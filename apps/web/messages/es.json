@@ -1,0 +1,343 @@
+{
+  "meta": {
+    "landingTitle": "{brand}: el árbol de tu familia, con pruebas y en tu idioma",
+    "landingDescription": "Plataforma de historia familiar en español, de código abierto, para familias mexicanas y binacionales: árbol con pruebas, historias, entrevistas y privacidad por defecto. Acceso anticipado por invitación.",
+    "avisoTitle": "Aviso de privacidad",
+    "appTitle": "Tu espacio familiar",
+    "notFoundTitle": "Página no encontrada"
+  },
+  "common": {
+    "skipToContent": "Saltar al contenido",
+    "switchLanguage": "English",
+    "switchLanguageLabel": "Ver esta página en inglés",
+    "earlyAccess": "Acceso anticipado",
+    "comingSoon": "Próximamente",
+    "openSource": "Código abierto (AGPL-3.0)",
+    "sourceCode": "Código fuente",
+    "backHome": "Volver al inicio",
+    "mainNav": "Navegación principal",
+    "footerNav": "Enlaces del pie de página"
+  },
+  "landing": {
+    "nav": {
+      "how": "Cómo funciona",
+      "mexican": "Para familias mexicanas",
+      "privacy": "Privacidad",
+      "faq": "Preguntas"
+    },
+    "hero": {
+      "eyebrow": "Acceso anticipado",
+      "title": "La historia de tu familia, con pruebas, historias y voces.",
+      "lead": "Arma tu árbol a partir de actas y libros parroquiales, y guarda en el mismo lugar lo que no está en ningún archivo: las historias, las fotos y la voz de tus mayores. En español primero, y bajo tu control.",
+      "ctaPrimary": "Conoce cómo funciona",
+      "ctaSecondary": "Nuestras promesas de privacidad",
+      "status": "Estamos construyendo la plataforma con un grupo pequeño de familias. Todavía no está abierta al público."
+    },
+    "how": {
+      "title": "Cómo funciona",
+      "lead": "Cuatro ideas guían todo lo que construimos.",
+      "items": {
+        "tree": {
+          "title": "Un árbol con pruebas",
+          "body": "Cada dato lleva su fuente: el acta, la partida de bautismo o la entrevista de donde salió. Si dos fuentes no coinciden, ambas se quedan y tú eliges cuál prefieres."
+        },
+        "stories": {
+          "title": "Historias y entrevistas",
+          "body": "Las anécdotas, las recetas, las fotos y la voz de tus abuelos viven junto al árbol, no en un cajón aparte."
+        },
+        "privacy": {
+          "title": "Privado por defecto",
+          "body": "Las personas vivas solo se ven dentro de su espacio familiar. Tú decides quién entra y con qué permisos."
+        },
+        "export": {
+          "title": "Llévate todo",
+          "body": "Tu árbol es tuyo. La exportación completa en formatos abiertos será gratuita siempre, sin condiciones."
+        }
+      }
+    },
+    "mexican": {
+      "title": "Hecho para familias mexicanas",
+      "lead": "Los programas de genealogía suelen pensar en otras costumbres. Este nace aquí.",
+      "items": {
+        "surnames": {
+          "title": "Dos apellidos",
+          "body": "Apellido paterno y materno, nombres de pila y nombres usados, apodos. Sin obligarte a cambiar el apellido de nadie al casarse."
+        },
+        "compadrazgo": {
+          "title": "Compadrazgo",
+          "body": "Padrinos de bautizo, de confirmación y de boda quedan registrados en cada sacramento; los compadres se deducen de ahí."
+        },
+        "records": {
+          "title": "Actas y libros parroquiales",
+          "body": "Citas con libro, foja y partida, actas del Registro Civil y testimonios orales, cada uno con su tipo de fuente."
+        },
+        "muertos": {
+          "title": "Día de Muertos",
+          "body": "Un espacio para recordar a quienes ya se fueron, con sus fotos y sus historias, a la manera de una ofrenda."
+        }
+      }
+    },
+    "promises": {
+      "title": "Nuestras promesas de privacidad",
+      "lead": "No son letra chica: así está diseñado el producto.",
+      "items": {
+        "living": {
+          "title": "Vivos, privados por defecto",
+          "body": "Nada sobre una persona viva se publica nunca. Solo la ve su espacio familiar."
+        },
+        "dna": {
+          "title": "Sin ADN",
+          "body": "No pedimos, no guardamos y no analizamos datos genéticos. Tampoco pedimos la CURP."
+        },
+        "noSale": {
+          "title": "No vendemos datos",
+          "body": "No vendemos tu información ni la usamos para entrenar modelos de inteligencia artificial."
+        },
+        "export": {
+          "title": "Exportación libre",
+          "body": "Podrás descargar todo tu árbol en GEDCOM 7, GEDCOM 5.5.1 y JSON, gratis, cuando quieras."
+        }
+      }
+    },
+    "faq": {
+      "title": "Preguntas frecuentes",
+      "items": {
+        "whatIs": {
+          "question": "¿Qué es {brand}?",
+          "answer": "Es una plataforma de historia familiar en español, de código abierto, para armar el árbol de tu familia a partir de pruebas y guardar sus historias, fotos y entrevistas en el mismo lugar."
+        },
+        "access": {
+          "question": "¿Cómo puedo empezar a usarla?",
+          "answer": "Estamos en acceso anticipado por invitación con un grupo pequeño de familias. Todavía no está abierta al público."
+        },
+        "living": {
+          "question": "¿Quién puede ver los datos de mis familiares vivos?",
+          "answer": "Solo las personas de tu espacio familiar. Toda persona que no conste como fallecida y haya nacido en los últimos 110 años, o sin fecha de nacimiento conocida, se trata como viva y nunca se publica."
+        },
+        "dna": {
+          "question": "¿Usan ADN o pruebas genéticas?",
+          "answer": "No. No pedimos, guardamos ni analizamos datos genéticos, y tampoco pedimos la CURP."
+        },
+        "data": {
+          "question": "¿Venden mis datos o los usan para entrenar inteligencia artificial?",
+          "answer": "No. No vendemos datos y no entrenamos modelos con el contenido de las familias."
+        },
+        "export": {
+          "question": "¿Podré llevarme mi árbol a otro programa?",
+          "answer": "Sí. La exportación completa en GEDCOM 7, GEDCOM 5.5.1 y JSON será gratuita siempre, para todas las familias."
+        },
+        "language": {
+          "question": "¿Está disponible en inglés?",
+          "answer": "Sí. El español de México es el idioma principal y el inglés va en segundo lugar, pensando en las familias binacionales."
+        },
+        "openSource": {
+          "question": "¿Es de código abierto?",
+          "answer": "Sí. El código se publica bajo la licencia AGPL-3.0 y cualquiera puede revisarlo."
+        },
+        "maker": {
+          "question": "¿Quién la hace?",
+          "answer": "Innovaciones MADFAM S.A.S. de C.V., una empresa de Cuernavaca, Morelos."
+        }
+      }
+    },
+    "waitlist": {
+      "soonTitle": "Muy pronto: acceso anticipado por invitación",
+      "soonBody": "Aún no recibimos registros. Abriremos la lista de espera cuando nuestro aviso de privacidad esté revisado.",
+      "title": "Pide acceso anticipado",
+      "lead": "Déjanos tu correo y te escribiremos cuando haya lugar para tu familia.",
+      "emailLabel": "Correo electrónico",
+      "emailHint": "Solo lo usaremos para escribirte sobre el acceso anticipado.",
+      "consentBefore": "He leído el ",
+      "consentLink": "aviso de privacidad",
+      "consentAfter": " y acepto que me escriban sobre el acceso anticipado.",
+      "submit": "Pedir acceso",
+      "submitting": "Enviando…",
+      "successTitle": "¡Listo!",
+      "successBody": "Recibimos tu solicitud. Te escribiremos cuando haya lugar.",
+      "errors": {
+        "invalidEmail": "Escribe un correo electrónico válido.",
+        "consentRequired": "Para continuar, marca la casilla de aceptación.",
+        "rateLimited": "Recibimos muchas solicitudes. Intenta de nuevo en unos minutos.",
+        "unavailable": "No pudimos registrar tu solicitud en este momento. Intenta más tarde.",
+        "closed": "La lista de espera no está abierta."
+      }
+    },
+    "footer": {
+      "aviso": "Aviso de privacidad",
+      "license": "Licencia AGPL-3.0",
+      "source": "Código fuente"
+    }
+  },
+  "aviso": {
+    "title": "Aviso de privacidad",
+    "inReviewTitle": "Aviso de privacidad en revisión",
+    "inReviewBody": "Nuestro aviso de privacidad está en revisión legal. Mientras tanto, no recabamos datos personales en este sitio.",
+    "version": "Versión {version}"
+  },
+  "app": {
+    "nav": {
+      "families": "Mis familias",
+      "settings": "Ajustes"
+    },
+    "signIn": {
+      "title": "Entra a tu espacio familiar",
+      "body": "Usa tu cuenta MADFAM para entrar. Si es tu primera vez, podrás crearla en el siguiente paso.",
+      "button": "Entrar",
+      "errors": {
+        "not_configured": "El inicio de sesión no está configurado en este servidor.",
+        "denied": "No se completó el inicio de sesión. Puedes intentarlo de nuevo.",
+        "expired": "El intento de inicio de sesión caducó. Vuelve a intentarlo.",
+        "invalid": "No pudimos verificar tu inicio de sesión. Vuelve a intentarlo.",
+        "unavailable": "El servicio de cuentas no responde. Intenta en unos minutos."
+      },
+      "signedOut": "Cerraste tu sesión en este dispositivo."
+    },
+    "earlyAccess": {
+      "title": "Tu cuenta aún no tiene acceso anticipado",
+      "body": "Estamos abriendo la plataforma poco a poco. Si recibiste una invitación, entra con la cuenta a la que llegó.",
+      "switchAccount": "Entrar con otra cuenta"
+    },
+    "spaces": {
+      "title": "Mis familias",
+      "lead": "Cada espacio familiar guarda un árbol y sus historias. Solo lo ven sus integrantes.",
+      "empty": "Todavía no tienes espacios familiares. Crea el primero.",
+      "createTitle": "Crear un espacio familiar",
+      "nameLabel": "Nombre del espacio",
+      "nameHint": "Por ejemplo: «Familia Ramírez Ocampo».",
+      "create": "Crear espacio",
+      "creating": "Creando…",
+      "created": "Espacio creado.",
+      "peopleCount": "{count, plural, =0 {Sin personas} one {# persona} other {# personas}}",
+      "roles": {
+        "steward": "Responsable",
+        "editor": "Editor",
+        "contributor": "Colaborador",
+        "viewer": "Lector"
+      },
+      "errors": {
+        "nameRequired": "Escribe un nombre para el espacio.",
+        "nameTooLong": "El nombre puede tener hasta 120 caracteres."
+      }
+    },
+    "space": {
+      "breadcrumb": "Mis familias",
+      "peopleTitle": "Personas",
+      "searchLabel": "Buscar por nombre",
+      "searchButton": "Buscar",
+      "clearSearch": "Quitar búsqueda",
+      "empty": "Este espacio todavía no tiene personas. Agrega la primera.",
+      "noResults": "No encontramos personas con «{query}».",
+      "more": "Ver más personas",
+      "born": "Nació: <mono>{date}</mono>",
+      "died": "Murió: <mono>{date}</mono>",
+      "treeTitle": "Árbol familiar",
+      "treeBody": "La vista del árbol llega en la siguiente etapa. Mientras tanto, las personas y sus relaciones se guardan aquí."
+    },
+    "personForm": {
+      "title": "Agregar persona",
+      "lead": "Escribe lo que sepas; podrás completar el resto después.",
+      "given": "Nombre(s)",
+      "paternal": "Apellido paterno",
+      "maternal": "Apellido materno",
+      "nickname": "Apodo",
+      "nicknameHint": "Como le decían en la familia.",
+      "sex": "Sexo",
+      "sexOptions": {
+        "M": "Masculino",
+        "F": "Femenino",
+        "X": "Otro",
+        "U": "Desconocido"
+      },
+      "birthDate": "Fecha de nacimiento",
+      "birthDateHint": "Como la sepas: «12 de mayo de 1931», «hacia 1890» o «antes de 1900».",
+      "submit": "Agregar persona",
+      "submitting": "Agregando…",
+      "created": "Persona agregada.",
+      "errors": {
+        "nameRequired": "Escribe al menos un nombre o un apellido.",
+        "tooLong": "Algún campo es demasiado largo (máximo 120 caracteres; la fecha, 80)."
+      }
+    },
+    "person": {
+      "breadcrumb": "Volver al espacio",
+      "namesTitle": "Nombres",
+      "eventsTitle": "Eventos",
+      "relationshipsTitle": "Relaciones",
+      "citationsTitle": "Fuentes citadas",
+      "noNames": "No hay nombres registrados.",
+      "noEvents": "Todavía no hay eventos. Los nacimientos, bautizos, matrimonios y defunciones aparecerán aquí.",
+      "noRelationships": "Todavía no hay relaciones registradas.",
+      "noCitations": "Todavía no hay fuentes citadas.",
+      "nickname": "Apodo: {nickname}",
+      "unknownDate": "Fecha desconocida",
+      "living": {
+        "living": "Viva",
+        "deceased": "Fallecida",
+        "unknown": "Sin confirmar"
+      },
+      "visibility": {
+        "space": "Visible en el espacio familiar",
+        "private": "Privada",
+        "public_memorial": "Memoria pública"
+      },
+      "sex": "Sexo: {sex}",
+      "relatedPerson": "Ver persona relacionada",
+      "eventTypes": {
+        "birth": "Nacimiento",
+        "baptism": "Bautizo",
+        "confirmation": "Confirmación",
+        "first_communion": "Primera comunión",
+        "marriage": "Matrimonio",
+        "civil_marriage": "Matrimonio civil",
+        "religious_marriage": "Matrimonio religioso",
+        "death": "Defunción",
+        "burial": "Sepultura",
+        "residence": "Residencia",
+        "other": "Otro evento"
+      },
+      "relationshipTypes": {
+        "parentOf": "Madre o padre de esta persona",
+        "childOf": "Hija o hijo de esta persona",
+        "union": "Unión",
+        "other": "Otra relación"
+      },
+      "pageTitle": "Persona",
+      "birthNotSaved": "La persona se guardó, pero la fecha de nacimiento no: el servidor todavía no acepta fechas escritas libremente. Podrás agregarla cuando esté disponible.",
+      "citationFoja": "foja {value}",
+      "citationPartida": "partida {value}"
+    },
+    "settings": {
+      "title": "Ajustes",
+      "accountTitle": "Tu cuenta",
+      "name": "Nombre",
+      "email": "Correo",
+      "notProvided": "Sin dato",
+      "switchTitle": "Cambiar de cuenta",
+      "switchBody": "Elige otra de tus cuentas MADFAM sin escribir la contraseña de nuevo.",
+      "switchAccount": "Cambiar de cuenta",
+      "otherPersonBody": "Para que otra persona entre en este dispositivo con su propia cuenta.",
+      "otherPerson": "Entrar como otra persona",
+      "signOutTitle": "Cerrar sesión",
+      "signOutBody": "Cierra tu sesión en este dispositivo.",
+      "signOut": "Cerrar sesión"
+    }
+  },
+  "errors": {
+    "early_access_required": "Tu cuenta aún no tiene acceso anticipado.",
+    "unauthorized": "Tu sesión terminó. Vuelve a entrar.",
+    "forbidden": "No tienes permiso para ver o cambiar esto.",
+    "not_found": "No encontramos lo que buscas.",
+    "validation_error": "Revisa los datos: algo no es válido.",
+    "conflict": "Ese cambio choca con otro. Recarga la página e intenta de nuevo.",
+    "rate_limited": "Demasiadas solicitudes. Espera un momento.",
+    "server_error": "El servidor tuvo un problema. Intenta más tarde.",
+    "api_unreachable": "No pudimos conectar con el servidor. Intenta más tarde.",
+    "api_not_configured": "Este servidor no tiene configurada la conexión con la API.",
+    "invalid_response": "El servidor respondió algo inesperado. Intenta más tarde.",
+    "unknown": "Ocurrió un error inesperado."
+  },
+  "notFound": {
+    "title": "No encontramos esta página",
+    "body": "Puede que el enlace esté mal escrito o que la página ya no exista."
+  }
+}
