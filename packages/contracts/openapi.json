@@ -6470,7 +6470,7 @@
     },
     "/v1/waitlist": {
       "post": {
-        "description": "Join the waitlist. Always `202` for a valid request, whether or not the email was\nalready on the list. Consent to the privacy notice (`aviso_version`) is required.",
+        "description": "Join the waitlist. `404 waitlist_closed` until the waitlist is opened with a reviewed\nprivacy notice. Once open, always `202` for a valid request, whether or not the email was\nalready on the list. Consent to the current privacy notice (`aviso_version`) is required.",
         "operationId": "join_waitlist_v1_waitlist_post",
         "requestBody": {
           "content": {

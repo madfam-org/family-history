@@ -42,7 +42,9 @@ def test_method_not_allowed_uses_envelope(client: TestClient) -> None:
     assert response.json()["error"]["code"] == "method_not_allowed"
 
 
-def test_validation_errors_use_envelope_and_never_echo_input(client: TestClient) -> None:
+def test_validation_errors_use_envelope_and_never_echo_input(jwk_client: StubJWKClient) -> None:
+    settings = make_settings(FH_WAITLIST_ENABLED="true", FH_AVISO_VERSION="2026-10")
+    client = TestClient(create_app(settings, key_resolver=jwk_client))
     secret = "correo.secreto@example.test"
     response = client.post("/v1/waitlist", json={"email": secret, "consent": "maybe"})
     assert response.status_code in (422, 503)
@@ -50,6 +52,16 @@ def test_validation_errors_use_envelope_and_never_echo_input(client: TestClient)
         body = response.json()
         assert body["error"]["code"] == "validation_error"
         assert secret not in response.text
+
+
+def test_closed_waitlist_answers_before_reading_input(client: TestClient) -> None:
+    secret = "correo.secreto@example.test"
+    response = client.post("/v1/waitlist", json={"email": secret, "consent": "maybe"})
+    assert response.status_code == 404
+    assert response.json() == {
+        "error": {"code": "waitlist_closed", "message": "The waitlist is not open."}
+    }
+    assert secret not in response.text
 
 
 def test_malformed_json_is_a_validation_error(client: TestClient) -> None:
