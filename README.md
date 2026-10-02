@@ -21,8 +21,9 @@ It is designed first for Mexican and binational families:
 - the history of migration north;
 - Día de Muertos.
 
-**Status: incubating.** Nothing is deployed yet. [docs/HONEST_STATUS.md](./docs/HONEST_STATUS.md)
-is the single source of truth for what works.
+**Status: incubating.** The first build wave (genealogy library, GEDCOM engine, API, web app
+shell, platform) is on `main`; nothing is deployed yet.
+[docs/HONEST_STATUS.md](./docs/HONEST_STATUS.md) is the single source of truth for what works.
 
 ## Principles
 
