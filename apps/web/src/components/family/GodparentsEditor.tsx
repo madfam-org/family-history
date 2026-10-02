@@ -46,8 +46,9 @@ export function GodparentsEditor({
   const formKey = state.status === "saved" ? `saved-${state.count}` : "editing";
 
   function label(entry: GodparentEntry): string {
+    // A recorded phrase («padrino de anillos») says more than the role's generic name.
+    if (entry.phrase) return entry.phrase;
     if (entry.role === "godparent") return t(godparentLabelKey(entry.sex));
-    if (entry.role === "other" && entry.phrase) return entry.phrase;
     return ASSOCIATION_ROLES.includes(entry.role as AssociationRole) ? t(`roles.${entry.role as AssociationRole}`) : entry.role;
   }
 

@@ -232,7 +232,7 @@ describe("addendum E: jobs", () => {
       record_counts: { INDI: 12, FAM: 4 },
       created_records: { INDI: 12 },
       diagnostics: [{ severity: "warning", code: "dual_year", message: "Dual year converted", line: 41 }],
-      extension_tags: { _MILT: 2 },
+      extension_tags: { _MILT: 2, _FH_SENSITIVITY: 3 },
     });
     expect(summary?.counts).toEqual([
       ["FAM", 4],

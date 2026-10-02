@@ -119,7 +119,8 @@ export function summarizeImportReport(report: unknown): ImportSummary | null {
     counts: entries(data.record_counts ?? data.counts),
     created: entries(data.created_records),
     diagnostics: data.diagnostics ?? data.warnings ?? [],
-    extensions: entries(data.extension_tags ?? data.extensions),
+    // `_FH_` tags are this platform's own (a re-imported export); only other programs' are listed.
+    extensions: entries(data.extension_tags ?? data.extensions).filter(([tag]) => !tag.startsWith("_FH_")),
   };
 }
 

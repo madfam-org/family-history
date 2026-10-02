@@ -21,7 +21,7 @@ parity.
 | `/es/personas/<id>/editar` | Name editor: nombre(s), apellido paterno and materno with particles («de la»), nombre usado, apodos and surname order, with a live preview. Events: «Corregir fecha» per event and «Agregar evento», which takes a free-text date and, for marriages, the spouse. Refused dates show a hint chosen for the text that was typed |
 | `/es/personas/<id>/arbol` | The tree: ancestors (pedigree), or descendants with `?vista=descendientes`. Pan, pinch, wheel, buttons and the keyboard; a legend of line styles; the same tree as a nested list |
 | `/es/familias/<id>/parentesco` | «¿Cómo estamos emparentados?»: pick two people (`?de=&a=`, ids only) and read `label_es`, for example «Porfirio Castillo Méndez es bisabuelo de Romina Torres Castillo». A «Verlo al revés» link swaps the two |
-| `/es/familias/<id>/importar` | Stewards and editors only. Upload a `.ged` or `.gdz` up to 25 MiB (checked before upload), follow the job, then read the report in Spanish: what was added, what the file held, every warning by severity and line, and other programs' extension tags |
+| `/es/familias/<id>/importar` | Stewards and editors only. Upload a `.ged`, a `.gdz` or a native `.json` (a «Llévate todo» copy) up to 25 MiB (checked before upload), follow the job, then read the report in Spanish: what was added, what the file held, every warning by severity and line (common codes explained in Spanish, the English message kept under «Detalle técnico»), and other programs' extension tags (the platform's own `_FH_` tags are not listed). A failed job shows its `error_code` copy, for example `gedcom_invalid` |
 | `/es/familias/<id>/exportar` | «Llévate todo»: the four formats in plain Spanish, «Gratis para todas las familias, siempre. No depende de ningún plan.», job polling, the download, and the 24-hour expiry. Nothing on the page checks a plan or a role |
 | `/es/familias/<id>` | The «Próximamente» tree placeholder is replaced by the space's tools: kinship, import (stewards and editors) and export. The people list shows `date_display` and «Privada» |
 
@@ -104,9 +104,11 @@ All are dev-only and pinned exactly. No runtime dependency was added.
 
 ## Tests and gates
 
-`pnpm --filter @family-history/web run lint|typecheck|test|build` all pass. There are 211 Vitest
-tests in 19 files; wave 1 had 107 in 13. New files:
-- `addendum-schemas.test.ts`: every addendum response shape through zod, and the endpoints that
+`pnpm --filter @family-history/web run lint|typecheck|test|build` all pass. There are 235 Vitest
+tests in 20 files (plus one that runs only once `packages/contracts/openapi.json` holds the #17
+contract); wave 1 had 107 in 13. New files:
+- `openapi-conformance.test.ts`: conformance with #17's OpenAPI contract (below);
+- `addendum-schemas.test.ts`: the addendum's response shapes through zod, and the endpoints that
   send its requests;
 - `date-hints.test.ts`: hint selection and rendering in both languages, date display, and error
   code → copy for every known code;
@@ -120,82 +122,88 @@ tests in 19 files; wave 1 had 107 in 13. New files:
 Message parity covers `family.<locale>.json`, which `src/i18n/messages.ts` merges with
 `<locale>.json`. Client components get only the `family` and `errors` namespaces, through a
 `NextIntlClientProvider` in the workspace layout. The largest new source file is
-`src/lib/api/schemas.ts` at 261 lines.
+`src/lib/api/schemas.ts` at under 300 lines.
 
-**Checked by hand.** The production build ran against a synthetic mock API (scratchpad only, not
-committed) with a locally minted session, at 360 px. Checked:
-- the person page;
-- the tree, both views;
-- the editor's `1890-1895` → «entre 1890 y 1895 … de 1890 a 1895» hint;
-- the padrino search, where «Chucho» finds Jesús;
-- the kinship answer;
-- export: polling, download, and the 303 back on failure;
-- import: upload through the proxy, polling and the report;
-- `en` pages, and `/api/app/*` returning 404 on the landing host.
+### Conformance with the API's contract
 
-No console errors and no CSP violations.
+`tests/fixtures/openapi-v1-web.json` vendors the component schemas the web touches from #17's
+`packages/contracts/openapi.json` (`d1dd43b`): the 13 responses it parses, the 7 request bodies
+it sends, and their dependencies (51 schemas). `tests/support/openapi.ts` generates payloads from
+them and validates bodies against them. The test:
+- feeds every response component to the matching zod schema three ways: every field filled,
+  required fields only with nulls, and one variant per enum value;
+- checks that the web's enums (living status, sex, role, visibility, job status, export
+  formats, association roles, editable event types) match the API's;
+- validates every request body the web builds (person create and patch, event create and
+  patch, relationships for each relative kind, associations, exports) against the API's input
+  schemas, which reject unknown fields;
+- compares the vendored copy with `packages/contracts/openapi.json` once that file holds the
+  #17 contract (it holds `KinshipOut`), so drift fails CI after #17 merges.
 
-**Not checked.** Any of this against the real API: the jobs endpoints are not in INT-API's branch
-yet (see below). `docker build` was not run locally either.
+A deliberate break (dropping `presumed_deceased`, narrowing an association's `sex`) makes four
+of these tests fail, so they bite.
 
-## Contract mismatches for the coordinator (INT-WEB ↔ INT-API)
+### Checked against the real API
 
-Compared against `feat/api-integration-domain-gedcom` (PR #17) at `c6c2640`.
+#17's API (`d1dd43b`, from the INT-API clone's own virtualenv) ran locally with:
+- `FH_ENV=local`, `FH_AUTH_DISABLED=true` (its synthetic principal);
+- a throwaway Homebrew PostgreSQL 14 cluster, with the app role `NOSUPERUSER NOBYPASSRLS` owning
+  the database and `pg_trgm` installed;
+- migrations at head, plus `python -m family_history.worker`.
 
-1. **Kinship `kinship` field shape.** The addendum lists `{kinship, label_es, label_en}`. INT-API
-   returns `kinship` as an object (`KinshipStructure`: kind, up, down, half, adoptive,
-   partner_status, via). The web accepts either the object or a string, and shows only the
-   labels.
-   - Request: record the object shape in the addendum.
-2. **The full `Person` has no `birth` or `death` brief.** The wave-1 web schema extended
-   `PersonSummary`, so it required both; every person page would have failed with
-   `invalid_response` against the real API. Fixed on the web side, which now reads vital dates
-   from `events`.
-   - No API change is needed. Optionally, add the briefs to `Person` for symmetry.
-3. **Where associations come back.** The addendum defines POST and DELETE only. INT-API returns
-   them on `Event.associations` as `{id, person_id, role, phrase}`, and the web relies on that to
-   list and remove padrinos.
-   - Request: add it to the addendum.
-   - There is no `display_name` or `sex`, so the web fetches each godparent separately to say
-     padrino or madrina.
-   - Request: add `display_name` and `sex` to `EventAssociation`.
-4. **The job `report` shape is open.** The web reads the GEDCOM engine's `ImportReport`:
-   `source_version`, `source_product`, `record_counts`, `created_records`,
-   `diagnostics[{severity, code, message, line}]` and `extension_tags`. It also tolerates
-   `counts`, `warnings` and `extensions`.
-   - Request: fix the report shape in the addendum.
-   - Diagnostic `message` is English. The web shows the code and line, and the message only under
-     «Detalle técnico (en inglés)».
-   - Request: a stable catalogue of diagnostic codes, so they can be translated.
-5. **Job endpoints are not on INT-API's branch yet.** The `JobKind`, `JobStatus` and
-   `ExportFormat` enums exist, but there are no routers for `/imports`, `/exports` or `/jobs` at
-   `c6c2640`. The web is built to the addendum and has only run against the mock.
-   - `kind` will be `gedcom_import` or `export`; the web does not depend on it.
-6. **Upload error codes are not named.** The web maps HTTP 413 to `file_too_large`, 415 to
-   `unsupported_file` and 410 to `download_expired`. It also accepts the aliases
-   `payload_too_large`, `unsupported_media_type`, `unsupported_format`, `gone`, `job_expired` and
-   `export_expired`.
-   - Request: name the codes for over 25 MiB, a wrong extension, a malformed GEDCOM (a job
-     `error_code`), and an expired download.
-7. **Other new codes.**
-   - `unknown_event` (422 from associations) maps to «No encontramos lo que buscas».
-   - `association_exists` maps to the conflict copy, through the `_exists` suffix rule.
-   - `association_not_found` and `job_not_found` map to not found.
-   - `relationship_exists` has its own copy.
-8. **`date_original` length.** INT-API accepts up to 200 characters; the web caps it at 80, the
-   wave-1 limit. Both are fine. Tell the web lane if longer phrases are expected.
-9. **Kinship direction.** The web reads `GET /people/{ego}/kinship?to={alter}` as «alter es
-   `label_es` de ego», which matches INT-API's «What `to` is to the person». The web shows the same
-   «no relation» notice for `404 no_relation` and for `404 person_not_found`.
-10. **No graph endpoint.** The tree walks one person at a time; the descendants view of a large
-    family is about 40 to 80 requests.
-    - Request, for a later wave: `GET /v1/people/{id}/tree?up=&down=` returning people (summary
-      fields) and relationships in one response.
-11. **The download's `content-disposition`.** The web passes the API's header through, or plain
-    `attachment` when there is none.
-    - Request: the API sets a filename with the right extension (`.gdz`, `.ged`, `.json`).
-12. **Search.** The web passes `q` unchanged and relies on addendum C. The picker searches from
-    2 characters with `limit=10`.
+The web's production build ran against it with a locally minted session. All data was synthetic:
+the repo's `api/tests/fixtures/gedcom/familia-sintetica-7.ged`.
+
+1. **Import through the web.** `POST /api/app/spaces/<id>/imports` returned `202`, and
+   `GET /api/app/jobs/<id>` reached `succeeded`. The report was in the final shape: `record_counts`
+   by tag, `created_records` by row, 3 diagnostics and the extension tags. The import page
+   rendered it in Spanish.
+2. **Every page parses real responses.** On the space page, and on each of the 4 imported people's
+   page, editor, and both tree views, nothing showed an alert and every `<h1>` showed the formal
+   `display_name`.
+   - The padrino on Silverio's baptism showed from `Event.associations` (`display_name`, `sex: U`),
+     with no extra fetch.
+   - Kinship read «Tomasa Moreno Reyes es madre de Consuelo Cortés Moreno», and `404 no_relation`
+     showed the notice.
+3. **Export through the web.** «Preparar descarga» for the JSON copy (the server action) moved to
+   `?trabajo=`, polled to «Listo», and showed the expiry. The download through
+   `/api/app/jobs/<id>/download` came back `application/json` with
+   `filename="family-history-2026-10-01.json"`.
+4. **Re-import.** The downloaded `.json` was uploaded into a second space through the same route
+   handler. It succeeded with the same counts (4 people, 10 events, 5 places, 1 union,
+   2 parent–child links and so on) and no diagnostics. Exporting the second space gave a file
+   **byte-identical** to the first export.
+5. **Filenames.** The GEDCOM 7, GEDZIP and 5.5.1 exports downloaded as `….ged`, `….gdz` and
+   `…-gedcom551.ged`.
+6. **Failures.** A text file named `.ged` failed the job with `gedcom_invalid`, and the import page
+   showed «No pudimos leer ese archivo como GEDCOM…». A `.txt` upload came back as
+   `415 unsupported_file` through the handler.
+
+No console errors. The server, the worker, Postgres and the browser tab were stopped afterwards.
+
+**Not checked:**
+- a real Janua token; the API ran with its synthetic principal;
+- `docker build`, which CI's image job covers.
+
+## Alignment with the final contract (INT-API #17)
+
+The mismatches raised during the lane were all settled by #17, and the web now follows its final
+contract:
+
+| Topic | Final contract | Web |
+|---|---|---|
+| Kinship | `{kinship: {kind, up, down, half, adoptive, partner_status, via}, label_es, label_en}`; `404 person_not_found`, `404 no_relation` | Strict object schema. `no_relation` → «No encontramos un parentesco…»; `person_not_found` → «No encontramos a una de las dos personas…» |
+| Associations | `Event.associations[]` = `{id, person_id, display_name, sex, role, phrase}` | Padrino, madrina or neutral from `sex`, or the recorded phrase; the per-godparent fetch is gone |
+| `display_name` | FORMAL: nombre de pila and surnames | Headings and pickers use it; the person page shows «Nombre que usaba: …» and «Apodos: …» under the heading |
+| Import report | Exactly `ImportReport` | Labels both tag counts and row counts (`people`, `unions`, `parent_child`…). Spanish copy for the 13 importer codes and 22 common engine codes; the code and the English message are always shown |
+| Imports | `.ged`, `.gdz`, native `.json`, 25 MiB | Picker, client check and copy accept `.json`; the route handler leaves type checks to the API (`415 unsupported_file`) |
+| Errors | `413 file_too_large`, `415 unsupported_file`, `410 download_expired`, plus `empty_file`, `job_not_ready`, `association_is_principal`, `no_download`, `invalid_cursor` | Own copy for the first set and `empty_file`, `job_not_ready`, `association_is_principal`; aliases for the rest |
+| Job `error_code` | `gedcom_invalid`, `native_export_invalid`, `insufficient_role`, `not_a_member`, `invalid_format`, `worker_timeout`, `internal_error` | Own es/en copy for `gedcom_invalid`, `native_export_invalid` and `worker_timeout`; the others map to forbidden, validation or server copy |
+| Downloads | `Content-Disposition` with `.ged`, `.gdz`, `-gedcom551.ged`, `.json` | Passed through unchanged |
+| Citing an event | Assertion `{subject_type: "event", field: "occurred", value: true, citation_ids}` | Noted only; no citation UI in this lane |
+
+**Still open (later waves):** `GET /v1/people/{id}/tree?up=&down=`. The tree still walks one person
+at a time, capped at 80. The rest of the diagnostic codes have English messages only.
 
 ## Requests for other owners
 
@@ -205,11 +213,11 @@ Compared against `feat/api-integration-domain-gedcom` (PR #17) at `c6c2640`.
 - **`docs/HONEST_STATUS.md`.**
   - The tree view, the editors, the kinship lookup, import and export now exist in the web, and
     are not deployed.
-  - Import and export are untested against the real API, because its jobs endpoints have not
-    landed.
+  - Import → export → re-import was checked locally against #17's API, not in any deployed
+    environment.
   - Editing places and visibility is not built.
-- **The `README` and llms files** should not describe import or export as working until the API
-  side lands.
+- **The `README` and llms files** should describe import and export only once #14 and #17 are
+  both merged and deployed.
 
 ## Known limits
 
