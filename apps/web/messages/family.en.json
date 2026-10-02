@@ -37,7 +37,7 @@
         "yearSpan": "“{from}-{to}” can be read two ways. Write “entre {from} y {to}” if you don't know the exact year, or “de {from} a {to}” if it was a period.",
         "ambiguous": "We won't guess this date. Write the month as a word, for example “3 de abril de 1923”.",
         "twoDigitYear": "Write the full year: “19{year}” or “18{year}”, not just “{year}”.",
-        "monthOver12": "Dates are read day/month/year, and there is no month {month}. Write the month as a word, for example “{day} de marzo de 1923”.",
+        "monthOver12": "Dates are read in the order day, month, year, and there is no month {month}. Write the month as a word, for example “{day} de marzo de 1923”.",
         "weekday": "The day of the week does not match the date. Remove it or check the date.",
         "invalid": "We could not read this date. Try one of the forms in the examples."
       },

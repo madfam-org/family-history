@@ -37,7 +37,7 @@
         "yearSpan": "«{from}-{to}» puede leerse de dos maneras. Escribe «entre {from} y {to}» si no sabes el año exacto, o «de {from} a {to}» si fue un periodo.",
         "ambiguous": "No queremos adivinar esta fecha. Escribe el mes con letra, por ejemplo «3 de abril de 1923».",
         "twoDigitYear": "Escribe el año completo: «19{year}» o «18{year}», no solo «{year}».",
-        "monthOver12": "Leemos las fechas como día/mes/año, y no hay mes {month}. Escribe el mes con letra, por ejemplo «{day} de marzo de 1923».",
+        "monthOver12": "Leemos las fechas en el orden día, mes y año, y no hay mes {month}. Escribe el mes con letra, por ejemplo «{day} de marzo de 1923».",
         "weekday": "El día de la semana no coincide con la fecha. Quítalo o revisa la fecha.",
         "invalid": "No pudimos leer esta fecha. Prueba con una de las formas de los ejemplos."
       },

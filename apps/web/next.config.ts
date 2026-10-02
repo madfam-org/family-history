@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "64kb",
     },
+    // GEDCOM imports stream through /api/app/spaces/<id>/imports: 25 MiB of file plus the
+    // multipart envelope. The proxy buffers request bodies up to this size (default 10 MB, and
+    // larger bodies would be cut short); the route handler itself rejects anything bigger.
+    proxyClientMaxBodySize: "26mb",
   },
 };
 

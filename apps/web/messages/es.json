@@ -230,8 +230,7 @@
       "more": "Ver más personas",
       "born": "Nació: <mono>{date}</mono>",
       "died": "Murió: <mono>{date}</mono>",
-      "treeTitle": "Árbol familiar",
-      "treeBody": "La vista del árbol llega en la siguiente etapa. Mientras tanto, las personas y sus relaciones se guardan aquí."
+      "treeBody": "Abre a cualquier persona y elige «Árbol familiar» para ver sus antepasados y descendientes."
     },
     "personForm": {
       "title": "Agregar persona",
@@ -282,28 +281,7 @@
         "public_memorial": "Memoria pública"
       },
       "sex": "Sexo: {sex}",
-      "relatedPerson": "Ver persona relacionada",
-      "eventTypes": {
-        "birth": "Nacimiento",
-        "baptism": "Bautizo",
-        "confirmation": "Confirmación",
-        "first_communion": "Primera comunión",
-        "marriage": "Matrimonio",
-        "civil_marriage": "Matrimonio civil",
-        "religious_marriage": "Matrimonio religioso",
-        "death": "Defunción",
-        "burial": "Sepultura",
-        "residence": "Residencia",
-        "other": "Otro evento"
-      },
-      "relationshipTypes": {
-        "parentOf": "Madre o padre de esta persona",
-        "childOf": "Hija o hijo de esta persona",
-        "union": "Unión",
-        "other": "Otra relación"
-      },
       "pageTitle": "Persona",
-      "birthNotSaved": "La persona se guardó, pero la fecha de nacimiento no: el servidor todavía no acepta fechas escritas libremente. Podrás agregarla cuando esté disponible.",
       "citationFoja": "foja {value}",
       "citationPartida": "partida {value}"
     },

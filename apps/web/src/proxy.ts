@@ -9,7 +9,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { applyWritesToCookieHeader, cookieAttributes, type CookieWrite } from "@/lib/auth/cookies";
 import { maintainSession } from "@/lib/auth/proxy-session";
 import { appOrigin, landingOrigin } from "@/lib/env";
-import { resolveRoute, robotsHeader, type RouteDecision } from "@/lib/routing/host-routing";
+import { isAppApiPath, resolveRoute, robotsHeader, type RouteDecision } from "@/lib/routing/host-routing";
 import { LOCALE_HEADER, NONCE_HEADER, PATHNAME_HEADER, SURFACE_HEADER } from "@/lib/routing/request-headers";
 import { baseSecurityHeaders, buildCsp, createNonce } from "@/lib/security/headers";
 
@@ -71,7 +71,17 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 
   if (decision.type === "pass") {
     requestHeaders.delete(LOCALE_HEADER);
-    return finalize(NextResponse.next({ request: { headers: requestHeaders } }), decision, csp);
+    // The app's own route handlers (job polling, uploads, downloads) get the same session
+    // rotation as pages, so a long upload or poll never runs on an expired access token.
+    let passWrites: CookieWrite[] = [];
+    if (decision.surface === "app" && isAppApiPath(request.nextUrl.pathname)) {
+      const existing = request.cookies.getAll().map(({ name, value }) => ({ name, value }));
+      passWrites = await maintainSession(existing);
+      if (passWrites.length > 0) requestHeaders.set("cookie", applyWritesToCookieHeader(existing, passWrites));
+    }
+    const response = NextResponse.next({ request: { headers: requestHeaders } });
+    applyCookieWrites(response, passWrites);
+    return finalize(response, decision, csp);
   }
 
   requestHeaders.set(LOCALE_HEADER, decision.locale);

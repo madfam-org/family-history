@@ -230,8 +230,7 @@
       "more": "Show more people",
       "born": "Born: <mono>{date}</mono>",
       "died": "Died: <mono>{date}</mono>",
-      "treeTitle": "Family tree",
-      "treeBody": "The tree view arrives in the next stage. Meanwhile, people and their relationships are kept here."
+      "treeBody": "Open any person and choose “Family tree” to see their ancestors and descendants."
     },
     "personForm": {
       "title": "Add a person",
@@ -282,28 +281,7 @@
         "public_memorial": "Public memorial"
       },
       "sex": "Sex: {sex}",
-      "relatedPerson": "View related person",
-      "eventTypes": {
-        "birth": "Birth",
-        "baptism": "Baptism",
-        "confirmation": "Confirmation",
-        "first_communion": "First communion",
-        "marriage": "Marriage",
-        "civil_marriage": "Civil marriage",
-        "religious_marriage": "Religious marriage",
-        "death": "Death",
-        "burial": "Burial",
-        "residence": "Residence",
-        "other": "Other event"
-      },
-      "relationshipTypes": {
-        "parentOf": "Parent of this person",
-        "childOf": "Child of this person",
-        "union": "Union",
-        "other": "Other relationship"
-      },
       "pageTitle": "Person",
-      "birthNotSaved": "The person was saved, but the birth date was not: the server does not accept free-text dates yet. You can add it once that is available.",
       "citationFoja": "folio {value}",
       "citationPartida": "entry {value}"
     },
