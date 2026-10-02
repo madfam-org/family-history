@@ -67,3 +67,6 @@ mypy_path = "src"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+markers = [
+    "postgres: needs a real Postgres; runs only when FH_TEST_DATABASE_URL is set",
+]

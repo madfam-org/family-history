@@ -22,9 +22,7 @@ from family_history.routers.schemas.common import ApiModel, InputModel, LongText
 EventType = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{1,49}$")]
 # GEDCOM 7 DateValue text: uppercase tokens such as `ABT 1890`, `BET 1850 AND 1860`,
 # `12 MAR 1901` or `JULIAN 1700`. The domain library parses it; the API keeps it verbatim.
-DateValue = Annotated[
-    str, StringConstraints(pattern=r"^[A-Z0-9_]+( [A-Z0-9_]+)*$", max_length=100)
-]
+DateValue = Annotated[str, StringConstraints(pattern=r"^[A-Z0-9_]+( [A-Z0-9_]+)*$", max_length=100)]
 InegiCode = Annotated[str, StringConstraints(pattern=r"^[0-9]{2,12}$")]
 
 

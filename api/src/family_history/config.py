@@ -10,6 +10,7 @@ from enum import StrEnum
 from functools import lru_cache
 from typing import Annotated, Any
 
+from fastapi import Depends, Request
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
@@ -156,4 +157,14 @@ class Settings(BaseSettings):
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
+    """The process settings, read from the environment once."""
     return Settings()
+
+
+def request_settings(request: Request) -> Settings:
+    """FastAPI dependency: the settings the running app was built with."""
+    settings = getattr(request.app.state, "settings", None)
+    return settings if isinstance(settings, Settings) else get_settings()
+
+
+AppSettings = Annotated[Settings, Depends(request_settings)]

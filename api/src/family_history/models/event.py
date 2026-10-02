@@ -49,8 +49,9 @@ class Event(IdMixin, TimestampMixin, TenantMixin, AuthoredMixin, Base):
         ForeignKeyConstraint(
             ["family_space_id", "place_id"], ["place.family_space_id", "place.id"]
         ),
-        CheckConstraint(f"sensitivity IS NULL OR {sql_in('sensitivity', Sensitivity)}",
-                        name="sensitivity"),
+        CheckConstraint(
+            f"sensitivity IS NULL OR {sql_in('sensitivity', Sensitivity)}", name="sensitivity"
+        ),
         Index("ix_event_space_type", "family_space_id", "type"),
     )
 

@@ -16,9 +16,7 @@ class Revision(IdMixin, TenantMixin, Base):
     """One row per write. Append-only: RLS grants only SELECT and INSERT."""
 
     __tablename__ = "revision"
-    __table_args__ = (
-        Index("ix_revision_entity", "family_space_id", "entity_type", "entity_id"),
-    )
+    __table_args__ = (Index("ix_revision_entity", "family_space_id", "entity_type", "entity_id"),)
 
     actor_sub: Mapped[str] = mapped_column(String(255))
     entity_type: Mapped[str] = mapped_column(String(40))
@@ -32,9 +30,7 @@ class WaitlistEntry(IdMixin, Base):
     """A waitlist sign-up. The email is stored for the relay to PhyndCRM and is never logged."""
 
     __tablename__ = "waitlist_entry"
-    __table_args__ = (
-        Index("uq_waitlist_entry_email_lower", text("lower(email)"), unique=True),
-    )
+    __table_args__ = (Index("uq_waitlist_entry_email_lower", text("lower(email)"), unique=True),)
 
     email: Mapped[str] = mapped_column(String(254))
     locale: Mapped[str] = mapped_column(String(35))

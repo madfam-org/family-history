@@ -19,7 +19,7 @@ import jwt
 from fastapi import Depends, Request
 from jwt import PyJWKClient
 
-from family_history.config import Settings, get_settings
+from family_history.config import AppSettings, Settings
 from family_history.errors import APIError
 from family_history.metrics import AUTH_FAILURES
 
@@ -170,9 +170,7 @@ def _bearer_token(request: Request) -> str:
     return token
 
 
-def current_principal(
-    request: Request, settings: Annotated[Settings, Depends(get_settings)]
-) -> Principal:
+def current_principal(request: Request, settings: AppSettings) -> Principal:
     """Authenticate the request. Does not enforce early access (see `require_early_access`)."""
     if settings.auth_disabled and settings.is_dev:
         return synthetic_principal()
@@ -182,7 +180,7 @@ def current_principal(
 
 def require_early_access(
     principal: Annotated[Principal, Depends(current_principal)],
-    settings: Annotated[Settings, Depends(get_settings)],
+    settings: AppSettings,
 ) -> Principal:
     if not has_early_access(principal, settings):
         AUTH_FAILURES.labels(code="early_access_required").inc()

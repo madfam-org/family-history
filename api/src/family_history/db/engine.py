@@ -31,7 +31,12 @@ _SET_SCOPE_SQL = text(
 
 def normalize_database_url(url: str) -> str:
     """Use the psycopg 3 driver whatever scheme the platform hands us."""
-    for prefix in ("postgresql+psycopg://", "postgresql+psycopg2://", "postgresql://", "postgres://"):
+    for prefix in (
+        "postgresql+psycopg://",
+        "postgresql+psycopg2://",
+        "postgresql://",
+        "postgres://",
+    ):
         if url.startswith(prefix):
             return "postgresql+psycopg://" + url[len(prefix) :]
     return url
@@ -52,9 +57,7 @@ def _apply_scope_on_begin(
     connection.execute(_SET_SCOPE_SQL, _scope_params(session))
 
 
-def set_scope(
-    session: Session, *, user_sub: str | None, space_id: uuid.UUID | None = None
-) -> None:
+def set_scope(session: Session, *, user_sub: str | None, space_id: uuid.UUID | None = None) -> None:
     """Record the RLS scope on the session and apply it to the open transaction, if any."""
     session.info[SCOPE_USER_KEY] = user_sub
     session.info[SCOPE_SPACE_KEY] = space_id

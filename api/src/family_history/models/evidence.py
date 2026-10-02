@@ -93,9 +93,7 @@ class Assertion(IdMixin, TenantMixin, Base):
     value: Mapped[Any] = mapped_column(JSONB)
     status: Mapped[str] = mapped_column(String(20))
     asserted_by: Mapped[str] = mapped_column(String(255))
-    citation_ids: Mapped[list[uuid.UUID]] = mapped_column(
-        ARRAY(UUID(as_uuid=True)), default=list
-    )
+    citation_ids: Mapped[list[uuid.UUID]] = mapped_column(ARRAY(UUID(as_uuid=True)), default=list)
     supersedes_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("assertion.id", ondelete="RESTRICT")
     )
