@@ -1,0 +1,62 @@
+﻿0 HEAD
+1 SOUR RootsMagic
+2 NAME rootsmagic
+2 VERS 10.0.3
+2 CORP RootsMagic, Inc.
+1 DEST RootsMagic
+1 DATE 1 OCT 2026
+1 FILE C:\Users\demo\Documents\familia-sintetica.rmtree
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+1 SUBM @SUBM1@
+0 @SUBM1@ SUBM
+1 NAME equipo sintético
+0 @I1@ INDI
+1 NAME Silverio /Cortés Moreno/
+2 GIVN Silverio
+2 NICK Chava
+2 SURN Cortés
+1 SEX M
+1 _UID 9B5F8C2E00004000800000000000000196A3
+1 BIRT
+2 DATE Bet 1930 and 1931
+2 PLAC Tlacotepec, Puebla, México
+2 SOUR @s-1@
+3 PAGE Libro 4, foja 12, partida 33
+3 QUAY 3
+3 _TMPLT
+4 FIELD
+5 NAME page
+5 VALUE Libro 4, foja 12, partida 33
+1 BAPM
+2 DATE INT 1931 (poco después de la Semana Santa)
+2 PLAC Parroquia de San Hipotético, Tlacotepec, Puebla, México
+1 EVEN Trabajó en los campos de California
+2 DATE (temporada de 1955)
+1 BURI
+2 DATE (sometime in spring)
+2 _SDATE 1999
+1 OBJE
+2 FILE fotos\boda 1958.jpg
+2 FORM jpg
+2 TITL Boda de Silverio
+2 _PRIM Y
+1 FAMS @F1@
+0 @I2@ INDI
+1 NAME Tomasa /Moreno/
+1 SEX F
+1 FAMS @F1@
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 MARR
+2 DATE 15 AUG 1958
+2 SOUR Acta de matrimonio vista por la familia, sin registro de fuente
+3 TEXT Se casaron en la parroquia.
+0 @s-1@ SOUR
+1 TITL Libro de bautismos de San Hipotético (sintético)
+1 _TMPLT
+2 TID 0
+0 TRLR
