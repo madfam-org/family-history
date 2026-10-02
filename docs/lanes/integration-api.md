@@ -266,8 +266,9 @@ New tests:
    `REDIS_URL`; the worker reads `DATABASE_URL` and `FH_ENV`; the shape diagram's worker is a
    Postgres queue.
 2. ARCHITECTURE v1 table: add the endpoints marked new above and the shape changes
-   (`PersonSummary` gains `sort_name`, `is_private`; `living_status` includes
-   `presumed_deceased`; `EventBrief` gains `date_display`).
+   (`PersonSummary` gains `sort_name` and `is_private`; `EventBrief` gains `date_display`;
+   `Event` gains `date_original`, `date_display`, `associations`). `presumed_deceased` is
+   already there after #7.
 3. HONEST_STATUS: GEDCOM 7 / 5.5.1 / GEDZIP import and export, the native export and the
    worker now exist; media inside GEDZIP does not.
 4. `family_history.domain` docs say `has_evidence` should come from an accepted assertion;
