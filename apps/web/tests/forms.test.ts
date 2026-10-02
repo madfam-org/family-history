@@ -78,3 +78,12 @@ describe("person labels", () => {
     expect(relationshipLabelKey({ ...rel, type: "godparent" }, "parent")).toBe("other");
   });
 });
+
+describe("language switch", () => {
+  it("keeps the path and query, and moves a locale-prefixed return_to along", async () => {
+    const { switchLocale } = await import("@/lib/i18n/switch-locale");
+    expect(switchLocale("/es", "en")).toBe("/en");
+    expect(switchLocale("/es/familias/abc?q=Ana", "en")).toBe("/en/familias/abc?q=Ana");
+    expect(switchLocale("/en/entrar?return_to=%2Fen%2Fajustes", "es")).toBe("/es/entrar?return_to=%2Fes%2Fajustes");
+  });
+});

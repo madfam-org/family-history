@@ -8,6 +8,8 @@ import { isIndexable } from "@/lib/env";
 import type { Surface } from "@/lib/routing/host-routing";
 import { NONCE_HEADER, PATHNAME_HEADER, SURFACE_HEADER } from "@/lib/routing/request-headers";
 
+import { switchLocale } from "./switch-locale";
+
 export async function requestSurface(): Promise<Surface> {
   return (await headers()).get(SURFACE_HEADER) === "app" ? "app" : "landing";
 }
@@ -24,8 +26,5 @@ export async function pageIsNoindex(): Promise<boolean> {
 /** The same public page in the other language, for the language switch. */
 export async function alternateLocaleHref(current: Locale): Promise<{ locale: Locale; href: string }> {
   const other = locales.find((locale) => locale !== current) ?? current;
-  const path = (await headers()).get(PATHNAME_HEADER) ?? `/${current}`;
-  const [pathname = "", query] = path.split("?");
-  const rest = pathname.replace(/^\/(es|en)(?=\/|$)/, "");
-  return { locale: other, href: `/${other}${rest}${query ? `?${query}` : ""}` };
+  return { locale: other, href: switchLocale((await headers()).get(PATHNAME_HEADER) ?? `/${current}`, other) };
 }
