@@ -1,0 +1,75 @@
+# family-history: full context for coding agents
+
+> Last Updated: 2026-10-01
+>
+> Boundary checkpoint (2026-10-01): public repository. Operational detail (topology, secrets,
+> runbooks, people) lives in MADFAM's private internal-devops repository under the repo-boundary
+> contract. Never copy it here.
+
+## Product
+
+`family-history` is a codename. The brand is a separate presentation layer (ADR 0001).
+
+The product is a Spanish-first, open-source family-history platform with two halves:
+
+1. **An evidence-based family graph.** People, multiple name forms (apellido paterno and materno,
+   apodos), relationships (birth, adoptive, step, unions), event-tied associations (padrinos per
+   sacrament, witnesses; compadres derived), events with GEDCOM 7 dates, time-aware places,
+   sources and citations.
+2. **Living memory.** Stories (relatos), recorded interviews with consent, photos and documents
+   kept as immutable originals.
+
+Who it is for: Mexican and binational families, phone-first. Spanish content, English second.
+
+## Hard rules
+
+- **Data:** synthetic only, everywhere in the repo.
+- **Living people:** private inside their family space. Treat a person as living when no death is
+  proven and they were born within 110 years or have no birth date.
+- **Sensitivity classes:** religion (sacramental events), health (cause of death), genetic,
+  ethnicity, sexual, political. Sharing a sensitive fact about a living person requires that
+  person's authenticated consent.
+- **Requests:** «Quítame de este árbol» lets any living person ask to be hidden or removed. ARCO
+  requests are answered within 20 business days.
+- **AI:** suggestions only, labelled «Asistida con IA», through the Selva gateway at `restricted` or
+  `confidential`. Hide the feature on 503.
+- **Media:** private bucket, presigned URLs, location metadata stripped. Restored images are
+  labelled «Modificada con IA».
+- **Out of scope:** DNA, CURP, health-risk inference, data sale, model training on family content,
+  voice or face cloning.
+- **Export:** GEDCOM 7 GEDZIP, GEDCOM 5.5.1 and native JSON at every tier, with a round-trip CI
+  test.
+
+## Contracts (docs/ARCHITECTURE.md is authoritative)
+
+- **API:** uvicorn `family_history.app:app` on 8000. `/health` is liveness; `/ready` checks the DB
+  and migrations. Metrics on :9090. OpenAPI snapshot in `packages/contracts/openapi.json`.
+- **Web:** Next.js 16.3.8 standalone on 3000, `/api/health`. Hosts: `fh.madfam.io` for the
+  landing, `fh-app.madfam.io` for the app, `fh-api.madfam.io` for the API.
+- **Auth:** Janua issuer `https://auth.madfam.io`, audience `family-history-api`. The web app uses
+  its own session secret (never the Janua client secret). `FH_AUTH_DISABLED` is honoured only in
+  local or test.
+- **Early access:** a fail-closed allowlist (`FH_EARLY_ACCESS_ALLOWLIST`). Production holds no real
+  family data until the backup restore drill passes.
+
+## Ecosystem (consume, never rebuild)
+
+| Service | Role |
+|---|---|
+| Janua | Identity, organizations, entitlements, transactional email |
+| Dhanam | Billing |
+| Selva | LLM |
+| tlacuilo | OCR |
+| ceq | Generative media |
+| PhyndCRM | Consent |
+| marca | QR |
+| Angelia Courier | Third-party messaging |
+| Enclii | Deploy, secrets, Postgres, object storage |
+| Plausible | Analytics (self-hosted) |
+
+## Conventions
+
+- Code, identifiers, commits and PRs in English; family-facing copy in es-MX first.
+- Source files stay under 600 lines; 800 fails CI.
+- GitHub Actions pinned by SHA; GitHub-hosted runners only (`ubuntu-24.04`).
+- Agents never merge their own PRs. Every agent commit carries its `Co-Authored-By` trailer.

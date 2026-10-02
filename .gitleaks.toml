@@ -1,0 +1,18 @@
+# gitleaks configuration for family-history (CI job `secrets`, run over the FULL git history with
+# --redact, so a finding never prints the value). Default ruleset plus the shapes specific to
+# this service. A hit in history means the value was exposed: rotate it first. Never "fix" a
+# finding by widening an allowlist.
+
+title = "family-history"
+
+[extend]
+useDefault = true
+
+# Janua OAuth client ids are names only in this public repo; the literal ids live in the
+# platform's secret store and must never be committed (repo-boundary contract).
+[[rules]]
+id = "janua-client-id-literal"
+description = "Janua OAuth client id literal (jnc_...)"
+regex = '''\b(jnc_[A-Za-z0-9_-]{8,})\b'''
+secretGroup = 1
+keywords = ["jnc_"]

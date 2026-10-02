@@ -1,0 +1,34 @@
+# family-history
+
+> Codename for a Spanish-first, open-source (AGPL-3.0-only) family-history platform by
+> Innovaciones MADFAM. Families build their tree from evidence and keep their living memory:
+> stories, voice interviews, photos and documents. Built for Mexican and binational families
+> first. Status: incubating; see docs/HONEST_STATUS.md.
+
+Boundary checkpoint (2026-10-01): public repository. Operational detail lives in MADFAM's private
+internal-devops repository under the repo-boundary contract.
+
+## Invariants
+
+- This repository holds synthetic data only: no real person, family, photo, CURP or RFC.
+- Living people are private by default (the 110-year rule). Nothing about them is ever public.
+- Facts are assertions with citations. AI produces suggestions, never facts.
+- Export is free at every tier: GEDCOM 7, GEDZIP, GEDCOM 5.5.1 and native JSON.
+- Identity comes from Janua (RS256, audience `family-history-api`). LLMs go only through Selva.
+  No provider keys in this repo.
+- Never: DNA, CURP collection, data sale, voice or face cloning of real people.
+
+## Docs
+
+- [AGENTS.md](AGENTS.md): canonical instructions, doctrines and layout
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): fixed contracts (ports, health paths, env names, hosts, v1 API)
+- [docs/PRIVACY.md](docs/PRIVACY.md): privacy rules the product enforces
+- [docs/HONEST_STATUS.md](docs/HONEST_STATUS.md): what works today
+- [ECOSYSTEM.md](ECOSYSTEM.md): which MADFAM service owns which capability
+- [docs/adr/](docs/adr/): decisions
+
+## Code
+
+- `api/src/family_history/`: Python service and the pure genealogy library
+- `apps/web/`: Next.js landing and app
+- `packages/contracts/`: generated OpenAPI and schemas
