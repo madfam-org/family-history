@@ -80,8 +80,12 @@ matters.
 2. **Take the secrets in** (table above). The web's Janua client comes from Enclii's OIDC provisioner,
    using the registration in `janua.client.yaml`: a confidential client with the exact redirect URI
    `https://fh-app.madfam.io/auth/callback`.
-3. **Grant the build what it needs:** the repository secret `ENCLII_CALLBACK_TOKEN`, and pull access for
-   the cluster to the two GHCR packages.
+3. **Grant the build what it needs:**
+   - the repository secret `ENCLII_CALLBACK_TOKEN`;
+   - pull access for the cluster to the two GHCR packages;
+   - an Enclii `build-publish` that pins its own actions by commit SHA. This repository requires SHA-pinned
+     actions, and the requirement reaches inside called reusable workflows. Until Enclii's workflow pins
+     its actions, GitHub refuses the Build & Deploy run before any job starts.
 4. **Dispatch Build & Deploy** with both services. Both digests are pinned on main, the migrate hook runs,
    and the pods roll.
 5. **Wire the hosts.** Enclii provisions the three domains and their tunnel routes from `enclii.yaml`. Each

@@ -52,6 +52,19 @@ These are things other lanes must provide.
 - **Synthetic lexicon.** `family_history.domain.synth.synthetic_lexicon()` may return strings or any
   nesting of mappings and iterables of strings. The name check skips with a notice until it exists.
 
+## Repository policy that shapes this lane
+
+The repository requires every action to be pinned to a full commit SHA, and the policy also applies inside
+called reusable workflows. This has two consequences:
+
+- **Org quality gates.** `madfam-quality-gates.yml` uses tag-pinned actions, so the `quality-gates` job
+  does not call it. Instead it runs the same gate scripts, from the same pinned commit of
+  `madfam-org/.github`, through SHA-pinned actions. Switch back to `uses:` once the org workflow pins its
+  actions.
+- **Build & Deploy.** Enclii's `build-publish.yml`, both at `v1.0.0-alpha.14` and on enclii main, uses
+  tag-pinned actions. The first dispatch will be refused until Enclii pins them, and the caller then bumps
+  its SHA.
+
 ## How it was verified
 
 Run locally before each push:

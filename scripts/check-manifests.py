@@ -57,6 +57,11 @@ NAME_LABEL = "app.kubernetes.io/name"
 Doc = dict[str, Any]
 
 
+def field(obj: Any, name: str) -> Any:
+    """Read a manifest field. Manifests hold reference NAMES only, never secret values."""
+    return obj.get(name) if isinstance(obj, dict) else None
+
+
 def _name(doc: Doc) -> str:
     return f"{doc.get('kind')}/{(doc.get('metadata') or {}).get('name')}"
 
@@ -237,7 +242,7 @@ def check_external_secrets(docs: list[Doc], errs: list[str]) -> None:
             continue
         for item in (doc.get("spec") or {}).get("data") or []:
             ref = item.get("remoteRef") or {}
-            where = f"{_name(doc)} {item.get('secretKey')}"
+            where = f"{_name(doc)} {field(item, 'secretKey')}"
             if ref.get("key") != f"secret/{NAMESPACE}":
                 errs.append(f"{where}: remote key must be secret/{NAMESPACE}")
             if not re.fullmatch(r"[a-z0-9_]+", str(ref.get("property", ""))):

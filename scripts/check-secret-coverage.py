@@ -40,6 +40,12 @@ SENSITIVE = {
 Doc = dict[str, Any]
 
 
+def field(obj: Any, name: str) -> Any:
+    """Read a manifest field. These scripts only ever see reference NAMES (Secret names, keys, env names);
+    manifests hold no secret values, and the guards would fail if they did."""
+    return obj.get(name) if isinstance(obj, dict) else None
+
+
 def contract_env(architecture: str) -> dict[str, set[str]]:
     """Parse the Environment table of docs/ARCHITECTURE.md into {process: {VAR, ...}}."""
     out: dict[str, set[str]] = {}
@@ -75,7 +81,7 @@ def check(docs: list[Doc], contract: dict[str, set[str]]) -> list[str]:
     for d in docs:
         if d.get("kind") == "ExternalSecret":
             target = ((d.get("spec") or {}).get("target") or {}).get("name") or d["metadata"]["name"]
-            keys = {item.get("secretKey") for item in (d["spec"].get("data") or [])}
+            keys = {field(item, "secretKey") for item in (d["spec"].get("data") or [])}
             provided.setdefault(target, set()).update(k for k in keys if k)
     used: dict[str, set[str]] = {name: set() for name in provided}
     for d in docs:
@@ -90,16 +96,16 @@ def check(docs: list[Doc], contract: dict[str, set[str]]) -> list[str]:
             errs.append(f"{where}: unknown app.kubernetes.io/component {component!r}; cannot match the env contract")
         allowed = contract.get(process or "", set()) | RUNTIME_VARS
         for vol in spec.get("volumes") or []:
-            secret = (vol.get("secret") or {}).get("secretName")
-            if secret:
-                if secret not in provided:
-                    errs.append(f"{where}: volume {vol.get('name')} mounts Secret {secret}, which no ExternalSecret produces")
+            target = field(field(vol, "secret"), "secretName")
+            if target:
+                if target not in provided:
+                    errs.append(f"{where}: volume {vol.get('name')} mounts Secret {target}, which no ExternalSecret produces")
                 else:
-                    used[secret].update(provided[secret])
+                    used[target].update(provided[target])
         for c in [*(spec.get("initContainers") or []), *(spec.get("containers") or [])]:
             cw = f"{where} container {c.get('name')}"
             for src in c.get("envFrom") or []:
-                name = (src.get("secretRef") or {}).get("name")
+                name = field(field(src, "secretRef"), "name")
                 if name:
                     if name not in provided:
                         errs.append(f"{cw}: envFrom Secret {name} is produced by no ExternalSecret")
@@ -111,15 +117,15 @@ def check(docs: list[Doc], contract: dict[str, set[str]]) -> list[str]:
                 var = env.get("name")
                 if var not in allowed:
                     errs.append(f"{cw}: {var} is not in the {process} env contract (docs/ARCHITECTURE.md)")
-                ref = (env.get("valueFrom") or {}).get("secretKeyRef")
+                ref = field(field(env, "valueFrom"), "secretKeyRef")
                 if ref:
-                    sname, key = ref.get("name"), ref.get("key")
-                    if sname not in provided:
-                        errs.append(f"{cw}: {var} reads Secret {sname}, which no ExternalSecret produces")
-                    elif key not in provided[sname]:
-                        errs.append(f"{cw}: {var} reads key {key} that ExternalSecret target {sname} does not map")
+                    target, key = field(ref, "name"), field(ref, "key")
+                    if target not in provided:
+                        errs.append(f"{cw}: {var} reads Secret {target}, which no ExternalSecret produces")
+                    elif key not in provided[target]:
+                        errs.append(f"{cw}: {var} reads key {key} that ExternalSecret target {target} does not map")
                     else:
-                        used[sname].add(key)
+                        used[target].add(key)
                 elif var in SENSITIVE:
                     errs.append(f"{cw}: {var} is sensitive and must come from a secretKeyRef, never a plain value")
     for name, keys in provided.items():

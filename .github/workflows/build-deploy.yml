@@ -17,6 +17,12 @@ name: Build & Deploy
 # .github/workflows/build-publish.yml from the current SHA to it, re-check the named secrets below against
 # its `on.workflow_call.secrets`, then change the SHA and its comment together.
 #
+# BLOCKER BEFORE THE FIRST DISPATCH: this repository requires every action to be pinned to a full commit SHA,
+# and the policy reaches inside called reusable workflows. build-publish.yml at this SHA (and on enclii main
+# as of 2026-10-01) still uses tag-pinned actions (actions/checkout@v7, docker/*, sigstore/cosign-installer),
+# so GitHub refuses the run before any job starts. Bump this pin to an Enclii commit whose build-publish pins
+# its actions by SHA (docs/DEPLOYMENT.md, "First deploy").
+#
 # DISPATCH ONLY for now. Push-on-main (with `paths-ignore: ['**.md', 'docs/**']`) is switched on in its own
 # pull request once the project is onboarded to Enclii (docs/DEPLOYMENT.md). Until then nothing deploys by
 # itself, and a dispatch before onboarding only builds and pins images nobody runs.

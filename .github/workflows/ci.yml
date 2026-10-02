@@ -156,18 +156,41 @@ jobs:
           exit "$rc"
 
   quality-gates:
-    name: Org quality gates
-    # The org workflow defaults to the self-hosted pool with no fork guard, so the runner is passed explicitly.
-    uses: madfam-org/.github/.github/workflows/madfam-quality-gates.yml@37560a3d87b883178f5a66a6a07c461263149858 # main (2026-09-01)
-    with:
-      runner: ubuntu-24.04
-      byte_check: true
-      byte_text_exts: ".ts,.tsx,.js,.mjs,.cjs,.css,.md,.sql,.json,.yml,.yaml,.sh,.py,.toml,.txt,.ged"
-      size_check: true
-      size_baseline: scripts/size-limit-baseline.json
-      size_include: "api/src/:.py,api/tests/:.py,apps/web/src/:.ts:.tsx,packages/:.ts:.tsx,scripts/:.py:.sh"
-      size_warn_at: 600
-      size_fail_at: 800
+    name: Org quality gates (byte and file-size)
+    # The org gates (madfam-org/.github, madfam-quality-gates.yml) cannot be CALLED from this repository:
+    # it requires every action to be pinned to a full commit SHA, and that reusable workflow uses
+    # tag-pinned actions/checkout@v4 and actions/setup-node@v4, so GitHub refuses the run before any job
+    # starts. This job runs the SAME gate scripts from the SAME pinned commit of madfam-org/.github, with
+    # the same thresholds, through SHA-pinned actions. Switch back to `uses:` once the org workflow pins
+    # its actions by SHA.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GATES_SHA: 37560a3d87b883178f5a66a6a07c461263149858 # madfam-org/.github main (2026-09-01)
+      TSX_VERSION: 4.23.15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: madfam-org/.github
+          ref: ${{ env.GATES_SHA }}
+          path: .madfam-gates
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "20"
+      - name: Byte gate (control bytes, BOM, U+2028/U+2029)
+        run: |
+          node .madfam-gates/scripts/check-source-bytes.mjs \
+            --text-exts ".ts,.tsx,.js,.mjs,.cjs,.css,.md,.sql,.json,.yml,.yaml,.sh,.py,.toml,.txt,.ged" \
+            --code-exts ".ts,.tsx,.js,.mjs,.cjs"
+      - name: File-size gate (warn over 600 lines, fail over 800; empty baseline)
+        run: |
+          npx --yes "tsx@${TSX_VERSION}" .madfam-gates/scripts/check-file-size.ts \
+            --baseline scripts/size-limit-baseline.json \
+            --include "api/src/:.py,api/tests/:.py,apps/web/src/:.ts:.tsx,packages/:.ts:.tsx,scripts/:.py:.sh" \
+            --warn-at 600 \
+            --fail-at 800
 
   secrets:
     name: Secret scan (full history)
