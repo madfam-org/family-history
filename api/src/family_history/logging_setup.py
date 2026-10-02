@@ -47,7 +47,7 @@ _JWT_RE: Final = re.compile(r"eyJ[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-
 # Attributes every LogRecord has; anything else came in through `extra=`.
 _RESERVED: Final = frozenset(
     vars(logging.LogRecord("x", logging.INFO, "x", 0, "x", None, None)).keys()
-) | {"message", "asctime", "taskName"}
+) | {"message", "asctime", "taskName", "color_message"}
 
 
 def scrub(text: str) -> str:
@@ -119,8 +119,9 @@ def configure_logging(level: str = "INFO") -> None:
         uv_logger = logging.getLogger(name)
         uv_logger.handlers = []
         uv_logger.propagate = True
-    # HTTP clients log full URLs (query strings included) at INFO.
-    for name in ("httpx", "httpcore", "urllib3"):
+    # HTTP clients log full URLs (query strings included) at INFO; Alembic logs on every
+    # readiness probe.
+    for name in ("httpx", "httpcore", "urllib3", "alembic"):
         logging.getLogger(name).setLevel(logging.WARNING)
     access = logging.getLogger("uvicorn.access")
     access.handlers = []

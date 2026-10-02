@@ -26,8 +26,8 @@ def test_ready_reports_db_and_migrations(client: TestClient) -> None:
 def test_downgrade_and_upgrade_round_trip(
     migrated: PgTarget, engine: Engine, client: TestClient
 ) -> None:
-    if migrated.created_database is None:
-        pytest.skip("only on the throwaway database the suite created")
+    if not migrated.throwaway:
+        pytest.skip("only on a throwaway database (created here, or CI's)")
     downgrade_to_base(migrated.app_url)
     try:
         with engine.connect() as conn:
@@ -39,3 +39,23 @@ def test_downgrade_and_upgrade_round_trip(
         upgrade_to_head(migrated.app_url)
     with engine.connect() as conn:
         assert is_at_head(conn)
+
+
+def test_models_match_migrations(engine: Engine) -> None:
+    """Autogenerate finds nothing to do: the migrations create exactly what the models say."""
+    from alembic.autogenerate import compare_metadata
+    from alembic.migration import MigrationContext
+
+    from family_history.models import Base
+
+    # Mirrors env.py's include_object (importing env.py would run the migrations).
+    optional = {"ix_person_search_trgm", "ix_place_search_trgm"}
+
+    def keep(obj: object, name: str | None, type_: str, reflected: bool, other: object) -> bool:
+        return not (type_ == "index" and reflected and name in optional)
+
+    with engine.connect() as conn:
+        context = MigrationContext.configure(
+            conn, opts={"compare_type": True, "include_object": keep}
+        )
+        assert compare_metadata(context, Base.metadata) == []

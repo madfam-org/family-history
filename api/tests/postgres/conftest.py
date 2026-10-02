@@ -6,7 +6,10 @@ a CI service), the suite creates a fresh database owned by a new LOGIN role that
 superuser nor BYPASSRLS, migrates it as that role and connects the app as that role. Because the
 migration FORCEs row-level security, the policies bind the table owner, so the tests exercise
 RLS exactly as production does. Otherwise the URL's own role is used as-is, after checking that
-it does not bypass RLS. The database and role are dropped at the end of the session.
+it does not bypass RLS (CI's split: `FH_TEST_DATABASE_URL` is a NOSUPERUSER NOBYPASSRLS role
+that owns the test database). When `FH_TEST_ADMIN_DATABASE_URL` is also set, that superuser
+installs `pg_trgm` in the test database first. A database and role the suite created are dropped
+at the end of the session.
 """
 
 from __future__ import annotations
@@ -52,6 +55,13 @@ class PgTarget:
     app_url: str
     created_database: str | None
 
+    @property
+    def throwaway(self) -> bool:
+        """Safe to downgrade: a database this suite created, or CI's (admin URL present)."""
+        return self.created_database is not None or bool(
+            os.environ.get("FH_TEST_ADMIN_DATABASE_URL")
+        )
+
 
 def _privileged(engine: Engine) -> bool:
     with engine.connect() as conn:
@@ -64,12 +74,27 @@ def _privileged(engine: Engine) -> bool:
     return bool(row)
 
 
+def _install_extensions(database: str | None) -> None:
+    """Optional: let the CI superuser install pg_trgm so the trigram indexes get created."""
+    superuser_url = os.environ.get("FH_TEST_ADMIN_DATABASE_URL")
+    if not superuser_url or not database:
+        return
+    url = make_url(normalize_database_url(superuser_url)).set(database=database)
+    engine = create_engine(url, isolation_level="AUTOCOMMIT")
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm"))
+    finally:
+        engine.dispose()
+
+
 @pytest.fixture(scope="session")
 def pg_target() -> Iterator[PgTarget]:
     admin_url = normalize_database_url(os.environ["FH_TEST_DATABASE_URL"])
     admin = create_engine(admin_url, isolation_level="AUTOCOMMIT")
     if not _privileged(admin):
         admin.dispose()
+        _install_extensions(make_url(admin_url).database)
         yield PgTarget(app_url=admin_url, created_database=None)
         return
     password = secrets.token_hex(16)

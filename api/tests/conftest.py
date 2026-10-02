@@ -78,6 +78,7 @@ def make_token(rsa_key: rsa.RSAPrivateKey) -> TokenFactory:
             "email": f"{sub}@example.test",
             "email_verified": True,
             "name": "Persona Sintética",
+            "scope": "openid fh:read fh:write",
         }
         claims.update(overrides)
         claims = {k: v for k, v in claims.items() if v is not None}

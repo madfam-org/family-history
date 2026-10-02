@@ -27,6 +27,13 @@ logger = logging.getLogger("family_history.auth")
 
 ALLOWED_ALGORITHMS = ("RS256",)
 
+# Scopes declared in janua.client.yaml. `fh:admin` implies the others.
+SCOPE_READ = "fh:read"
+SCOPE_WRITE = "fh:write"
+SCOPE_EXPORT = "fh:export"
+SCOPE_ADMIN = "fh:admin"
+_READ_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
+
 SYNTHETIC_SUB = "synthetic-local-user"
 SYNTHETIC_EMAIL = "persona.sintetica@example.test"
 SYNTHETIC_NAME = "Persona Sintética"
@@ -40,6 +47,7 @@ class Principal:
     email: str | None = None
     name: str | None = None
     orgs: tuple[str, ...] = field(default_factory=tuple)
+    scopes: frozenset[str] = field(default_factory=frozenset)
     email_verified: bool | None = None
     synthetic: bool = False
 
@@ -66,6 +74,18 @@ def _parse_orgs(raw: Any) -> tuple[str, ...]:
             if isinstance(org_id, str) and org_id:
                 orgs.append(org_id)
     return tuple(orgs)
+
+
+def _parse_scopes(claims: dict[str, Any]) -> frozenset[str]:
+    """OAuth scopes from `scope` (space-separated) or `scp` (list or string)."""
+    scopes: set[str] = set()
+    for key in ("scope", "scp"):
+        raw = claims.get(key)
+        if isinstance(raw, str):
+            scopes.update(part for part in raw.split() if part)
+        elif isinstance(raw, list):
+            scopes.update(part for part in raw if isinstance(part, str) and part)
+    return frozenset(scopes)
 
 
 def _optional_str(claims: dict[str, Any], key: str) -> str | None:
@@ -130,6 +150,7 @@ class TokenVerifier:
             email=_optional_str(claims, "email"),
             name=_optional_str(claims, "name"),
             orgs=_parse_orgs(claims.get("orgs")),
+            scopes=_parse_scopes(claims),
             email_verified=verified if isinstance(verified, bool) else None,
         )
 
@@ -139,6 +160,7 @@ def synthetic_principal() -> Principal:
         sub=SYNTHETIC_SUB,
         email=SYNTHETIC_EMAIL,
         name=SYNTHETIC_NAME,
+        scopes=frozenset({SCOPE_READ, SCOPE_WRITE, SCOPE_EXPORT, SCOPE_ADMIN}),
         email_verified=True,
         synthetic=True,
     )
@@ -178,13 +200,34 @@ def current_principal(request: Request, settings: AppSettings) -> Principal:
     return get_verifier(request).verify(token)
 
 
+def has_scope(principal: Principal, scope: str) -> bool:
+    return scope in principal.scopes or SCOPE_ADMIN in principal.scopes
+
+
+def required_scope(method: str) -> str:
+    """Reads need `fh:read`; every other method needs `fh:write`."""
+    return SCOPE_READ if method.upper() in _READ_METHODS else SCOPE_WRITE
+
+
 def require_early_access(
+    request: Request,
     principal: Annotated[Principal, Depends(current_principal)],
     settings: AppSettings,
 ) -> Principal:
+    """Every `/v1` route except `/v1/me` and the waitlist: early access plus the scope that
+    matches the method."""
     if not has_early_access(principal, settings):
         AUTH_FAILURES.labels(code="early_access_required").inc()
         raise APIError(403, "early_access_required", "Early access is required.")
+    scope = required_scope(request.method)
+    if not has_scope(principal, scope):
+        AUTH_FAILURES.labels(code="insufficient_scope").inc()
+        raise APIError(
+            403,
+            "insufficient_scope",
+            f"The token lacks the {scope} scope.",
+            headers={"WWW-Authenticate": f'Bearer error="insufficient_scope", scope="{scope}"'},
+        )
     return principal
 
 

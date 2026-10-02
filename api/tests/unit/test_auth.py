@@ -224,3 +224,41 @@ def test_auth_disabled_is_ignored_without_the_flag(jwk_client: StubJWKClient) ->
         return {"sub": principal.sub}
 
     assert TestClient(app).get("/probe").status_code == 401
+
+
+def test_scopes_are_parsed(verifier: TokenVerifier, make_token: TokenFactory) -> None:
+    assert verifier.verify(make_token(scope="fh:read  openid")).scopes == {"fh:read", "openid"}
+    assert verifier.verify(make_token(scope=None, scp=["fh:write"])).scopes == {"fh:write"}
+
+
+@pytest.mark.parametrize(
+    ("scope", "get_status", "post_status"),
+    [
+        ("fh:read", 503, 403),
+        ("fh:write", 403, 503),
+        ("fh:admin", 503, 503),
+        (None, 403, 403),
+    ],
+)
+def test_read_and_write_scopes_are_enforced(
+    client: TestClient,
+    make_token: TokenFactory,
+    scope: str | None,
+    get_status: int,
+    post_status: int,
+) -> None:
+    headers = {"Authorization": f"Bearer {make_token('user-ana', scope=scope)}"}
+    read = client.get("/v1/spaces", headers=headers)
+    write = client.post("/v1/spaces", json={"name": "Familia"}, headers=headers)
+    assert read.status_code == get_status
+    assert write.status_code == post_status
+    for response in (read, write):
+        if response.status_code == 403:
+            assert response.json()["error"]["code"] == "insufficient_scope"
+            assert "insufficient_scope" in response.headers["www-authenticate"]
+
+
+def test_me_needs_no_scope(client: TestClient, make_token: TokenFactory) -> None:
+    token = make_token("user-zeta", scope=None)
+    response = client.get("/v1/me", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
