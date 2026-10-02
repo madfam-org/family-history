@@ -24,6 +24,7 @@ internal-devops repository under the repo-boundary contract.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): fixed contracts (ports, health paths, env names, hosts, v1 API)
 - [docs/PRIVACY.md](docs/PRIVACY.md): privacy rules the product enforces
 - [docs/HONEST_STATUS.md](docs/HONEST_STATUS.md): what works today
+- [docs/ROADMAP.md](docs/ROADMAP.md): milestones, launch gates, open decisions, dependency holds
 - [ECOSYSTEM.md](ECOSYSTEM.md): which MADFAM service owns which capability
 - [docs/adr/](docs/adr/): decisions
 

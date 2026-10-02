@@ -17,6 +17,12 @@ updates:
       python-dev:
         dependency-type: development
         update-types: [minor, patch]
+    ignore:
+      # SQLAlchemy 2.1 changes Select/Row typing and breaks strict mypy across the estate; the
+      # `<2.1` cap in api/pyproject.toml is deliberate. Lift this rule in the same PR that migrates
+      # the typing on purpose (see docs/ROADMAP.md, "Dependency holds").
+      - dependency-name: sqlalchemy
+        versions: [">=2.1"]
 
   - package-ecosystem: npm
     directory: /
