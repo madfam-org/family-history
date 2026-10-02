@@ -4,13 +4,18 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime
 from typing import Annotated, Any
 
 from pydantic import Field, JsonValue, StringConstraints, field_validator
 
 from family_history.models.enums import AssertionStatus, Sensitivity, SourceType, SubjectType
-from family_history.routers.schemas.common import ApiModel, InputModel, LongText, MediumText
+from family_history.routers.schemas.common import (
+    ApiModel,
+    InputModel,
+    LongText,
+    MediumText,
+    UtcDateTime,
+)
 
 LocatorKey = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,39}$")]
 LocatorValue = Annotated[str, StringConstraints(min_length=1, max_length=300)]
@@ -34,7 +39,7 @@ class Source(ApiModel):
     title: str
     repository: str | None
     locator: dict[str, str]
-    created_at: datetime
+    created_at: UtcDateTime
 
 
 class CitationCreate(InputModel):
@@ -53,7 +58,7 @@ class Citation(ApiModel):
     partida: str | None
     quality: int | None
     extracted_text: str | None
-    created_at: datetime
+    created_at: UtcDateTime
 
 
 def _bounded(value: Any) -> Any:
@@ -99,4 +104,4 @@ class Assertion(ApiModel):
     citation_ids: list[uuid.UUID]
     supersedes_id: uuid.UUID | None
     sensitivity: Sensitivity | None
-    created_at: datetime
+    created_at: UtcDateTime

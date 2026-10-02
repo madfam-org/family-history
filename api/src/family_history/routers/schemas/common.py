@@ -2,9 +2,18 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, StringConstraints
+from pydantic import AfterValidator, BaseModel, ConfigDict, StringConstraints
+
+
+def _as_utc(value: datetime) -> datetime:
+    return value.astimezone(UTC) if value.tzinfo else value.replace(tzinfo=UTC)
+
+
+# Timestamps always leave the API in UTC, whatever the database session's time zone.
+UtcDateTime = Annotated[datetime, AfterValidator(_as_utc)]
 
 
 class ApiModel(BaseModel):

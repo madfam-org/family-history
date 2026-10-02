@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime
+from datetime import date
 from typing import Annotated
 
 from pydantic import Field, StringConstraints, model_validator
@@ -17,7 +17,13 @@ from family_history.models.enums import (
     UnionQualifier,
     UnionStatus,
 )
-from family_history.routers.schemas.common import ApiModel, InputModel, LongText, MediumText
+from family_history.routers.schemas.common import (
+    ApiModel,
+    InputModel,
+    LongText,
+    MediumText,
+    UtcDateTime,
+)
 
 EventType = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{1,49}$")]
 # GEDCOM 7 DateValue text: uppercase tokens such as `ABT 1890`, `BET 1850 AND 1860`,
@@ -70,8 +76,8 @@ class Event(ApiModel):
     sensitivity: Sensitivity | None
     participants: list[Participant]
     created_by: str
-    created_at: datetime
-    updated_at: datetime
+    created_at: UtcDateTime
+    updated_at: UtcDateTime
 
 
 class RelationshipCreate(InputModel):
@@ -108,7 +114,7 @@ class Relationship(ApiModel):
     to_person_id: uuid.UUID
     qualifier: str
     status: UnionStatus | None
-    created_at: datetime
+    created_at: UtcDateTime
 
 
 class PlaceCreate(InputModel):
@@ -135,4 +141,4 @@ class Place(ApiModel):
     valid_from: date | None
     valid_to: date | None
     inegi_code: str | None
-    created_at: datetime
+    created_at: UtcDateTime

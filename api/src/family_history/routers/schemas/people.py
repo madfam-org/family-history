@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
 from typing import Annotated
 
 from pydantic import Field, model_validator
@@ -15,6 +14,7 @@ from family_history.routers.schemas.common import (
     InputModel,
     LangTag,
     ShortText,
+    UtcDateTime,
 )
 from family_history.routers.schemas.events import Event, Relationship
 from family_history.routers.schemas.evidence import Citation
@@ -114,5 +114,5 @@ class Person(ApiModel):
     relationships: list[Relationship]
     citations: list[Citation]
     created_by: str
-    created_at: datetime
-    updated_at: datetime
+    created_at: UtcDateTime
+    updated_at: UtcDateTime

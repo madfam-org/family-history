@@ -119,6 +119,9 @@ def configure_logging(level: str = "INFO") -> None:
         uv_logger = logging.getLogger(name)
         uv_logger.handlers = []
         uv_logger.propagate = True
+    # HTTP clients log full URLs (query strings included) at INFO.
+    for name in ("httpx", "httpcore", "urllib3"):
+        logging.getLogger(name).setLevel(logging.WARNING)
     access = logging.getLogger("uvicorn.access")
     access.handlers = []
     access.propagate = False

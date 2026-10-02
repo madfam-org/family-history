@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
 
 from family_history.models.enums import Role
-from family_history.routers.schemas.common import ApiModel, InputModel, ShortText
+from family_history.routers.schemas.common import ApiModel, InputModel, ShortText, UtcDateTime
 
 
 class SpaceSummary(ApiModel):
@@ -18,8 +17,8 @@ class SpaceSummary(ApiModel):
 
 class Space(SpaceSummary):
     janua_organization_id: str | None
-    created_at: datetime
-    updated_at: datetime
+    created_at: UtcDateTime
+    updated_at: UtcDateTime
 
 
 class SpaceCreate(InputModel):
@@ -33,7 +32,7 @@ class SpaceRename(InputModel):
 class Member(ApiModel):
     user_sub: str
     role: Role
-    created_at: datetime
+    created_at: UtcDateTime
 
 
 class Me(ApiModel):

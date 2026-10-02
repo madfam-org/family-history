@@ -152,9 +152,12 @@ def events_out(ctx: SpaceContext, events: Sequence[Event]) -> list[EventOut]:
     place_ids = [event.place_id for event in events if event.place_id is not None]
     places: dict[uuid.UUID, str] = {}
     if place_ids:
-        places = dict(
-            ctx.db.execute(select(Place.id, Place.name).where(Place.id.in_(place_ids))).tuples()
-        )
+        places = {
+            place_id: name
+            for place_id, name in ctx.db.execute(
+                select(Place.id, Place.name).where(Place.id.in_(place_ids))
+            ).tuples()
+        }
 
     out: list[EventOut] = []
     for event in events:

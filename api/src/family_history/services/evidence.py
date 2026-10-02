@@ -174,6 +174,7 @@ def append_version(
             "citation_required", "Accepting an assertion needs at least one citation."
         )
     row = Assertion(
+        id=uuid.uuid4(),
         family_space_id=ctx.space_id,
         subject_type=previous.subject_type,
         subject_id=previous.subject_id,
