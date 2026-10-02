@@ -1,6 +1,6 @@
 # Roadmap
 
-> Last Updated: 2026-10-01
+> Last Updated: 2026-10-02
 >
 > Boundary checkpoint (2026-10-01): public roadmap. It lists product milestones, launch gates and
 > follow-ups only. Operator procedures, owner gates and internal decisions are tracked in MADFAM's
@@ -14,7 +14,7 @@ in what order. Milestones are defined by scope and exit gates, not by dates.
 | Milestone | Scope | Exit gate | State |
 |---|---|---|---|
 | **M0 Cimientos** | Repository, licence, agent docs, contracts, CI gates and guards, deployment manifests, the landing and the app shell | Working hosts live (noindex), CI green, sign-in works for allowlisted accounts | Code on `main`; **deployment pending** (platform onboarding, sign-in client, secrets, DNS) |
-| **M1 Árbol** | Wiring the genealogy library and GEDCOM engine into the API; tree view; relationship and godparent editors; kinship lookup; GEDCOM import; the free full export with a byte-identical round trip; a Postgres-backed job queue and worker | Real use on synthetic families only; export round trip byte-identical in CI | Engines and API core on `main`; **integration in progress** |
+| **M1 Árbol** | Wiring the genealogy library and GEDCOM engine into the API; tree view; relationship and godparent editors; kinship lookup; GEDCOM import; the free full export with a byte-identical round trip; a Postgres-backed job queue and worker | Real use on synthetic families only; export round trip byte-identical in CI | **Code on `main`** (API and web integration, import and export, the worker); the round trip is byte-identical in CI. Real use waits on M0's deployment |
 | **M2 Historias** | Written stories (relatos); guided interviews in Spanish (`usted` for elders); in-browser recording; invitations by email and `wa.me` links; timeline; private ofrenda view; consent records; privacy requests and «Quítame de este árbol» | Privacy notice reviewed by counsel; privacy-request deadlines tracked | Not started |
 | **M3 Asistencia** | Story drafts and summaries as AI *suggestions* (MADFAM inference gateway, `restricted` sensitivity); reading actas and parish books (document-reading service, new document types contributed upstream); photo restoration as labelled derivatives; read-only agent tools generated from the OpenAPI | The gateway can serve `restricted` data; a speech-to-text owner is decided | Not started |
 | **M4 Comunidad** | Paid tiers (`free`, `family`, `society`) once priced; opt-in memorial pages for the deceased with structured data; QR plaques; brand ruling and the move from working hosts to the product's own domain | Launch gates below | Not started |
@@ -40,6 +40,9 @@ No real family's data goes in before all of these hold:
 - **Tiers and prices:** shape (`free`, `family`, `society`) and prices, set through MADFAM's
   pricing process. Export stays free at every tier.
 - **Brand:** the public name and domain. `family-history` remains the internal codename (ADR 0001).
+- **What proves a death:** whether any current cited assertion about a death, burial or cremation
+  ends the living presumption (today's behaviour), or only accepted assertions do. Decided before
+  real data goes in.
 
 ## Dependency holds
 
@@ -63,3 +66,12 @@ Lift each hold deliberately, in its own PR, with the migration it needs.
 - **Token verification inside the cluster.** Pin the identity provider's signing-key thumbprints.
 - **Deploy workflow.** Builds run only on manual dispatch until onboarding is complete; then switch
   to push-on-main.
+- **Tree endpoint.** One request per tree (`/v1/people/{id}/tree`) instead of one per relative; the
+  tree view stops at 80 people until then.
+- **Media in imports.** GEDZIP media and `OBJE` records are skipped with a warning until the media
+  bucket lands.
+- **Worker.** Its own database role; an alert on failed jobs or a stale queue, with its runbook
+  entry; streaming imports (today a 25 MiB file is parsed in memory, peaking near 1.5 GiB).
+- **Web editing gaps.** Places, privacy and visibility, and citing sources.
+- **Diagnostics in Spanish.** Some GEDCOM engine diagnostics still show only their English message,
+  under «Detalle técnico».

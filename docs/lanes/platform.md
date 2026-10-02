@@ -102,7 +102,7 @@ There are two sources of secrets.
   secrets file. family-history mirrors this exactly: same key names, pooled key on the API and direct key
   on the migrate Job only.
 - **Not in the first deploy:** `FH_S3_*` (media is in the next wave; the API treats it as optional),
-  `REDIS_URL` (no worker yet) and `FH_SENTRY_DSN`.
+  `REDIS_URL` (no longer used: the worker's queue is in Postgres, ADR 0002) and `FH_SENTRY_DSN`.
 
 ## Operator steps (first deploy)
 

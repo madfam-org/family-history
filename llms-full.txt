@@ -21,9 +21,10 @@ The product is a Spanish-first, open-source family-history platform with two hal
 
 Who it is for: Mexican and binational families, phone-first. Spanish content, English second.
 
-Status (2026-10-01): incubating. The genealogy library, GEDCOM engine, API core, web app
-shell and platform CI are on main; the library is not yet wired into the API, and nothing is
-deployed. docs/HONEST_STATUS.md is authoritative.
+Status (2026-10-02): incubating. The genealogy library and the GEDCOM engine are wired into the
+API (dates, living status, search, kinship, compadrazgo, import and export jobs on a Postgres
+queue), and the web app has the tree view, the editors, the kinship lookup, import and export.
+Nothing is deployed. docs/HONEST_STATUS.md is authoritative.
 
 ## Hard rules
 
@@ -55,6 +56,10 @@ deployed. docs/HONEST_STATUS.md is authoritative.
   local or test.
 - **Early access:** a fail-closed allowlist (`FH_EARLY_ACCESS_ALLOWLIST`). Production holds no real
   family data until the backup restore drill passes.
+- **Worker:** `python -m family_history.worker`, the API image with another command, on a Postgres
+  job queue (ADR 0002); no Redis. Imports and exports are jobs; downloads expire after 24 hours.
+- **Waitlist:** closed in the API (`FH_WAITLIST_ENABLED`, `FH_AVISO_VERSION`) and in the web until
+  the privacy notice is reviewed by counsel.
 
 ## Ecosystem (consume, never rebuild)
 
