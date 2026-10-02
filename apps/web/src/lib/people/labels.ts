@@ -2,14 +2,25 @@
 export const EVENT_TYPE_KEYS = [
   "birth",
   "baptism",
+  "christening",
   "confirmation",
   "first_communion",
+  "quinceanera",
   "marriage",
   "civil_marriage",
   "religious_marriage",
+  "divorce",
   "death",
   "burial",
+  "cremation",
+  "emigration",
+  "immigration",
+  "naturalization",
   "residence",
+  "occupation",
+  "education",
+  "bracero_contract",
+  "border_crossing",
 ] as const;
 export type EventTypeKey = (typeof EVENT_TYPE_KEYS)[number] | "other";
 
@@ -23,6 +34,13 @@ const EVENT_ALIASES: Readonly<Record<string, EventTypeKey>> = {
   DEAT: "death",
   BURI: "burial",
   RESI: "residence",
+  DIV: "divorce",
+  CREM: "cremation",
+  EMIG: "emigration",
+  IMMI: "immigration",
+  NATU: "naturalization",
+  OCCU: "occupation",
+  EDUC: "education",
 };
 
 export function eventTypeKey(type: string): EventTypeKey {

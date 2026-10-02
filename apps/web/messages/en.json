@@ -230,8 +230,7 @@
       "more": "Show more people",
       "born": "Born: <mono>{date}</mono>",
       "died": "Died: <mono>{date}</mono>",
-      "treeTitle": "Family tree",
-      "treeBody": "The tree view arrives in the next stage. Meanwhile, people and their relationships are kept here."
+      "treeBody": "Open any person and choose “Family tree” to see their ancestors and descendants."
     },
     "personForm": {
       "title": "Add a person",
@@ -273,6 +272,7 @@
       "living": {
         "living": "Living",
         "deceased": "Deceased",
+        "presumed_deceased": "Presumed deceased",
         "unknown": "Unconfirmed"
       },
       "visibility": {
@@ -281,28 +281,7 @@
         "public_memorial": "Public memorial"
       },
       "sex": "Sex: {sex}",
-      "relatedPerson": "View related person",
-      "eventTypes": {
-        "birth": "Birth",
-        "baptism": "Baptism",
-        "confirmation": "Confirmation",
-        "first_communion": "First communion",
-        "marriage": "Marriage",
-        "civil_marriage": "Civil marriage",
-        "religious_marriage": "Religious marriage",
-        "death": "Death",
-        "burial": "Burial",
-        "residence": "Residence",
-        "other": "Other event"
-      },
-      "relationshipTypes": {
-        "parentOf": "Parent of this person",
-        "childOf": "Child of this person",
-        "union": "Union",
-        "other": "Other relationship"
-      },
       "pageTitle": "Person",
-      "birthNotSaved": "The person was saved, but the birth date was not: the server does not accept free-text dates yet. You can add it once that is available.",
       "citationFoja": "folio {value}",
       "citationPartida": "entry {value}"
     },
@@ -334,6 +313,19 @@
     "api_unreachable": "We could not reach the server. Please try later.",
     "api_not_configured": "This server has no API connection configured.",
     "invalid_response": "The server sent an unexpected response. Please try later.",
+    "ambiguous_date": "We won't guess that date. Write it another way.",
+    "invalid_date": "We could not read that date. Try writing it another way.",
+    "no_relation": "We found no recorded relationship between these people.",
+    "relationship_exists": "That relationship is already recorded.",
+    "file_too_large": "The file is too large. The limit is 25 MiB.",
+    "unsupported_file": "We do not recognise that kind of file. Use a .ged, a .gdz or a .json from “Take everything”.",
+    "download_expired": "The download link has expired. Prepare another download.",
+    "gedcom_invalid": "We could not read that file as GEDCOM. Check that it is a .ged or .gdz exported by a genealogy program.",
+    "native_export_invalid": "That .json file is not a complete copy exported from here (“Take everything”), or it is damaged.",
+    "empty_file": "The file is empty.",
+    "job_not_ready": "The file is still being prepared. Wait a moment.",
+    "association_is_principal": "That person is the event's principal; choose someone else as godparent or witness.",
+    "worker_timeout": "The process took too long and stopped. Try again; if it happens again, try a smaller file.",
     "unknown": "An unexpected error occurred."
   },
   "notFound": {

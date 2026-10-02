@@ -161,7 +161,8 @@ export async function handleCallback(request: Request, deps: HandlerDeps = {}): 
   }
 }
 
-function isSameOriginPost(request: Request, env: Env): boolean {
+/** True for a POST sent by a page of the app itself (Origin, else Sec-Fetch-Site). */
+export function isSameOriginPost(request: Request, env: Env = process.env): boolean {
   const origin = request.headers.get("origin");
   if (origin) return origin === appOrigin(env);
   return request.headers.get("sec-fetch-site") === "same-origin";
