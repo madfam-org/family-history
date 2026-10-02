@@ -9,11 +9,11 @@ from collections.abc import Iterable, Sequence
 from sqlalchemy import select
 
 from family_history.errors import unprocessable
-from family_history.models import Event, EventParticipant, Person, Place
-from family_history.models.enums import EventType, ParticipantRole, Sensitivity
+from family_history.models import Association, Event, EventParticipant, Person, Place
+from family_history.models.enums import AssociationRole, EventType, ParticipantRole, Sensitivity
 from family_history.routers.schemas.common import DateDisplay
 from family_history.routers.schemas.events import Event as EventOut
-from family_history.routers.schemas.events import Participant, ParticipantIn
+from family_history.routers.schemas.events import EventAssociation, Participant, ParticipantIn
 from family_history.services import dates
 from family_history.services.access import SpaceContext
 from family_history.services.privacy import sensitive_visible, treated_as_living, visible_people
@@ -106,8 +106,16 @@ def events_out(ctx: SpaceContext, events: Sequence[Event]) -> list[EventOut]:
     by_event: dict[uuid.UUID, list[EventParticipant]] = defaultdict(list)
     for row in participants:
         by_event[row.event_id].append(row)
+    associations = ctx.db.scalars(
+        select(Association)
+        .where(Association.event_id.in_(event_ids))
+        .order_by(Association.role, Association.person_id, Association.id)
+    ).all()
+    by_event_assoc: dict[uuid.UUID, list[Association]] = defaultdict(list)
+    for assoc in associations:
+        by_event_assoc[assoc.event_id].append(assoc)
     all_people = [row.person_id for row in participants]
-    visible = visible_person_ids(ctx, all_people)
+    visible = visible_person_ids(ctx, [*all_people, *(a.person_id for a in associations)])
     living = _living_by_person(ctx, all_people)
     place_ids = [event.place_id for event in events if event.place_id is not None]
     places: dict[uuid.UUID, str] = {}
@@ -147,6 +155,16 @@ def events_out(ctx: SpaceContext, events: Sequence[Event]) -> list[EventOut]:
                     Participant(person_id=row.person_id, role=ParticipantRole(row.role))
                     for row in rows
                     if row.person_id in visible
+                ],
+                associations=[
+                    EventAssociation(
+                        id=assoc.id,
+                        person_id=assoc.person_id,
+                        role=AssociationRole(assoc.role),
+                        phrase=assoc.phrase,
+                    )
+                    for assoc in by_event_assoc.get(event.id, [])
+                    if assoc.person_id in visible
                 ],
                 created_by=event.created_by,
                 created_at=event.created_at,

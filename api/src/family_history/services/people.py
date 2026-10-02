@@ -271,3 +271,16 @@ def detail(ctx: SpaceContext, person: Person) -> PersonOut:
         created_at=person.created_at,
         updated_at=person.updated_at,
     )
+
+
+def display_names(ctx: SpaceContext, ids: Sequence[uuid.UUID]) -> dict[uuid.UUID, str]:
+    """Display names of the people the caller can see among `ids`."""
+    wanted = list(dict.fromkeys(ids))
+    if not wanted:
+        return {}
+    rows = ctx.db.scalars(
+        select(Person).where(
+            Person.family_space_id == ctx.space_id, Person.id.in_(wanted), visible_people(ctx.sub)
+        )
+    ).all()
+    return {p.id: name_rules.display_name(name_rules.primary_name(p.names)) for p in rows}

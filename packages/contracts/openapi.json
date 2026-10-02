@@ -192,6 +192,110 @@
         "title": "AssertionStatusChange",
         "type": "object"
       },
+      "Association": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "event_id": {
+            "format": "uuid",
+            "title": "Event Id",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "person_id": {
+            "format": "uuid",
+            "title": "Person Id",
+            "type": "string"
+          },
+          "phrase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phrase"
+          },
+          "role": {
+            "$ref": "#/components/schemas/AssociationRole"
+          },
+          "space_id": {
+            "format": "uuid",
+            "title": "Space Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "space_id",
+          "event_id",
+          "person_id",
+          "role",
+          "phrase",
+          "created_at"
+        ],
+        "title": "Association",
+        "type": "object"
+      },
+      "AssociationCreate": {
+        "additionalProperties": false,
+        "description": "`person_id` took part in someone else's event: the padrino at a baptism, a witness at a\ncivil marriage. The godchild is the event's principal. `other` needs a `phrase`.",
+        "properties": {
+          "event_id": {
+            "format": "uuid",
+            "title": "Event Id",
+            "type": "string"
+          },
+          "person_id": {
+            "format": "uuid",
+            "title": "Person Id",
+            "type": "string"
+          },
+          "phrase": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phrase"
+          },
+          "role": {
+            "$ref": "#/components/schemas/AssociationRole"
+          }
+        },
+        "required": [
+          "event_id",
+          "person_id",
+          "role"
+        ],
+        "title": "AssociationCreate",
+        "type": "object"
+      },
+      "AssociationRole": {
+        "description": "A person's role at someone else's event. Maps to `domain.events.AssociationRole`\n(GEDCOM `ROLE`: GODP, WITN, OFFICIATOR, OTHER with a phrase).",
+        "enum": [
+          "godparent",
+          "witness",
+          "officiant",
+          "other"
+        ],
+        "title": "AssociationRole",
+        "type": "string"
+      },
       "Citation": {
         "properties": {
           "created_at": {
@@ -349,6 +453,71 @@
         "title": "CitationCreate",
         "type": "object"
       },
+      "CompadrazgoItem": {
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "label_en": {
+            "title": "Label En",
+            "type": "string"
+          },
+          "label_es": {
+            "description": "«madrina de bautizo», «compadre de boda».",
+            "title": "Label Es",
+            "type": "string"
+          },
+          "person_id": {
+            "format": "uuid",
+            "title": "Person Id",
+            "type": "string"
+          },
+          "relation": {
+            "$ref": "#/components/schemas/CompadrazgoRole",
+            "description": "What that person is to this one."
+          },
+          "sacrament": {
+            "$ref": "#/components/schemas/Occasion"
+          }
+        },
+        "required": [
+          "person_id",
+          "display_name",
+          "relation",
+          "sacrament",
+          "label_es",
+          "label_en"
+        ],
+        "title": "CompadrazgoItem",
+        "type": "object"
+      },
+      "CompadrazgoList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CompadrazgoItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "CompadrazgoList",
+        "type": "object"
+      },
+      "CompadrazgoRole": {
+        "description": "What the other person is to ego.",
+        "enum": [
+          "godparent",
+          "godchild",
+          "compadre"
+        ],
+        "title": "CompadrazgoRole",
+        "type": "string"
+      },
       "DateDisplay": {
         "description": "A date in words: «hacia 1891» / \"about 1891\" (`domain.dates.humanize_es`/`_en`).",
         "properties": {
@@ -400,6 +569,13 @@
       },
       "Event": {
         "properties": {
+          "associations": {
+            "items": {
+              "$ref": "#/components/schemas/EventAssociation"
+            },
+            "title": "Associations",
+            "type": "array"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -553,11 +729,49 @@
           "description",
           "sensitivity",
           "participants",
+          "associations",
           "created_by",
           "created_at",
           "updated_at"
         ],
         "title": "Event",
+        "type": "object"
+      },
+      "EventAssociation": {
+        "description": "Someone else's part in the event (padrino, witness, officiant).",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "person_id": {
+            "format": "uuid",
+            "title": "Person Id",
+            "type": "string"
+          },
+          "phrase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phrase"
+          },
+          "role": {
+            "$ref": "#/components/schemas/AssociationRole"
+          }
+        },
+        "required": [
+          "id",
+          "person_id",
+          "role",
+          "phrase"
+        ],
+        "title": "EventAssociation",
         "type": "object"
       },
       "EventBrief": {
@@ -826,6 +1040,105 @@
         "type": "object"
       },
       "JsonValue": {},
+      "KinshipKind": {
+        "enum": [
+          "self",
+          "partner",
+          "blood",
+          "foster",
+          "step",
+          "in_law"
+        ],
+        "title": "KinshipKind",
+        "type": "string"
+      },
+      "KinshipOut": {
+        "properties": {
+          "kinship": {
+            "$ref": "#/components/schemas/KinshipStructure"
+          },
+          "label_en": {
+            "title": "Label En",
+            "type": "string"
+          },
+          "label_es": {
+            "description": "«tía abuela», «primo segundo», «cuñada».",
+            "title": "Label Es",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kinship",
+          "label_es",
+          "label_en"
+        ],
+        "title": "KinshipOut",
+        "type": "object"
+      },
+      "KinshipStructure": {
+        "description": "What `to` is to the person (`domain.kinship.Kinship`). `up`/`down` are generations to the\ncommon ancestor; `half` is null when unknown; `via` is the partner or parent an in-law or\nstep relation goes through.",
+        "properties": {
+          "adoptive": {
+            "title": "Adoptive",
+            "type": "boolean"
+          },
+          "down": {
+            "title": "Down",
+            "type": "integer"
+          },
+          "half": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Half"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/KinshipKind"
+          },
+          "partner_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartnerStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "up": {
+            "title": "Up",
+            "type": "integer"
+          },
+          "via": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Via"
+          }
+        },
+        "required": [
+          "kind",
+          "up",
+          "down",
+          "half",
+          "adoptive",
+          "partner_status",
+          "via"
+        ],
+        "title": "KinshipStructure",
+        "type": "object"
+      },
       "LivingStatus": {
         "description": "Whether a person is treated as living.",
         "enum": [
@@ -1192,6 +1505,19 @@
         "title": "NameType",
         "type": "string"
       },
+      "Occasion": {
+        "description": "The sacrament or celebration a godparent sponsored.",
+        "enum": [
+          "bautizo",
+          "confirmacion",
+          "primera_comunion",
+          "boda",
+          "xv_anos",
+          "presentacion"
+        ],
+        "title": "Occasion",
+        "type": "string"
+      },
       "Participant": {
         "properties": {
           "person_id": {
@@ -1241,6 +1567,18 @@
           "other"
         ],
         "title": "ParticipantRole",
+        "type": "string"
+      },
+      "PartnerStatus": {
+        "description": "The state of a couple's union.",
+        "enum": [
+          "married",
+          "union_libre",
+          "partner",
+          "separated",
+          "divorced"
+        ],
+        "title": "PartnerStatus",
         "type": "string"
       },
       "Person": {
@@ -2420,6 +2758,102 @@
         ]
       }
     },
+    "/v1/associations/{association_id}": {
+      "delete": {
+        "operationId": "delete_association_v1_associations__association_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "association_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Association Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Delete Association",
+        "tags": [
+          "associations"
+        ]
+      }
+    },
     "/v1/events/{event_id}": {
       "delete": {
         "operationId": "delete_event_v1_events__event_id__delete",
@@ -3026,6 +3460,226 @@
         "summary": "Patch Person",
         "tags": [
           "people"
+        ]
+      }
+    },
+    "/v1/people/{person_id}/compadrazgo": {
+      "get": {
+        "description": "Padrinos, ahijados and compadres of this person, derived from godparent associations\n(never stored).",
+        "operationId": "get_compadrazgo_v1_people__person_id__compadrazgo_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompadrazgoList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Get Compadrazgo",
+        "tags": [
+          "kinship"
+        ]
+      }
+    },
+    "/v1/people/{person_id}/kinship": {
+      "get": {
+        "description": "What `to` is to this person, with Spanish and English labels. `404 person_not_found`\nwhen `to` is not a person the caller can see in the same space; `404 no_relation` when the\ntwo are not related within eight generations.",
+        "operationId": "get_kinship_v1_people__person_id__kinship_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The other person, in the same family space.",
+            "in": "query",
+            "name": "to",
+            "required": true,
+            "schema": {
+              "description": "The other person, in the same family space.",
+              "format": "uuid",
+              "title": "To",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KinshipOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Get Kinship",
+        "tags": [
+          "kinship"
         ]
       }
     },
@@ -3997,6 +4651,120 @@
         "summary": "Create Assertion",
         "tags": [
           "assertions"
+        ]
+      }
+    },
+    "/v1/spaces/{space_id}/associations": {
+      "post": {
+        "description": "`422 unknown_event` / `unknown_person` for anything the caller cannot see in the space;\n`422 association_is_principal` when the person is the event's principal (nobody is their own\npadrino); `409 association_exists` for a repeat.",
+        "operationId": "create_association_v1_spaces__space_id__associations_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Space Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssociationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Association"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Create Association",
+        "tags": [
+          "associations"
         ]
       }
     },

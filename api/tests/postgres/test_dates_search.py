@@ -117,7 +117,7 @@ def test_search_ranks_exact_then_variant_then_prefix(
     _person(client, auth, space, given="Jesús", apellido_paterno="Romero")
     _person(client, auth, space, given="Chucho", apellido_paterno="Zamora")
     _person(client, auth, space, given="Manuel", apellido_paterno="Zamora")
-    _person(client, auth, space, given="Manolo", apellido_paterno="Benítez")
+    _person(client, auth, space, given="Manolo", apellido_paterno="Moreno")
     _person(client, auth, space, given="Manuela", apellido_paterno="Álvarez")
     _person(client, auth, space, given="José María", apellido_paterno="Castro")
     _person(client, auth, space, given="Guadalupe", apellido_paterno="Hernández")
@@ -128,7 +128,7 @@ def test_search_ranks_exact_then_variant_then_prefix(
         return [item["display_name"] for item in response.json()["items"]]
 
     # Exact «Manuel», then the variant (Manolo), then the prefix (Manuela).
-    assert search("Manuel") == ["Manuel Zamora", "Manolo Benítez", "Manuela Álvarez"]
+    assert search("Manuel") == ["Manuel Zamora", "Manolo Moreno", "Manuela Álvarez"]
     # Hipocorísticos work both ways: «Chucho» finds Jesús and «Jesús» finds Chucho.
     assert search("Chucho") == ["Chucho Zamora", "Jesús Romero"]
     assert search("jesus") == ["Jesús Romero", "Chucho Zamora"]
@@ -143,10 +143,10 @@ def test_search_ranks_exact_then_variant_then_prefix(
 
 def test_search_pages_keep_the_rank_order(client: TestClient, auth: AuthHeaders) -> None:
     space = _space(client, auth)
-    for surname in ("Zamora", "Castro", "Benítez"):
+    for surname in ("Zamora", "Castro", "Moreno"):
         _person(client, auth, space, given="Manuel", apellido_paterno=surname)
     _person(client, auth, space, given="Manolo", apellido_paterno="Álvarez")
-    _person(client, auth, space, given="Manuela", apellido_paterno="Durán")
+    _person(client, auth, space, given="Manuela", apellido_paterno="Reyes")
     seen: list[str] = []
     cursor: str | None = None
     while True:
@@ -159,11 +159,11 @@ def test_search_pages_keep_the_rank_order(client: TestClient, auth: AuthHeaders)
         if cursor is None:
             break
     assert seen == [
-        "Manuel Benítez",
         "Manuel Castro",
+        "Manuel Moreno",
         "Manuel Zamora",
         "Manolo Álvarez",
-        "Manuela Durán",
+        "Manuela Reyes",
     ]
     plain_cursor = client.get(
         f"/v1/spaces/{space}/people", params={"limit": 1}, headers=auth(ANA)

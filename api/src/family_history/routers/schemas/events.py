@@ -9,6 +9,7 @@ from typing import Annotated
 from pydantic import Field, StringConstraints, model_validator
 
 from family_history.models.enums import (
+    AssociationRole,
     EventType,
     ParticipantRole,
     PartnerStatus,
@@ -88,6 +89,15 @@ class EventPatch(InputModel):
         return self
 
 
+class EventAssociation(ApiModel):
+    """Someone else's part in the event (padrino, witness, officiant)."""
+
+    id: uuid.UUID
+    person_id: uuid.UUID
+    role: AssociationRole
+    phrase: str | None
+
+
 class Event(ApiModel):
     id: uuid.UUID
     space_id: uuid.UUID
@@ -102,6 +112,7 @@ class Event(ApiModel):
     description: str | None
     sensitivity: Sensitivity | None
     participants: list[Participant]
+    associations: list[EventAssociation]
     created_by: str
     created_at: UtcDateTime
     updated_at: UtcDateTime

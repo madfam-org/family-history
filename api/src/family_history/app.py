@@ -24,8 +24,10 @@ from family_history.logging_setup import configure_logging, request_id_var
 from family_history.metrics import MetricsServer, observe_request, start_metrics_server
 from family_history.routers import (
     assertions,
+    associations,
     events,
     health,
+    kinship,
     people,
     places,
     relationships,
@@ -167,6 +169,8 @@ def create_app(
         places,
         sources,
         assertions,
+        associations,
+        kinship,
         waitlist,
     ):
         app.include_router(module.router)
