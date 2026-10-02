@@ -37,5 +37,5 @@ def write_gedcom551(
     diagnostics = Diagnostics(strict=False)
     roots = Downgrader(diagnostics).run(document.to_structures())
     text = render(emit_lines(roots, GEDCOM551_EMIT), line_ending)
-    data = ("﻿" + text if bom else text).encode("utf-8")
+    data = ("\ufeff" + text if bom else text).encode("utf-8")
     return Export551(data, list(diagnostics))

@@ -67,7 +67,7 @@ def split_lines(text: str) -> list[str]:
 
 
 def strip_bom(text: str) -> str:
-    return text[1:] if text.startswith("﻿") else text
+    return text[1:] if text.startswith("\ufeff") else text
 
 
 def tokenize(text: str, diagnostics: Diagnostics, dialect: Dialect = GEDCOM7) -> list[GedcomLine]:
