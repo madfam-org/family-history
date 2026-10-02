@@ -53,7 +53,8 @@ class Settings(BaseSettings):
         case_sensitive=False,
     )
 
-    env: Environment = Field(default=Environment.LOCAL, alias="FH_ENV")
+    # Unset means production: the safe default (no auth bypass, docs off, metrics on, HSTS).
+    env: Environment = Field(default=Environment.PRODUCTION, alias="FH_ENV")
 
     database_url: SecretStr | None = Field(default=None, alias="DATABASE_URL")
     direct_database_url: SecretStr | None = Field(default=None, alias="DIRECT_DATABASE_URL")
