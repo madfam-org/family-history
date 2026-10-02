@@ -1,0 +1,144 @@
+0 HEAD
+1 GEDC
+2 VERS 7.0
+1 SCHMA
+2 TAG _FH_EVENT_KIND https://github.com/madfam-org/family-history/blob/main/docs/GEDCOM.md#_fh_event_kind
+2 TAG _FH_SENSITIVITY https://github.com/madfam-org/family-history/blob/main/docs/GEDCOM.md#_fh_sensitivity
+2 TAG _FH_SURNAME_LINE https://github.com/madfam-org/family-history/blob/main/docs/GEDCOM.md#_fh_surname_line
+2 TAG _FH_SURNAME_ORDER https://github.com/madfam-org/family-history/blob/main/docs/GEDCOM.md#_fh_surname_order
+2 TAG _LOC https://example.org/synthetic/LocationRecord
+1 SOUR FAMILY_HISTORY_TEST
+2 VERS 0.1.0
+2 NAME Synthetic fixture
+1 DEST ANY
+1 DATE 1 OCT 2026
+2 TIME 12:00:00Z
+1 SUBM @U1@
+1 LANG es-MX
+1 PLAC
+2 FORM Localidad, Municipio, Estado, País
+1 NOTE Archivo sintético: todas las personas son inventadas.
+0 @U1@ SUBM
+1 NAME Equipo de pruebas
+1 LANG es
+0 @I1@ INDI
+1 NAME Aurelio /Quintanar Belmonte/
+2 TYPE BIRTH
+2 GIVN Aurelio
+2 NICK Lelo
+2 SURN Quintanar
+3 _FH_SURNAME_LINE PATERNAL
+2 SURN Belmonte
+3 _FH_SURNAME_LINE MATERNAL
+2 _FH_SURNAME_ORDER PATERNAL_FIRST
+1 SEX M
+1 BIRT
+2 DATE 12 MAR 1931
+3 TIME 06:30
+2 PLAC San Isidro del Monte, Tlacotepec, Puebla, México
+3 MAP
+4 LATI N18.6812
+4 LONG W97.6430
+2 SOUR @S1@
+3 PAGE Libro 4, foja 12, partida 33
+3 QUAY 3
+1 BAPM
+2 DATE 2 APR 1931
+2 PLAC Parroquia de San Isidro, Tlacotepec, Puebla, México
+2 ASSO @I4@
+3 ROLE GODP
+4 PHRASE Padrino de bautismo
+2 _FH_SENSITIVITY RELIGION
+1 EVEN
+2 TYPE Contrato bracero
+2 DATE BET 1954 AND 1956
+3 PHRASE entre 1954 y 1956, según la tarjeta de identificación
+2 _FH_EVENT_KIND BRACERO_CONTRACT
+1 DEAT Y
+2 DATE ABT 1999
+2 CAUS Insuficiencia cardiaca
+3 _FH_SENSITIVITY HEALTH
+1 OCCU Campesino
+1 FAMS @F1@
+1 NOTE @@aurelio decía que el río crecía en julio.
+2 CONT
+2 CONT   Segunda línea con espacios iniciales.
+1 EXID 4f1e0c2a-synthetic
+2 TYPE https://example.org/synthetic/id
+1 UID 9b5f8c2e-0000-4000-8000-000000000001
+1 _UNDOC valor sin documentar
+1 CHAN
+2 DATE 30 SEP 2026
+3 TIME 18:05:00Z
+0 @I2@ INDI
+1 RESN CONFIDENTIAL
+1 NAME Teodora /Belmonte Arriaga/
+2 GIVN Teodora
+2 SURN Belmonte
+2 SURN Arriaga
+1 SEX F
+1 BIRT
+2 DATE JULIAN 1750
+3 PHRASE 1750/51 en el libro original
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME Remedios /Quintanar Belmonte/
+1 SEX X
+1 BIRT
+2 DATE FROM 1960 TO 1961
+1 EVEN
+2 TYPE XV años
+2 DATE 4 JUN 1975
+2 _FH_EVENT_KIND QUINCEANERA
+2 ASSO @VOID@
+3 PHRASE madrina de XV años, nombre ilegible
+3 ROLE GODP
+1 NO MARR
+2 DATE TO 2000
+1 FAMC @F1@
+2 PEDI BIRTH
+2 STAT PROVEN
+1 ASSO @I1@
+2 ROLE OTHER
+3 PHRASE tío abuelo
+0 @I4@ INDI
+1 NAME Cipriano /Arriaga/
+1 SEX U
+1 SNOTE @N1@
+0 @F1@ FAM
+1 HUSB @I1@
+1 WIFE @I2@
+1 CHIL @I3@
+1 MARR
+2 TYPE Matrimonio religioso
+2 DATE 15 AUG 1958
+2 HUSB
+3 AGE 27y
+2 _FH_EVENT_KIND RELIGIOUS_MARRIAGE
+2 _FH_SENSITIVITY RELIGION
+1 MARR
+2 TYPE Matrimonio civil
+2 DATE 1 AUG 1958
+2 _FH_EVENT_KIND CIVIL_MARRIAGE
+1 OBJE @M1@
+2 TITL Foto de la boda
+0 @S1@ SOUR
+1 TITL Libro de bautismos, Parroquia de San Isidro
+1 AUTH Parroquia sintética
+1 REPO @R1@
+2 CALN Caja 7
+0 @R1@ REPO
+1 NAME Archivo parroquial sintético
+1 ADDR Calle Inventada 1
+2 CONT Tlacotepec, Puebla
+2 CITY Tlacotepec
+0 @M1@ OBJE
+1 FILE media/boda-1958.jpg
+2 FORM image/jpeg
+3 MEDI PHOTO
+2 TITL Boda
+0 @N1@ SNOTE Cipriano fue padrino en varias familias del pueblo.
+1 LANG es
+0 @L1@ _LOC
+1 NAME San Isidro del Monte
+0 TRLR
