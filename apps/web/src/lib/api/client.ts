@@ -20,9 +20,18 @@ export interface ApiClientOptions {
 }
 
 export interface RequestOptions {
-  method?: "GET" | "POST" | "PATCH";
+  method?: "GET" | "POST" | "PATCH" | "DELETE";
   query?: Record<string, string | number | undefined | null>;
+  /** JSON body. */
   body?: unknown;
+  /**
+   * A body sent as is (a multipart upload streamed through), with its own content type. It is
+   * mutually exclusive with `body`.
+   */
+  raw?: { stream: ReadableStream<Uint8Array>; contentType: string };
+  /** Overrides the default timeout (uploads and downloads take longer). */
+  timeoutMs?: number;
+  accept?: string;
 }
 
 const DEFAULT_TIMEOUT_MS = 15_000;
@@ -38,18 +47,28 @@ export function createApiClient(options: ApiClientOptions = {}, env: Env = proce
     for (const [key, value] of Object.entries(request.query ?? {})) {
       if (value !== undefined && value !== null && value !== "") url.searchParams.set(key, String(value));
     }
-    const headers: Record<string, string> = { accept: "application/json" };
+    const headers: Record<string, string> = { accept: request.accept ?? "application/json" };
     if (options.accessToken) headers.authorization = `Bearer ${options.accessToken}`;
-    if (request.body !== undefined) headers["content-type"] = "application/json";
+    let body: BodyInit | undefined;
+    if (request.raw) {
+      headers["content-type"] = request.raw.contentType;
+      body = request.raw.stream;
+    } else if (request.body !== undefined) {
+      headers["content-type"] = "application/json";
+      body = JSON.stringify(request.body);
+    }
     let response: Response;
     try {
-      response = await fetchImpl(url, {
+      const init: RequestInit & { duplex?: "half" } = {
         method: request.method ?? "GET",
         headers,
-        body: request.body === undefined ? undefined : JSON.stringify(request.body),
-        signal: AbortSignal.timeout(timeoutMs),
+        body,
+        signal: AbortSignal.timeout(request.timeoutMs ?? timeoutMs),
         cache: "no-store",
-      });
+      };
+      // Streaming request bodies need half duplex in Node's fetch.
+      if (request.raw) init.duplex = "half";
+      response = await fetchImpl(url, init);
     } catch {
       throw new ApiError(0, "api_unreachable", `request to ${path} failed before a response`);
     }
@@ -79,7 +98,12 @@ export function createApiClient(options: ApiClientOptions = {}, env: Env = proce
     return response.status;
   }
 
-  return { json, empty };
+  /** The successful response itself, for downloads streamed through to the browser. */
+  async function stream(path: string, request: RequestOptions = {}): Promise<Response> {
+    return send(path, request);
+  }
+
+  return { json, empty, stream };
 }
 
 export type ApiClient = ReturnType<typeof createApiClient>;

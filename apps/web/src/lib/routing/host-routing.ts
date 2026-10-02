@@ -32,6 +32,16 @@ const SHARED_EXACT = new Set([
 
 const AUTH_PATHS = new Set(["/auth/start", "/auth/callback", "/auth/signout"]);
 
+/**
+ * Route handlers that serve the signed-in app's browser code (job polling, uploads, downloads).
+ * App host only; they read the session cookie like pages do.
+ */
+export const APP_API_PREFIX = "/api/app/";
+
+export function isAppApiPath(pathname: string): boolean {
+  return pathname.startsWith(APP_API_PREFIX);
+}
+
 export type RouteDecision =
   | { type: "asset"; surface: Surface }
   | { type: "pass"; surface: Surface }
@@ -55,7 +65,7 @@ export function resolveRoute(
   if (pathname.startsWith("/_next/")) return { type: "asset", surface };
   if (SHARED_EXACT.has(pathname)) return { type: "pass", surface };
 
-  if (AUTH_PATHS.has(pathname)) {
+  if (AUTH_PATHS.has(pathname) || isAppApiPath(pathname)) {
     return surface === "app" ? { type: "pass", surface } : { type: "not_found", surface };
   }
 

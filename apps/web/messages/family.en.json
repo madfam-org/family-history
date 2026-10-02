@@ -1,0 +1,435 @@
+{
+  "family": {
+    "nav": {
+      "tree": "Family tree",
+      "kinship": "How are we related?",
+      "import": "Import GEDCOM",
+      "export": "Take everything",
+      "editPerson": "Edit person",
+      "backToPerson": "Back to the person",
+      "toolsTitle": "Family space tools"
+    },
+    "privacy": {
+      "privateBadge": "Living person — only your family sees them",
+      "privateHelp": "Nothing about a living person is ever published. Only members of this family space can see them.",
+      "privateShort": "Private",
+      "sensitive": "Sensitive fact",
+      "sensitiveHelp": "This is a sensitive fact ({kind}). If the person is living, it stays with whoever recorded it until they give consent.",
+      "sensitivity": {
+        "religion": "religion",
+        "health": "health",
+        "genetic": "genetic",
+        "ethnicity": "ethnic origin",
+        "sexual": "sexual life",
+        "political": "political opinion"
+      }
+    },
+    "dates": {
+      "examplesTitle": "Write it the way you know it, for example:",
+      "examples": {
+        "exact": "15 de marzo de 1923",
+        "about": "hacia 1890",
+        "before": "antes de 1900",
+        "between": "entre 1890 y 1895",
+        "monthYear": "marzo de 1923"
+      },
+      "hints": {
+        "yearSpan": "“{from}-{to}” can be read two ways. Write “entre {from} y {to}” if you don't know the exact year, or “de {from} a {to}” if it was a period.",
+        "ambiguous": "We won't guess this date. Write the month as a word, for example “3 de abril de 1923”.",
+        "twoDigitYear": "Write the full year: “19{year}” or “18{year}”, not just “{year}”.",
+        "monthOver12": "Dates are read in the order day, month, year, and there is no month {month}. Write the month as a word, for example “{day} de marzo de 1923”.",
+        "weekday": "The day of the week does not match the date. Remove it or check the date.",
+        "invalid": "We could not read this date. Try one of the forms in the examples."
+      },
+      "unknown": "Unknown date",
+      "asWritten": "Written as: “{text}”"
+    },
+    "editor": {
+      "pageTitle": "Edit person",
+      "title": "Edit {name}",
+      "namesTitle": "Name",
+      "namesLead": "As it appears on the birth or baptism record. Other recorded names are kept.",
+      "given": "Given name(s)",
+      "paternal": "Father's surname (apellido paterno)",
+      "maternal": "Mother's surname (apellido materno)",
+      "particlePaternal": "Particle of the father's surname",
+      "particleMaternal": "Particle of the mother's surname",
+      "particleHint": "Only if there is one: “de”, “de la”, “del”.",
+      "nombreUsado": "Name they went by",
+      "nombreUsadoHint": "If they used another of their names, for example “Lupe” for “María Guadalupe”.",
+      "nicknames": "Nicknames",
+      "nicknamesHint": "Separate them with commas: “Chucho, el Güero”.",
+      "surnameOrder": "Surname order",
+      "surnameOrders": {
+        "paterno_materno": "Father's, then mother's",
+        "materno_paterno": "Mother's, then father's",
+        "single": "A single surname"
+      },
+      "preview": "It will read: {name}",
+      "sex": "Sex",
+      "save": "Save name",
+      "saving": "Saving…",
+      "saved": "Changes saved.",
+      "errors": {
+        "nameRequired": "Write at least one given name or surname.",
+        "tooLong": "A field is too long (120 characters at most; particles, 20).",
+        "tooManyNicknames": "You can record up to 10 nicknames."
+      }
+    },
+    "events": {
+      "title": "Events",
+      "addTitle": "Add an event",
+      "type": "Event type",
+      "date": "Date",
+      "description": "Notes",
+      "descriptionHint": "Optional. For example, the parish or the place.",
+      "spouse": "With whom",
+      "spouseNone": "Not stated",
+      "save": "Add event",
+      "saving": "Adding…",
+      "saved": "Event added.",
+      "correctDate": "Correct the date",
+      "correctDateSubmit": "Save date",
+      "dateSaved": "Date saved.",
+      "dateRequired": "Write a date.",
+      "birthNotSaved": "The person was saved, but the birth date was not: {hint} You can add it below as a birth event.",
+      "types": {
+        "birth": "Birth",
+        "baptism": "Baptism",
+        "christening": "Baptism",
+        "confirmation": "Confirmation",
+        "first_communion": "First communion",
+        "quinceanera": "Quinceañera",
+        "marriage": "Marriage",
+        "civil_marriage": "Civil marriage",
+        "religious_marriage": "Religious marriage",
+        "divorce": "Divorce",
+        "death": "Death",
+        "burial": "Burial",
+        "cremation": "Cremation",
+        "emigration": "Emigration",
+        "immigration": "Immigration",
+        "naturalization": "Naturalization",
+        "residence": "Residence",
+        "occupation": "Occupation",
+        "education": "Education",
+        "bracero_contract": "Bracero contract",
+        "border_crossing": "Border crossing",
+        "other": "Other event"
+      }
+    },
+    "relationships": {
+      "title": "Relatives",
+      "empty": "No relatives recorded yet.",
+      "addTitle": "Add a relative",
+      "kind": "What are they to this person?",
+      "kinds": {
+        "father": "Father",
+        "mother": "Mother",
+        "child": "Daughter or son",
+        "partner": "Partner"
+      },
+      "pedigree": "Kind of parentage",
+      "pedigrees": {
+        "birth": "By birth",
+        "adopted": "By adoption",
+        "foster": "Foster",
+        "step": "By marriage (stepparent, stepchildren)"
+      },
+      "pedigreeShort": {
+        "birth": "by birth",
+        "adopted": "adoption",
+        "foster": "foster",
+        "step": "by marriage"
+      },
+      "status": "Couple's status",
+      "statuses": {
+        "married": "Married",
+        "union_libre": "Common-law union",
+        "partner": "Partners",
+        "separated": "Separated",
+        "divorced": "Divorced"
+      },
+      "statusHint": "Civil and religious marriages are recorded as events, with their dates.",
+      "who": "Who is it?",
+      "pickExisting": "Someone already in the tree",
+      "createNew": "A new person",
+      "newPersonLead": "Write what you know; you can fill in the rest later.",
+      "submit": "Add relative",
+      "submitting": "Adding…",
+      "added": "Relative added.",
+      "pickRequired": "Choose a person from the list.",
+      "samePerson": "A person cannot be their own relative.",
+      "createdWithoutLink": "The new person was saved, but the relationship was not: {error}",
+      "openCreated": "See the new person",
+      "remove": "Remove",
+      "removeLabel": "Remove the relationship with {name}",
+      "confirmRemove": "Remove the relationship with {name}? The person stays in the tree; only this link is removed.",
+      "confirmYes": "Yes, remove",
+      "cancel": "Cancel",
+      "removing": "Removing…",
+      "removed": "Relationship removed.",
+      "labels": {
+        "parent": {
+          "M": "Father",
+          "F": "Mother",
+          "X": "Parent",
+          "U": "Parent"
+        },
+        "child": {
+          "M": "Son",
+          "F": "Daughter",
+          "X": "Child",
+          "U": "Child"
+        },
+        "partner": "Partner"
+      },
+      "unknownPerson": "Person not loaded"
+    },
+    "picker": {
+      "label": "Search by name",
+      "hint": "Type at least two letters. Nicknames work too: “Chucho” finds Jesús.",
+      "searching": "Searching…",
+      "noResults": "Nobody found with that name.",
+      "results": "{count, plural, one {# result} other {# results}}",
+      "chosen": "You chose {name}.",
+      "change": "Change",
+      "failed": "The search failed: {error}"
+    },
+    "godparents": {
+      "title": "Godparents",
+      "none": "No godparents recorded.",
+      "addTitle": "Add a godparent",
+      "role": "Role",
+      "roles": {
+        "godparent": "Godparent",
+        "witness": "Witness",
+        "officiant": "Officiant",
+        "other": "Other"
+      },
+      "phrase": "Which role?",
+      "phraseOptional": "Detail (optional)",
+      "phraseHint": "For example: “padrino de anillos” (ring sponsor), “madrina de lazo” (lasso sponsor).",
+      "phraseRequired": "Describe the role.",
+      "padrino": "Godfather",
+      "madrina": "Godmother",
+      "padrinoNeutral": "Godparent",
+      "submit": "Add",
+      "submitting": "Adding…",
+      "added": "Added.",
+      "removeLabel": "Remove {name} from this event",
+      "confirmRemove": "Remove {name} from this event?",
+      "removed": "Removed."
+    },
+    "compadrazgo": {
+      "title": "Compadrazgo",
+      "lead": "Godparents, godchildren and co-parents (compadres), worked out from the godparents of each sacrament.",
+      "empty": "No godparents are recorded yet on the events of this person or their family.",
+      "groups": {
+        "godparents": "Their godparents",
+        "godchildren": "Their godchildren",
+        "compadres": "Their compadres and comadres",
+        "other": "Others"
+      },
+      "sacrament": "at the {sacrament}",
+      "sacraments": {
+        "bautizo": "baptism",
+        "baptism": "baptism",
+        "christening": "baptism",
+        "confirmacion": "confirmation",
+        "confirmation": "confirmation",
+        "primera_comunion": "first communion",
+        "first_communion": "first communion",
+        "boda": "wedding",
+        "religious_marriage": "wedding",
+        "xv_anos": "quinceañera",
+        "quinceanera": "quinceañera",
+        "presentacion": "presentation"
+      },
+      "unavailable": "We could not load the compadrazgo: {error}"
+    },
+    "kinship": {
+      "pageTitle": "How are we related?",
+      "title": "How are we related?",
+      "lead": "Choose two people from the tree and we tell you what one is to the other: “great-uncle”, “co-brother-in-law”, “second cousin”.",
+      "ego": "First person",
+      "alter": "Second person",
+      "submit": "Show relationship",
+      "result": "{alter} is {ego}'s {label}.",
+      "noRelation": "We found no recorded relationship between these two people. A link may be missing from the tree.",
+      "samePerson": "Choose two different people.",
+      "pickBoth": "Choose both people.",
+      "swap": "See it the other way round",
+      "personMissing": "We could not find one of the two people in this space."
+    },
+    "tree": {
+      "pageTitle": "Family tree",
+      "title": "{name}'s tree",
+      "ancestors": "Ancestors",
+      "descendants": "Descendants",
+      "viewLabel": "What to show",
+      "drawingLabel": "{name}'s tree: {count, plural, one {# person} other {# people}}. The same information is in the list below.",
+      "listTitle": "The tree as a list",
+      "listLead": "The same information as the drawing, for screen readers and keyboards.",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "reset": "Centre",
+      "panHint": "Drag to move and pinch to zoom. With a keyboard: arrows to move, + and − to zoom.",
+      "repeated": "appears in another branch",
+      "hiddenChildren": "{count, plural, one {and # more person} other {and # more people}}",
+      "truncated": "This tree is large: we show up to {max} people around the person in the centre.",
+      "failed": "{count, plural, one {We could not load # relative.} other {We could not load # relatives.}}",
+      "legendTitle": "How to read the lines",
+      "legendBirth": "By birth",
+      "legendAdopted": "Adoption",
+      "legendFoster": "Foster",
+      "legendStep": "By marriage",
+      "legendUnion": "Partners",
+      "emptyAncestors": "No parents are recorded for this person yet.",
+      "emptyDescendants": "No children or partners are recorded for this person yet.",
+      "born": "b. {date}",
+      "died": "d. {date}",
+      "focusOn": "See {name}'s tree",
+      "loading": "Loading the tree drawing…",
+      "partnerOf": "partner"
+    },
+    "jobs": {
+      "status": {
+        "queued": "Waiting",
+        "running": "In progress",
+        "succeeded": "Done",
+        "failed": "Could not be completed"
+      },
+      "checking": "Checking progress…",
+      "pollFailed": "We could not check progress: {error} We will try again.",
+      "startedAt": "Started: {date}"
+    },
+    "import": {
+      "pageTitle": "Import GEDCOM",
+      "title": "Import a tree (GEDCOM)",
+      "lead": "Bring your tree from another program, or upload a complete copy from “Take everything” again. People, families and sources are added to this space; nothing already here is deleted.",
+      "file": "File",
+      "fileHint": ".ged files (GEDCOM 7 or 5.5.1), .gdz (GEDZIP) or .json (a complete copy from “Take everything”), up to 25 MiB. Photos inside a .gdz are not imported yet.",
+      "submit": "Import",
+      "uploading": "Uploading…",
+      "noFile": "Choose a file.",
+      "wrongType": "The file must end in .ged, .gdz or .json.",
+      "tooLarge": "The file is {size}; the limit is 25 MiB.",
+      "notAllowed": "Only the space's stewards and editors can import.",
+      "started": "We received your file and are reading it; you can stay on this page.",
+      "reportTitle": "Import result",
+      "source": "Source: {product}",
+      "version": "GEDCOM version: {version}",
+      "countsTitle": "What we found in the file",
+      "createdTitle": "What was added to your tree",
+      "recordTypes": {
+        "INDI": "People",
+        "FAM": "Families",
+        "SOUR": "Sources",
+        "REPO": "Archives and repositories",
+        "OBJE": "Photos and documents",
+        "NOTE": "Notes",
+        "SNOTE": "Notes",
+        "SUBM": "Submitters",
+        "other": "Other records ({tag})"
+      },
+      "diagnosticsTitle": "{count, plural, =0 {No notices} one {# notice} other {# notices}}",
+      "diagnosticsLead": "What we had to adjust, skip or could not read. Data from other programs that we do not understand is kept as is.",
+      "severity": {
+        "error": "Error",
+        "warning": "Notice",
+        "info": "Note"
+      },
+      "line": "line {line}",
+      "technical": "Technical detail",
+      "extensionsTitle": "Tags specific to other programs",
+      "extensionsLead": "Data only the source program understands. We keep it so it comes back out when you export.",
+      "noReport": "The import finished, but the server sent no details.",
+      "another": "Import another file",
+      "openSpace": "See the people in this space",
+      "diagnostics": {
+        "gedzip_media_skipped": "Photos and documents inside the .gdz were not imported yet.",
+        "media_skipped": "A photo or document was not imported yet.",
+        "person_without_name": "A person had no name; they were saved without one.",
+        "structure_skipped": "A piece of data we do not understand was skipped.",
+        "event_without_person": "An event did not belong to anyone and was skipped.",
+        "event_as_other": "An unknown event type was saved as “Other event”.",
+        "date_kept_as_text": "A date could not be read; it was kept exactly as written.",
+        "sensitivity_narrowed": "A sensitive fact was marked with its class (religion, health…).",
+        "association_skipped": "A godparent or witness could not be linked and was skipped.",
+        "citation_skipped": "A source citation could not be linked and was skipped.",
+        "pedigree_sealing": "A “sealing” link was saved as parentage by birth.",
+        "pedigree_other": "An unknown kind of parentage was saved as by birth.",
+        "diagnostics_truncated": "There were more notices; we show the first 500.",
+        "ansel-decoded": "The file used the old ANSEL encoding; we converted it.",
+        "charset-fallback": "We did not know the file's encoding; we used the most likely one.",
+        "charset-mismatch": "The file declared a different encoding from the one it used.",
+        "charset-missing": "The file did not declare its encoding.",
+        "date-normalized": "A date was rewritten in the standard form.",
+        "date-upgraded": "A 5.5.1 date was converted to GEDCOM 7.",
+        "dangling-pointer": "A reference pointed to a record that does not exist.",
+        "duplicate-xref": "Two records had the same identifier; one was renamed.",
+        "xref-renamed": "An internal identifier was renamed.",
+        "missing-trlr": "The file had no end marker; it was read as far as it went.",
+        "missing-head": "The file had no header.",
+        "unknown-record": "An unknown kind of record was kept unchanged.",
+        "undocumented-extensions": "There are tags specific to another program; they were kept.",
+        "sex-normalized": "A sex value was rewritten in the standard form.",
+        "sex-unknown": "An unknown sex value was saved as “Unknown”.",
+        "enum-mapped": "A value was translated to its GEDCOM 7 equivalent.",
+        "role-mapped": "A role (godparent, witness…) was translated to its GEDCOM 7 equivalent.",
+        "asso-lifted": "A godparent or witness was moved to the event they belong to.",
+        "level-jump": "A line skipped levels; it was fixed.",
+        "unparseable-line": "A line could not be read and was skipped.",
+        "not-utf8": "The file was not UTF-8; we converted it.",
+        "blank-line": "There were blank lines; they were ignored."
+      },
+      "createdTypes": {
+        "people": "People",
+        "places": "Places",
+        "sources": "Sources",
+        "citations": "Citations",
+        "events": "Events",
+        "unions": "Couples",
+        "parent_child": "Parent–child links",
+        "assertions": "Facts with their source"
+      }
+    },
+    "export": {
+      "pageTitle": "Take everything",
+      "title": "Take everything",
+      "lead": "Your tree is yours. Download all of it whenever you want, in open formats other programs understand.",
+      "free": "Free for every family, always. It does not depend on any plan.",
+      "formatsTitle": "Choose a format",
+      "formats": {
+        "gedzip": {
+          "name": "GEDZIP (GEDCOM 7 with photos)",
+          "body": "Everything in one .gdz file: the tree plus its photos and documents. The most complete way to move to another modern program."
+        },
+        "gedcom7": {
+          "name": "GEDCOM 7",
+          "body": "Just the tree, without photos, in the current standard format. For programs that already read GEDCOM 7."
+        },
+        "gedcom551": {
+          "name": "GEDCOM 5.5.1",
+          "body": "The older format that almost every program reads. Some data is adapted; the report says which."
+        },
+        "native_json": {
+          "name": "Complete copy (JSON)",
+          "body": "Everything exactly as it is here, with nothing lost. To keep as a backup or to import here again."
+        }
+      },
+      "start": "Prepare download",
+      "starting": "Preparing…",
+      "preparing": "We are preparing your file. You can stay on this page.",
+      "download": "Download",
+      "expires": "The link works until {date}. After that, prepare another download.",
+      "expired": "This link has expired. Prepare another download.",
+      "another": "Prepare another format"
+    },
+    "names": {
+      "used": "Went by: {name}",
+      "nicknames": "Nicknames: {names}"
+    }
+  }
+}

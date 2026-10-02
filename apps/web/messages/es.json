@@ -230,8 +230,7 @@
       "more": "Ver más personas",
       "born": "Nació: <mono>{date}</mono>",
       "died": "Murió: <mono>{date}</mono>",
-      "treeTitle": "Árbol familiar",
-      "treeBody": "La vista del árbol llega en la siguiente etapa. Mientras tanto, las personas y sus relaciones se guardan aquí."
+      "treeBody": "Abre a cualquier persona y elige «Árbol familiar» para ver sus antepasados y descendientes."
     },
     "personForm": {
       "title": "Agregar persona",
@@ -273,6 +272,7 @@
       "living": {
         "living": "Viva",
         "deceased": "Fallecida",
+        "presumed_deceased": "Probablemente fallecida",
         "unknown": "Sin confirmar"
       },
       "visibility": {
@@ -281,28 +281,7 @@
         "public_memorial": "Memoria pública"
       },
       "sex": "Sexo: {sex}",
-      "relatedPerson": "Ver persona relacionada",
-      "eventTypes": {
-        "birth": "Nacimiento",
-        "baptism": "Bautizo",
-        "confirmation": "Confirmación",
-        "first_communion": "Primera comunión",
-        "marriage": "Matrimonio",
-        "civil_marriage": "Matrimonio civil",
-        "religious_marriage": "Matrimonio religioso",
-        "death": "Defunción",
-        "burial": "Sepultura",
-        "residence": "Residencia",
-        "other": "Otro evento"
-      },
-      "relationshipTypes": {
-        "parentOf": "Madre o padre de esta persona",
-        "childOf": "Hija o hijo de esta persona",
-        "union": "Unión",
-        "other": "Otra relación"
-      },
       "pageTitle": "Persona",
-      "birthNotSaved": "La persona se guardó, pero la fecha de nacimiento no: el servidor todavía no acepta fechas escritas libremente. Podrás agregarla cuando esté disponible.",
       "citationFoja": "foja {value}",
       "citationPartida": "partida {value}"
     },
@@ -334,6 +313,19 @@
     "api_unreachable": "No pudimos conectar con el servidor. Intenta más tarde.",
     "api_not_configured": "Este servidor no tiene configurada la conexión con la API.",
     "invalid_response": "El servidor respondió algo inesperado. Intenta más tarde.",
+    "ambiguous_date": "No queremos adivinar esa fecha. Escríbela de otra forma.",
+    "invalid_date": "No pudimos leer esa fecha. Prueba con otra forma de escribirla.",
+    "no_relation": "No encontramos un parentesco registrado entre estas personas.",
+    "relationship_exists": "Esa relación ya está registrada.",
+    "file_too_large": "El archivo es demasiado grande. El límite es 25 MiB.",
+    "unsupported_file": "No reconocemos ese tipo de archivo. Usa un .ged, un .gdz o un .json de «Llévate todo».",
+    "download_expired": "El enlace de descarga ya venció. Prepara otra descarga.",
+    "gedcom_invalid": "No pudimos leer ese archivo como GEDCOM. Revisa que sea un .ged o un .gdz exportado por un programa de genealogía.",
+    "native_export_invalid": "Ese archivo .json no es una copia completa exportada desde aquí («Llévate todo»), o está dañado.",
+    "empty_file": "El archivo está vacío.",
+    "job_not_ready": "El archivo todavía se está preparando. Espera un momento.",
+    "association_is_principal": "Esa persona es la protagonista del evento; elige a otra como padrino, madrina o testigo.",
+    "worker_timeout": "El proceso tardó demasiado y se detuvo. Intenta de nuevo; si vuelve a pasar, prueba con un archivo más pequeño.",
     "unknown": "Ocurrió un error inesperado."
   },
   "notFound": {

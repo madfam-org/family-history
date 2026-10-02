@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
 
 import { AppHeader } from "@/components/app/AppHeader";
 import { isLocale } from "@/i18n/locales";
+import { clientMessages, loadMessages } from "@/i18n/messages";
 import { brandName } from "@/lib/brand";
 import { getSession } from "@/lib/auth/server";
 
@@ -23,12 +25,14 @@ export default async function WorkspaceLayout({ children, params }: { children: 
   if (!isLocale(locale)) notFound();
   setRequestLocale(locale);
   const session = await getSession();
+  // Client components (editors, pickers, the tree, job polling) only get the namespaces they use.
+  const messages = clientMessages(await loadMessages(locale));
   return (
-    <>
+    <NextIntlClientProvider locale={locale} messages={messages} timeZone="America/Mexico_City">
       <AppHeader locale={locale} signedIn={session !== null} />
       <main id="contenido" tabIndex={-1} className="fh-container py-8">
         {children}
       </main>
-    </>
+    </NextIntlClientProvider>
   );
 }

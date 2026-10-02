@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import en from "@messages/en.json";
 import es from "@messages/es.json";
+import familyEn from "@messages/family.en.json";
+import familyEs from "@messages/family.es.json";
 
 import { brand } from "@/lib/brand";
 
@@ -17,14 +19,19 @@ function leaves(tree: Tree, prefix = ""): Map<string, string> {
   return out;
 }
 
-const esLeaves = leaves(es as Tree);
-const enLeaves = leaves(en as Tree);
+const esLeaves = leaves({ ...es, ...familyEs } as Tree);
+const enLeaves = leaves({ ...en, ...familyEn } as Tree);
 
 function placeholders(text: string): string[] {
   return [...text.matchAll(/\{(\w+)[,}]|<(\w+)>/g)].map((match) => match[1] ?? match[2] ?? "").sort();
 }
 
 describe("message files", () => {
+  it("split by area without overlapping top-level keys", () => {
+    for (const key of Object.keys(familyEs)) expect(Object.keys(es)).not.toContain(key);
+    for (const key of Object.keys(familyEn)) expect(Object.keys(en)).not.toContain(key);
+  });
+
   it("have the same keys in es and en", () => {
     expect([...enLeaves.keys()].sort()).toEqual([...esLeaves.keys()].sort());
   });
