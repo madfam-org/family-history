@@ -28,9 +28,10 @@ and what does not. Keep it true when you change behaviour.
 CI and review enforce these. A change that breaks one does not merge.
 
 1. **Synthetic data only.** This repo never holds a real family, person, minor, CURP, RFC, real
-   photo or real document. That covers fixtures, seeds, tests, screenshots, demos and docs. Use
-   the synthetic generator (`python -m family_history.cli seed-synth`) and the synthetic lexicon
-   in `family_history.domain.synth`.
+   photo or real document. That covers fixtures, seeds, tests, screenshots, demos and docs.
+   Generate data with `family_history.domain.synth.generate_family()` and draw every name from
+   `family_history.domain.synth.synthetic_lexicon()` (data files in `family_history.domain.data`).
+   CI enforces it with `scripts/check-synthetic-fixtures.py`.
 2. **Living people are private by default.** Anyone not proven dead and born within the last 110
    years, or with no known birth date, is visible only inside their family space. Nothing about a
    living person is ever public.

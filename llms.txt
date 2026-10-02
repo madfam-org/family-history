@@ -3,7 +3,7 @@
 > Codename for a Spanish-first, open-source (AGPL-3.0-only) family-history platform by
 > Innovaciones MADFAM. Families build their tree from evidence and keep their living memory:
 > stories, voice interviews, photos and documents. Built for Mexican and binational families
-> first. Status: incubating; see docs/HONEST_STATUS.md.
+> first. Status: incubating; first build wave on main, not deployed; see docs/HONEST_STATUS.md.
 
 Boundary checkpoint (2026-10-01): public repository. Operational detail lives in MADFAM's private
 internal-devops repository under the repo-boundary contract.

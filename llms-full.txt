@@ -21,6 +21,10 @@ The product is a Spanish-first, open-source family-history platform with two hal
 
 Who it is for: Mexican and binational families, phone-first. Spanish content, English second.
 
+Status (2026-10-01): incubating. The genealogy library, GEDCOM engine, API core, web app
+shell and platform CI are on main; the library is not yet wired into the API, and nothing is
+deployed. docs/HONEST_STATUS.md is authoritative.
+
 ## Hard rules
 
 - **Data:** synthetic only, everywhere in the repo.
