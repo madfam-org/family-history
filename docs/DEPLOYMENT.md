@@ -102,6 +102,11 @@ requirement inside reusable workflows too. `.github/workflows/build-deploy.yml` 
 commit whose `build-publish.yml` pins every action by SHA. Keep it that way when bumping the pin (the
 workflow's header says how).
 
+**Identity-provider prerequisite.** Janua must keep the granted scopes on refreshed tokens
+([janua#683](https://github.com/madfam-org/janua/pull/683), promoted to production). Without it, the
+web's first token refresh returns an access token with only `openid`, and every API call answers
+`403 insufficient_scope` about an hour after sign-in.
+
 1. **Onboard the project** from `enclii.yaml`, with `--secret-name family-history-secrets`. This creates the
    namespace with its platform labels, the managed database and its role, and the project Secret holding
    `DATABASE_URL` (pooled) and `DIRECT_DATABASE_URL` (direct). Then reconcile any service drift Enclii
