@@ -1,0 +1,119 @@
+# The API (FastAPI, `api/`). Public behind the Cloudflare tunnel at fh-api.madfam.io (enclii.yaml; no Ingress
+# object): the tunnel reaches Service family-history-api on port 80, i.e. this pod's port 8000
+# (NetworkPolicy allow-tunnel-ingress-api). Every /v1 route except the waitlist needs a Janua token. The web
+# app's server calls it in-cluster through the same Service (allow-web-to-api-ingress).
+# Two listeners (docs/ARCHITECTURE.md, Contracts): http on 8000 (the app) and metrics on 9090 (/metrics,
+# never routed through the tunnel; Service family-history-api-metrics, the scraper's namespace only).
+# The process is the image's own command (`uvicorn family_history.app:app --host 0.0.0.0 --port 8000`).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: family-history-api
+  labels:
+    app.kubernetes.io/name: family-history-api
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: family-history
+  annotations:
+    # A Secret change (intake or rotation) does not restart pods on its own.
+    reloader.stakater.com/auto: "true"
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: family-history-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: family-history-api
+        app.kubernetes.io/component: api
+        app.kubernetes.io/part-of: family-history
+        # Enclii convention labels (the platform selects the service's pods by these).
+        app: family-history-api
+        enclii.dev/service: family-history-api
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+        - name: ghcr-credentials
+      containers:
+        - name: api
+          # DECOY: the real pin is the images: block in kustomization.yaml.
+          image: ghcr.io/madfam-org/family-history-api:latest
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          ports:
+            - name: http
+              containerPort: 8000
+            - name: metrics
+              containerPort: 9090
+          env:
+            - name: FH_ENV
+              value: production
+            - name: PYTHONDONTWRITEBYTECODE
+              value: "1"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            # Janua: tokens carry the public issuer, and the JWKS is fetched from it over 443
+            # (allow-https-egress). The audience is the resource server registered in janua.client.yaml.
+            - name: FH_JANUA_ISSUER
+              value: https://auth.madfam.io
+            - name: FH_JANUA_AUDIENCE
+              value: family-history-api
+            - name: FH_JANUA_JWKS_URL
+              value: https://auth.madfam.io/.well-known/jwks.json
+            # Browsers never call the API from the app (the web is a backend-for-frontend), so the only
+            # origin is the app host itself.
+            - name: FH_CORS_ORIGINS
+              value: https://fh-app.madfam.io
+            # Key references, not envFrom: a missing key stops the pod visibly instead of booting it half
+            # configured.
+            # The pooled URL (through PgBouncer) from the project Secret that onboarding writes
+            # (`enclii onboard --secret-name family-history-secrets`), as in creator-census. DIRECT_DATABASE_URL,
+            # in the same Secret, is mounted by the migrate Job only.
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: family-history-secrets
+                  key: DATABASE_URL
+            # From the intake (ExternalSecret family-history-api).
+            - name: FH_EARLY_ACCESS_ALLOWLIST
+              valueFrom:
+                secretKeyRef:
+                  name: family-history-api
+                  key: FH_EARLY_ACCESS_ALLOWLIST
+            # No FH_S3_* yet: media lands in the next wave, and the API treats the bucket settings as optional.
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            requests: { cpu: 50m, memory: 160Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          # Liveness is a static 200 with no dependency checks, so a database blip never restarts the pod.
+          livenessProbe:
+            httpGet: { path: /health, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 3
+          # Readiness proves the database and the migration head (503 until the migrate Job has run).
+          readinessProbe:
+            httpGet: { path: /ready, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 128Mi

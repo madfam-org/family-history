@@ -2,8 +2,9 @@
 #
 # GitHub-hosted runners only, pinned to ubuntu-24.04: fork pull requests must never reach MADFAM's
 # self-hosted runners, and `ubuntu-latest` moves to a new image on 2026-10-19. Every action is
-# pinned to a full commit SHA. Jobs for parts of the repo that do not exist yet skip themselves,
-# so the same workflow serves the scaffold and the full build.
+# pinned to a full commit SHA, every downloaded tool to a version and a checksum. Jobs for parts of
+# the repo that do not exist yet skip themselves with a notice, so the same workflow serves the
+# scaffold and the full build. scripts/check-supply-chain.py enforces these rules on this file.
 
 name: CI
 
@@ -93,3 +94,350 @@ jobs:
           grep -qi 'compatibility' CLAUDE.md
           grep -q 'GNU AFFERO GENERAL PUBLIC LICENSE' LICENSE
           echo "agent docs OK"
+
+  postgres:
+    name: API tests on Postgres (non-superuser, RLS)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    # A disposable database with CI-only placeholder credentials, never a real one. The tests connect
+    # as fh_app, a role without SUPERUSER or BYPASSRLS, so row-level security actually applies.
+    # FH_TEST_ADMIN_DATABASE_URL (the container superuser) is there for fixtures that must create roles.
+    services:
+      postgres:
+        image: postgres:16@sha256:1a6ab3f5345eb6dbe04a1349529caabdb0ab09293a09590fad07b2246bfa4b54 # postgres:16
+        env:
+          POSTGRES_USER: fh_admin
+          POSTGRES_PASSWORD: fh_ci_only
+          POSTGRES_DB: postgres
+        options: >-
+          --health-cmd "pg_isready -U fh_admin -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+        ports:
+          - 5432:5432
+    env:
+      ADMIN_URL: postgresql://fh_admin:fh_ci_only@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+      - name: Create the non-superuser test role and its database
+        run: |
+          set -euo pipefail
+          psql "$ADMIN_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE ROLE fh_app LOGIN PASSWORD 'fh_ci_only'
+            NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+          CREATE DATABASE family_history_test OWNER fh_app;
+          SQL
+          flags="$(psql "$ADMIN_URL" -Atc "SELECT rolsuper::text || rolbypassrls::text FROM pg_roles WHERE rolname = 'fh_app'")"
+          [ "$flags" = "falsefalse" ] || { echo "fh_app must be neither superuser nor BYPASSRLS (got $flags)"; exit 1; }
+          {
+            echo "FH_TEST_DATABASE_URL=postgresql+psycopg://fh_app:fh_ci_only@localhost:5432/family_history_test"
+            echo "FH_TEST_ADMIN_DATABASE_URL=postgresql+psycopg://fh_admin:fh_ci_only@localhost:5432/family_history_test"
+          } >> "$GITHUB_ENV"
+      - name: Install
+        working-directory: api
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Tests marked postgres
+        working-directory: api
+        run: |
+          set +e
+          pytest -q -m postgres
+          rc=$?
+          set -e
+          if [ "$rc" -eq 5 ]; then
+            echo "::notice title=No postgres tests yet::no test is marked postgres; nothing to run"
+            exit 0
+          fi
+          exit "$rc"
+
+  quality-gates:
+    name: Org quality gates (byte and file-size)
+    # The org gates (madfam-org/.github, madfam-quality-gates.yml) cannot be CALLED from this repository:
+    # it requires every action to be pinned to a full commit SHA, and that reusable workflow uses
+    # tag-pinned actions/checkout@v4 and actions/setup-node@v4, so GitHub refuses the run before any job
+    # starts. This job runs the SAME gate scripts from the SAME pinned commit of madfam-org/.github, with
+    # the same thresholds, through SHA-pinned actions. Switch back to `uses:` once the org workflow pins
+    # its actions by SHA.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GATES_SHA: 37560a3d87b883178f5a66a6a07c461263149858 # madfam-org/.github main (2026-09-01)
+      TSX_VERSION: 4.23.15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          repository: madfam-org/.github
+          ref: ${{ env.GATES_SHA }}
+          path: .madfam-gates
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "20"
+      - name: Byte gate (control bytes, BOM, U+2028/U+2029)
+        run: |
+          node .madfam-gates/scripts/check-source-bytes.mjs \
+            --text-exts ".ts,.tsx,.js,.mjs,.cjs,.css,.md,.sql,.json,.yml,.yaml,.sh,.py,.toml,.txt,.ged" \
+            --code-exts ".ts,.tsx,.js,.mjs,.cjs"
+      - name: File-size gate (warn over 600 lines, fail over 800; empty baseline)
+        run: |
+          npx --yes "tsx@${TSX_VERSION}" .madfam-gates/scripts/check-file-size.ts \
+            --baseline scripts/size-limit-baseline.json \
+            --include "api/src/:.py,api/tests/:.py,apps/web/src/:.ts:.tsx,packages/:.ts:.tsx,scripts/:.py:.sh" \
+            --warn-at 600 \
+            --fail-at 800
+
+  secrets:
+    name: Secret scan (full history)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GITLEAKS_VERSION: 8.30.1
+      # sha256 of gitleaks_8.30.1_linux_x64.tar.gz, from the release's checksums file. The step checks the
+      # tarball against this pin AND against the checksums file it downloads.
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+      - name: Install gitleaks (pinned, checksum-verified)
+        run: |
+          set -euo pipefail
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          tgz="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          work="$RUNNER_TEMP/gitleaks" && mkdir -p "$work" && cd "$work"
+          curl -fsSL -o "$tgz" "$base/$tgz"
+          curl -fsSL -o checksums.txt "$base/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          echo "${GITLEAKS_SHA256}  $tgz" | sha256sum -c -
+          grep -F "  $tgz" checksums.txt | sha256sum -c -
+          tar -xzf "$tgz" gitleaks
+          mkdir -p "$HOME/.local/bin" && install -m 0755 gitleaks "$HOME/.local/bin/gitleaks"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Scan every commit reachable from any fetched ref (values redacted)
+        # A finding prints the rule, the path and the commit, never the value. Rotate first, then decide on history.
+        run: gitleaks git --config .gitleaks.toml --redact --no-banner --log-opts="--all" .
+
+  security:
+    name: Dependency and filesystem vulnerabilities, licences
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      TRIVY_VERSION: 0.74.0
+      # sha256 of trivy_0.74.0_Linux-64bit.tar.gz, from the release's checksums file (checked against both).
+      TRIVY_SHA256: 2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+      - name: Install trivy (pinned, checksum-verified binary; no third-party action)
+        run: |
+          set -euo pipefail
+          base="https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}"
+          tgz="trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          work="$RUNNER_TEMP/trivy" && mkdir -p "$work" && cd "$work"
+          curl -fsSL -o "$tgz" "$base/$tgz"
+          curl -fsSL -o checksums.txt "$base/trivy_${TRIVY_VERSION}_checksums.txt"
+          echo "${TRIVY_SHA256}  $tgz" | sha256sum -c -
+          grep -F "  $tgz" checksums.txt | sha256sum -c -
+          tar -xzf "$tgz" trivy
+          mkdir -p "$HOME/.local/bin" && install -m 0755 trivy "$HOME/.local/bin/trivy"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Trivy filesystem scan (fails on CRITICAL with a fix available)
+        run: trivy fs --scanners vuln --severity CRITICAL --ignore-unfixed --exit-code 1 --no-progress .
+      - name: Install the API's runtime dependencies and the audit tools (separate virtualenvs)
+        run: |
+          set -euo pipefail
+          python -m venv "$RUNNER_TEMP/target"
+          "$RUNNER_TEMP/target/bin/python" -m pip install --quiet --upgrade pip
+          "$RUNNER_TEMP/target/bin/python" -m pip install --quiet ./api
+          python -m venv "$RUNNER_TEMP/tools"
+          "$RUNNER_TEMP/tools/bin/python" -m pip install --quiet --require-hashes -r scripts/ci/requirements-audit.txt
+      - name: pip-audit (every known vulnerability in the API's resolved dependencies fails)
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/target/bin/python" -m pip freeze --exclude-editable \
+            | grep -viE '^(family-history-api|pip|setuptools|wheel)==' > "$RUNNER_TEMP/frozen.txt"
+          "$RUNNER_TEMP/tools/bin/pip-audit" -r "$RUNNER_TEMP/frozen.txt" --no-deps --disable-pip --progress-spinner off
+      - name: Python licences (AGPL-aware allowlist)
+        env:
+          TARGET_PYTHON: ${{ runner.temp }}/target/bin/python
+          PIP_LICENSES: ${{ runner.temp }}/tools/bin/pip-licenses
+        run: bash scripts/check-licenses.sh --python-only
+      - name: Detect web app
+        id: web
+        run: |
+          if [ -f apps/web/package.json ] && [ -f pnpm-lock.yaml ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; fi
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        if: steps.web.outputs.present == 'true'
+        with:
+          node-version: "22"
+      - name: pnpm audit (critical) and Node licences
+        if: steps.web.outputs.present == 'true'
+        run: |
+          set -euo pipefail
+          corepack enable
+          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm audit --audit-level critical
+          bash scripts/check-licenses.sh --node-only
+      - name: Web skip notice
+        if: steps.web.outputs.present != 'true'
+        run: echo "::notice title=Web audit skipped::apps/web or pnpm-lock.yaml does not exist yet"
+
+  guards:
+    name: Repository guards and their tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ACTIONLINT_VERSION: 1.7.12
+      # sha256 of actionlint_1.7.12_linux_amd64.tar.gz (release checksums file).
+      ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+      SHELLCHECK_VERSION: 0.11.0
+      # sha256 of shellcheck-v0.11.0.linux.x86_64.tar.xz.
+      SHELLCHECK_SHA256: 8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+      - name: Install PyYAML (hashed) and the API package (for the synthetic lexicon)
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet --require-hashes -r scripts/ci/requirements-guards.txt
+          python -m pip install --quiet -e ./api
+      - name: Install actionlint and shellcheck (pinned, checksum-verified)
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/lint" && mkdir -p "$work" "$HOME/.local/bin" && cd "$work"
+          al="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl -fsSL -o "$al" "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/$al"
+          echo "${ACTIONLINT_SHA256}  $al" | sha256sum -c -
+          tar -xzf "$al" actionlint && install -m 0755 actionlint "$HOME/.local/bin/actionlint"
+          sc="shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
+          curl -fsSL -o "$sc" "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/$sc"
+          echo "${SHELLCHECK_SHA256}  $sc" | sha256sum -c -
+          tar -xJf "$sc" && install -m 0755 "shellcheck-v${SHELLCHECK_VERSION}/shellcheck" "$HOME/.local/bin/shellcheck"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Guard script tests
+        run: python -m unittest discover -s scripts/tests -v
+      - name: Shell guard self-tests
+        run: |
+          set -euo pipefail
+          bash scripts/public-hygiene-check.sh --self-test
+          bash scripts/check-licenses.sh --self-test
+          bash scripts/ci/smoke-image.sh --self-test
+      - name: Supply chain (SHA pins, GitHub-hosted runners, timeouts, digest-pinned images)
+        run: python scripts/check-supply-chain.py
+      - name: Secret coverage (every secret reference provisioned, env contract respected)
+        run: python scripts/check-secret-coverage.py
+      - name: Synthetic fixtures (no CURP, RFC, phone, real email or off-lexicon name)
+        run: python scripts/check-synthetic-fixtures.py
+      - name: Public hygiene (no private addresses, cluster names, client ids, vault paths, node names)
+        run: bash scripts/public-hygiene-check.sh
+      - name: actionlint (workflows; shellcheck on their run blocks)
+        run: actionlint -color
+      - name: shellcheck (scripts)
+        run: git ls-files -z 'scripts/*.sh' | xargs -0 --no-run-if-empty shellcheck
+
+  contracts:
+    name: OpenAPI contract drift
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+      - name: Install the API package
+        run: python -m pip install --quiet -e ./api
+      - name: Detect the check-openapi command
+        id: detect
+        run: |
+          if python -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('family_history.cli') else 1)" \
+            && python -m family_history.cli --help 2>&1 | grep -q 'check-openapi'; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Check the committed OpenAPI matches the code
+        if: steps.detect.outputs.present == 'true'
+        run: python -m family_history.cli check-openapi
+      - name: Skip notice
+        if: steps.detect.outputs.present != 'true'
+        run: echo "::notice title=Contract check skipped::family_history.cli check-openapi does not exist yet"
+
+  manifests:
+    name: Production manifests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      KUSTOMIZE_VERSION: v5.4.3
+      # sha256 of kustomize_v5.4.3_linux_amd64.tar.gz (release checksums.txt).
+      KUSTOMIZE_SHA256: 3669470b454d865c8184d6bce78df05e977c9aea31c30df3c669317d43bcc7a7
+      KUBECONFORM_VERSION: v0.7.0
+      # sha256 of kubeconform-linux-amd64.tar.gz (release CHECKSUMS).
+      KUBECONFORM_SHA256: c31518ddd122663b3f3aa874cfe8178cb0988de944f29c74a0b9260920d115d3
+      PROMETHEUS_VERSION: 3.14.0
+      # sha256 of prometheus-3.14.0.linux-amd64.tar.gz (release sha256sums.txt); only promtool is extracted.
+      PROMETHEUS_SHA256: f665c6da19eb7ba399c915d30c7d9793c9b417bf8a749b504bc470678631478d
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+      - name: Install kustomize, kubeconform, promtool (pinned, checksum-verified) and PyYAML (hashed)
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet --require-hashes -r scripts/ci/requirements-guards.txt
+          work="$RUNNER_TEMP/k8s-tools" && mkdir -p "$work" "$HOME/.local/bin" && cd "$work"
+          curl -fsSL -o kustomize.tgz "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz"
+          echo "${KUSTOMIZE_SHA256}  kustomize.tgz" | sha256sum -c -
+          tar -xzf kustomize.tgz kustomize
+          curl -fsSL -o kubeconform.tgz "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
+          echo "${KUBECONFORM_SHA256}  kubeconform.tgz" | sha256sum -c -
+          tar -xzf kubeconform.tgz kubeconform
+          prom="prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz"
+          curl -fsSL -o "$prom" "https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS_VERSION}/$prom"
+          echo "${PROMETHEUS_SHA256}  $prom" | sha256sum -c -
+          tar -xzf "$prom" --strip-components=1 "prometheus-${PROMETHEUS_VERSION}.linux-amd64/promtool"
+          install -m 0755 kustomize kubeconform promtool "$HOME/.local/bin/"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Render and validate schemas
+        run: |
+          set -euo pipefail
+          kustomize build infra/k8s/production > "$RUNNER_TEMP/rendered.yaml"
+          kubeconform -strict -ignore-missing-schemas -summary "$RUNNER_TEMP/rendered.yaml"
+      - name: Manifest rules (non-root, read-only root, drop ALL, probes, digests, tunnel and metrics reach, alerts)
+        run: python scripts/check-manifests.py "$RUNNER_TEMP/rendered.yaml" --extract-rules "$RUNNER_TEMP/rules.yaml"
+      - name: Alert rules (promtool)
+        run: promtool check rules "$RUNNER_TEMP/rules.yaml"
+
+  image-smoke:
+    name: Image build and restricted-runtime smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: API image (api/Dockerfile, context api/)
+        run: |
+          set -euo pipefail
+          if [ ! -f api/Dockerfile ]; then echo "::notice title=API image skipped::api/Dockerfile does not exist yet"; exit 0; fi
+          docker build -t fh-api:ci api
+          bash scripts/ci/smoke-image.sh fh-api:ci 8000 /health '"ok"' \
+            -e FH_ENV=test -e FH_AUTH_DISABLED=true
+      - name: Web image (apps/web/Dockerfile, context repository root)
+        run: |
+          set -euo pipefail
+          if [ ! -f apps/web/Dockerfile ]; then echo "::notice title=Web image skipped::apps/web/Dockerfile does not exist yet"; exit 0; fi
+          docker build -t fh-web:ci -f apps/web/Dockerfile .
+          # A throwaway session secret generated for this run only.
+          bash scripts/ci/smoke-image.sh fh-web:ci 3000 /api/health '' \
+            --tmpfs /app/.next/cache -e FH_ENV=test -e FH_INDEXABLE=false \
+            -e FH_PUBLIC_LANDING_HOST=localhost -e FH_PUBLIC_APP_HOST=app.localhost \
+            -e FH_API_INTERNAL_URL=http://127.0.0.1:9 -e AUTH_JANUA_ISSUER=https://auth.madfam.io \
+            -e "FH_SESSION_SECRET=$(openssl rand -hex 32)"

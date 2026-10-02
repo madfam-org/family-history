@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from gedcom_helpers import fixture_bytes
+from gedcom_helpers import UTF8_BOM, fixture_bytes
 
 from family_history.gedcom import import_gedcom551, parse_gedcom7, write_gedcom7
 from family_history.gedcom.diagnostics import Severity
@@ -110,7 +110,9 @@ def test_gramps_like_ansel() -> None:
 
 
 def test_rootsmagic_like_bom_crlf_and_quirks() -> None:
-    result = import_gedcom551(fixture_bytes("rootsmagic-like-551.ged"))
+    data = fixture_bytes("rootsmagic-like-551.ged")
+    assert data.startswith(UTF8_BOM) and data.count(UTF8_BOM) == 1  # the importer really sees a BOM
+    result = import_gedcom551(data)
     report = result.report
     assert report.encoding == "utf-8"
     assert report.renamed_xrefs == {"@s-1@": "@S_1@"}

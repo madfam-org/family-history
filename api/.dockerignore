@@ -1,0 +1,9 @@
+# Only src/ and requirements/ reach the image.
+*
+!src/
+!requirements/runtime.txt
+**/__pycache__
+**/*.py[cod]
+**/.mypy_cache
+**/.ruff_cache
+**/.pytest_cache

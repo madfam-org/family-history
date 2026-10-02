@@ -1,0 +1,37 @@
+# Build context for images built from the repository root (apps/web/Dockerfile: the pnpm workspace).
+# The API image builds with api/ as its context and keeps its own api/.dockerignore.
+
+# Never ship credentials or local env into a build context.
+.env
+.env.*
+!.env.example
+**/.npmrc.local
+
+# VCS, tooling and local state
+.git
+.github
+.tools
+.claude
+.idea
+.vscode
+**/.DS_Store
+
+# Dependencies and build output are rebuilt inside the image
+**/node_modules
+**/.next
+**/out
+**/.turbo
+**/*.tsbuildinfo
+**/coverage
+**/test-results
+**/playwright-report
+
+# Not part of the web image
+api
+infra
+scripts
+**/__pycache__
+**/.venv
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache

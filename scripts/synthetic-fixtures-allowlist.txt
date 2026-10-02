@@ -1,0 +1,4 @@
+# Exceptions for scripts/check-synthetic-fixtures.py. One per line:
+#   <rule> <path-glob> <regex>  # why this value is synthetic
+# rule is one of curp, rfc, phone, email, name. Every entry needs a reason after '#'.
+# Prefer fixing the fixture (the synthetic generator, the lexicon, example.com) over adding a line here.
