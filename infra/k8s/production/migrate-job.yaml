@@ -1,0 +1,97 @@
+# Schema migrations (`python -m family_history.cli migrate`: Alembic upgrade head), run as an ArgoCD PreSync
+# hook so the schema is current before new pods roll. The API never creates tables, and its /ready answers
+# 503 until this has run. It connects DIRECT (DIRECT_DATABASE_URL, unpooled): transaction-pooled connections
+# are never trusted with DDL.
+#
+# Retry-safe. A fresh pod can be denied by the network policy for a few seconds while the policy controller
+# programs its address, and the database can be briefly unreachable during a pooler or primary restart. The
+# wrapper below retries the migration with a backoff before it gives up; Alembic's upgrade runs in a
+# transaction on Postgres, so a failed attempt leaves nothing half-applied and a retry is safe. The Job's own
+# backoffLimit adds one more pod on top.
+#
+# A PreSync hook that FAILS blocks every later sync of the app. If deploys stop rolling, look at this Job
+# through Enclii first (docs/RUNBOOK.md#familyhistorymigrationfailed).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: family-history-migrate
+  labels:
+    app.kubernetes.io/name: family-history-migrate
+    app.kubernetes.io/component: migrate
+    app.kubernetes.io/part-of: family-history
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 1
+  activeDeadlineSeconds: 900
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: family-history-migrate
+        app.kubernetes.io/component: migrate
+        app.kubernetes.io/part-of: family-history
+        # The API's service identity, so platform database policies keyed on it admit this pod.
+        app: family-history-api
+        enclii.dev/service: family-history-api
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+        - name: ghcr-credentials
+      containers:
+        - name: migrate
+          # DECOY: the real pin is the images: block in kustomization.yaml (the API image).
+          image: ghcr.io/madfam-org/family-history-api:latest
+          # Six attempts over about two minutes, then a non-zero exit (the Job fails visibly).
+          command:
+            - python
+            - -c
+            - |
+              import subprocess, sys, time
+              delays = [0, 5, 10, 20, 30, 45]
+              for attempt, delay in enumerate(delays, start=1):
+                  time.sleep(delay)
+                  rc = subprocess.call([sys.executable, "-m", "family_history.cli", "migrate"])
+                  if rc == 0:
+                      print(f"migrate: done on attempt {attempt}", flush=True)
+                      sys.exit(0)
+                  print(f"migrate: attempt {attempt}/{len(delays)} exited {rc}", file=sys.stderr, flush=True)
+              print("migrate: giving up", file=sys.stderr, flush=True)
+              sys.exit(1)
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          env:
+            - name: FH_ENV
+              value: production
+            - name: PYTHONDONTWRITEBYTECODE
+              value: "1"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: DIRECT_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: family-history-api
+                  key: DIRECT_DATABASE_URL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 384Mi }
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi

@@ -1,0 +1,22 @@
+# Scrapes the metrics Service only (service-api-metrics.yaml, port 9090), never the public app's port.
+# `jobLabel` keeps the Prometheus job name the alerts select on (family-history-api).
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: family-history
+  labels:
+    app.kubernetes.io/part-of: family-history
+spec:
+  jobLabel: app.kubernetes.io/name
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: family-history
+      app.kubernetes.io/component: metrics
+  namespaceSelector:
+    matchNames:
+      - family-history
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 60s
+      scrapeTimeout: 10s

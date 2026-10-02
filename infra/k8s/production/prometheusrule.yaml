@@ -1,0 +1,100 @@
+# Alerts for family-history. They rest on metrics the platform already exports (the scrape's `up`,
+# kube-state-metrics, cAdvisor and External Secrets), so they hold before the API publishes metrics of its
+# own. Every alert carries a runbook_url to its section of docs/RUNBOOK.md; scripts/check-manifests.py fails
+# the build when an anchor is missing. CI runs `promtool check rules` on the rendered rules.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: family-history
+  labels:
+    app.kubernetes.io/part-of: family-history
+spec:
+  groups:
+    - name: family-history.availability
+      rules:
+        - alert: FamilyHistoryApiDown
+          expr: up{namespace="family-history", job="family-history-api"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            service: family-history-api
+          annotations:
+            summary: the API's metrics endpoint has not answered a scrape for 5 minutes
+            description: >-
+              Prometheus cannot scrape {{ $labels.instance }}. The pod is down, restarting, or the metrics
+              listener on 9090 died with the app still up.
+            runbook_url: https://github.com/madfam-org/family-history/blob/main/docs/RUNBOOK.md#familyhistoryapidown
+        - alert: FamilyHistoryApiMetricsAbsent
+          expr: absent(up{namespace="family-history", job="family-history-api"})
+          for: 30m
+          labels:
+            severity: warning
+            service: family-history-api
+          annotations:
+            summary: no scrape target for the API has existed for 30 minutes
+            description: >-
+              No API pod is running, or the ServiceMonitor no longer selects the metrics Service. A service
+              without an Enclii Release stays at zero replicas while the GitOps sync reports Synced.
+            runbook_url: https://github.com/madfam-org/family-history/blob/main/docs/RUNBOOK.md#familyhistoryapimetricsabsent
+        - alert: FamilyHistoryDeploymentUnavailable
+          expr: kube_deployment_status_replicas_available{namespace="family-history"} < 1
+          for: 10m
+          labels:
+            severity: critical
+            service: family-history
+          annotations:
+            summary: deployment {{ $labels.deployment }} has had no available replica for 10 minutes
+            description: >-
+              Every pod of {{ $labels.deployment }} is failing its readiness probe, crash looping, pending, or
+              scaled to zero.
+            runbook_url: https://github.com/madfam-org/family-history/blob/main/docs/RUNBOOK.md#familyhistorydeploymentunavailable
+        - alert: FamilyHistoryPodCrashLooping
+          expr: increase(kube_pod_container_status_restarts_total{namespace="family-history"}[30m]) > 3
+          for: 5m
+          labels:
+            severity: warning
+            service: family-history
+          annotations:
+            summary: container {{ $labels.container }} in {{ $labels.pod }} restarted more than 3 times in 30 minutes
+            runbook_url: https://github.com/madfam-org/family-history/blob/main/docs/RUNBOOK.md#familyhistorypodcrashlooping
+    - name: family-history.delivery
+      rules:
+        - alert: FamilyHistoryMigrationFailed
+          expr: kube_job_status_failed{namespace="family-history", job_name="family-history-migrate"} > 0
+          for: 1m
+          labels:
+            severity: critical
+            service: family-history-api
+          annotations:
+            summary: the migrate hook failed, so every later sync of the app is blocked
+            description: >-
+              The PreSync migrate Job exhausted its retries. New images will not roll until a migration
+              succeeds.
+            runbook_url: https://github.com/madfam-org/family-history/blob/main/docs/RUNBOOK.md#familyhistorymigrationfailed
+        - alert: FamilyHistoryExternalSecretNotSynced
+          expr: externalsecret_status_condition{namespace="family-history", condition="Ready", status="False"} == 1
+          for: 15m
+          labels:
+            severity: warning
+            service: family-history
+          annotations:
+            summary: ExternalSecret {{ $labels.name }} has not synced for 15 minutes
+            description: >-
+              A mapped key is missing from the secret store, or the store is unreachable. Running pods keep
+              their values; new pods and the migrate hook may not start.
+            runbook_url: https://github.com/madfam-org/family-history/blob/main/docs/RUNBOOK.md#familyhistoryexternalsecretnotsynced
+    - name: family-history.capacity
+      rules:
+        - alert: FamilyHistoryMemoryNearLimit
+          expr: >-
+            max by (pod, container) (container_memory_working_set_bytes{namespace="family-history", container!=""})
+            / max by (pod, container) (kube_pod_container_resource_limits{namespace="family-history", resource="memory"})
+            > 0.9
+          for: 15m
+          labels:
+            severity: warning
+            service: family-history
+          annotations:
+            summary: container {{ $labels.container }} in {{ $labels.pod }} is above 90% of its memory limit
+            description: The container is close to being OOM-killed. The cluster is tight; raise limits deliberately.
+            runbook_url: https://github.com/madfam-org/family-history/blob/main/docs/RUNBOOK.md#familyhistorymemorynearlimit

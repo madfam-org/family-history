@@ -1,0 +1,18 @@
+# Named after the Enclii service (enclii.yaml `family-history-web`) on port 80: the tunnel routes for
+# fh.madfam.io (the public landing) AND fh-app.madfam.io (the signed-in app) both reach this Service on
+# port 80, the same pod; the app tells the two apart by host.
+apiVersion: v1
+kind: Service
+metadata:
+  name: family-history-web
+  labels:
+    app: family-history-web
+    app.kubernetes.io/name: family-history-web
+    app.kubernetes.io/part-of: family-history
+spec:
+  selector:
+    app.kubernetes.io/name: family-history-web
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

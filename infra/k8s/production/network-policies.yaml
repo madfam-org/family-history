@@ -1,0 +1,205 @@
+# Default-deny for every family-history pod, then explicit allows.
+#
+# Ingress, per workload and per port:
+#   - the web (3000): the Cloudflare tunnel (fh.madfam.io and fh-app.madfam.io) ONLY;
+#   - the API (8000): the Cloudflare tunnel (fh-api.madfam.io) and the web pod;
+#   - the API's metrics port (9090): the scraper's namespace ONLY.
+# The tunnel reaches the web and the API only, each on its app port, never 9090 and never the migrate Job;
+# there is no Ingress object (scripts/check-manifests.py asserts all of it).
+#
+# Egress:
+#   - every pod: DNS;
+#   - the API and the migrate Job: the data namespace, Postgres (5432) and PgBouncer (6432);
+#   - the web: the API pod on 8000 (backend-for-frontend);
+#   - the API and the web: TCP 443 to public addresses only (Janua's JWKS and token endpoint at their public
+#     origin, and the S3-compatible media bucket). A NetworkPolicy cannot name hosts, so 443 is "any public
+#     address"; the private ranges, the carrier-grade NAT range and link-local (cloud metadata) are excluded,
+#     so these rules never reach another in-cluster service.
+#
+# One selector per peer entry. On this estate's policy controller an entry combining a namespaceSelector
+# AND a podSelector has rendered as deny-everything, so every peer below names a single selector; the tunnel
+# peer is the whole cloudflare-tunnel namespace, exactly the shape Enclii's own generated tunnel policy uses.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: family-history
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-tunnel-ingress-web
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: family-history-web
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cloudflare-tunnel
+      ports:
+        - protocol: TCP
+          port: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-tunnel-ingress-api
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: family-history-api
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cloudflare-tunnel
+      ports:
+        - protocol: TCP
+          port: 8000
+---
+# The web's server calls the API in-cluster with the signed-in user's token: the API admits the web pod on
+# 8000, and the web may leave for the API pod on 8000 and nowhere else in the cluster.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-web-to-api-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: family-history-api
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: family-history-web
+      ports:
+        - protocol: TCP
+          port: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-web-to-api-egress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: family-history-web
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: family-history-api
+      ports:
+        - protocol: TCP
+          port: 8000
+---
+# The scraper, to the API's metrics port ONLY.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-monitoring-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: family-history-api
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 9090
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-egress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: family-history
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+# The API and the migrate Job only: the web holds no database access.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-data-egress
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: In
+        values:
+          - family-history-api
+          - family-history-migrate
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: data
+      ports:
+        - protocol: TCP
+          port: 5432
+        - protocol: TCP
+          port: 6432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-https-egress
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: In
+        values:
+          - family-history-api
+          - family-history-web
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 100.64.0.0/10
+              - 169.254.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443
