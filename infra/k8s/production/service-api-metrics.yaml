@@ -1,0 +1,20 @@
+# The API's metrics listener (container port `metrics`, 9090) on a Service of its own: the tunnel-routable
+# Service family-history-api exposes the app only. ServiceMonitor family-history selects this Service by
+# `app.kubernetes.io/component: metrics` and takes the Prometheus `job` from `app.kubernetes.io/name`
+# (family-history-api, the name the alerts select on). NetworkPolicy allow-monitoring-ingress admits 9090
+# from the scraper's namespace only.
+apiVersion: v1
+kind: Service
+metadata:
+  name: family-history-api-metrics
+  labels:
+    app.kubernetes.io/name: family-history-api
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: family-history
+spec:
+  selector:
+    app.kubernetes.io/name: family-history-api
+  ports:
+    - name: metrics
+      port: 9090
+      targetPort: metrics

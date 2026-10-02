@@ -1,0 +1,3 @@
+# Licence overrides for scripts/check-licenses.sh, for packages whose metadata is missing or unreadable.
+#   <ecosystem> <package> <SPDX expression>  # where the licence was verified (upstream LICENSE file, release)
+# ecosystem is python or node. Every entry needs a source after '#'. Never override a denied licence here.
