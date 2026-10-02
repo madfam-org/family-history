@@ -27,6 +27,7 @@ from family_history.routers import (
     associations,
     events,
     health,
+    jobs,
     kinship,
     people,
     places,
@@ -171,6 +172,7 @@ def create_app(
         assertions,
         associations,
         kinship,
+        jobs,
         waitlist,
     ):
         app.include_router(module.router)
