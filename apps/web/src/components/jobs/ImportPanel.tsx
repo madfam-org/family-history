@@ -13,7 +13,7 @@ import { JobStatusLine } from "./JobStatusLine";
 import { useJob } from "./useJob";
 
 /**
- * Upload a .ged or .gdz (≤ 25 MiB), then follow the import job and show its report. The job id
+ * Upload a .ged, .gdz or native .json (≤ 25 MiB), then follow the import job and show its report. The job id
  * goes into the URL (`?trabajo=`) so a reload keeps following it.
  */
 export function ImportPanel({

@@ -18,6 +18,7 @@ import { getCompadrazgo, getPerson } from "@/lib/api/endpoints";
 import { load } from "@/lib/api/load";
 import { isPrivatePerson } from "@/lib/api/schemas";
 import { requireApi } from "@/lib/auth/server";
+import { primaryName } from "@/lib/forms/names";
 import { fetchPeople, relatedIds } from "@/lib/tree/load";
 
 type Params = Promise<{ locale: string; personId: string }>;
@@ -48,13 +49,15 @@ export default async function PersonPage({ params }: { params: Params }) {
   if (!result.ok) return <ApiErrorNotice locale={locale} code={result.code} returnTo={here} />;
   const person = result.data;
 
-  // Names (and sex, for padrino/madrina) of everyone this page mentions.
-  const associated = person.events.flatMap((event) => event.associations.map((association) => association.person_id));
-  const ids = [...new Set([...relatedIds(person), ...associated])].filter((id) => id !== person.id);
+  // Names and sex of relatives (padrinos already carry theirs on `Event.associations`).
   const [related, compadrazgo] = await Promise.all([
-    fetchPeople(api, ids),
+    fetchPeople(api, relatedIds(person)),
     load(() => getCompadrazgo(api, person.id)),
   ]);
+  // display_name is the formal name (nombre de pila and surnames); show the name they went by.
+  const primary = primaryName(person.names);
+  const usedName = primary?.nombre_usado ?? null;
+  const nicknames = (primary?.nicknames ?? []).filter(Boolean);
   const known = new Map<string, KnownPerson>(related.people.map((other) => [other.id, { name: other.display_name, sex: other.sex }]));
 
   return (
@@ -66,6 +69,16 @@ export default async function PersonPage({ params }: { params: Params }) {
           </a>
         ) : null}
         <h1 className="text-3xl font-bold">{person.display_name}</h1>
+        {usedName || nicknames.length > 0 ? (
+          <p className="text-lg text-muted">
+            {[
+              usedName ? family("names.used", { name: usedName }) : null,
+              nicknames.length > 0 ? family("names.nicknames", { names: nicknames.join(", ") }) : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+        ) : null}
         <p className="flex flex-wrap gap-2 text-sm">
           <span className="rounded-full bg-amate px-3 py-1 font-semibold text-bark">{t(`living.${person.living_status}`)}</span>
           <span className="rounded-full bg-amate px-3 py-1 font-semibold text-bark">{t(`visibility.${person.visibility}`)}</span>
@@ -100,7 +113,7 @@ export default async function PersonPage({ params }: { params: Params }) {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <NamesSection locale={locale} person={person} />
-        <EventsSection locale={locale} person={person} known={known} />
+        <EventsSection locale={locale} person={person} />
         <RelativesSection locale={locale} person={person} known={known} />
         <CompadrazgoPanel
           locale={locale}

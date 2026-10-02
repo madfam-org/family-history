@@ -6,6 +6,9 @@ import { summarizeImportReport, type ImportSummary } from "@/lib/api/schemas-fam
 
 const KNOWN_RECORDS = ["INDI", "FAM", "SOUR", "REPO", "OBJE", "NOTE", "SNOTE", "SUBM"] as const;
 type KnownRecord = (typeof KNOWN_RECORDS)[number];
+/** `created_records` keys, and a native file's `record_counts` sections. */
+const KNOWN_ROWS = ["people", "places", "sources", "citations", "events", "unions", "parent_child", "assertions"] as const;
+type KnownRow = (typeof KNOWN_ROWS)[number];
 
 function CountList({ entries, label }: { entries: ImportSummary["counts"]; label: (tag: string) => string }) {
   return (
@@ -28,8 +31,16 @@ export function ImportReport({ report }: { report: unknown }) {
   const t = useTranslations("family.import");
   const summary = summarizeImportReport(report);
   if (!summary) return <p className="text-muted">{t("noReport")}</p>;
-  const recordLabel = (tag: string) =>
-    (KNOWN_RECORDS as readonly string[]).includes(tag) ? t(`recordTypes.${tag as KnownRecord}`) : t("recordTypes.other", { tag });
+  const recordLabel = (tag: string) => {
+    if ((KNOWN_RECORDS as readonly string[]).includes(tag)) return t(`recordTypes.${tag as KnownRecord}`);
+    if ((KNOWN_ROWS as readonly string[]).includes(tag)) return t(`createdTypes.${tag as KnownRow}`);
+    return t("recordTypes.other", { tag });
+  };
+  // Stable diagnostic codes (docs/lanes/integration-api.md); the common ones have copy.
+  const diagnosticText = (code: string) => {
+    const key = `diagnostics.${code}` as "diagnostics.media_skipped";
+    return t.has(key) ? t(key) : null;
+  };
   const severities = ["error", "warning", "info"] as const;
 
   return (
@@ -72,6 +83,7 @@ export function ImportReport({ report }: { report: unknown }) {
                   <ul className="mt-1 flex flex-col gap-1 text-sm">
                     {items.map((item, index) => (
                       <li key={`${item.code}-${item.line ?? "x"}-${index}`}>
+                        {diagnosticText(item.code) ? <span className="block">{diagnosticText(item.code)}</span> : null}
                         <span className="fh-date">{item.code}</span>
                         {typeof item.line === "number" ? <span className="text-muted"> · {t("line", { line: item.line })}</span> : null}
                         {item.message ? (

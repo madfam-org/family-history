@@ -86,13 +86,17 @@ export const nameFormSchema = z
 
 export const associationRoleSchema = z.enum(["godparent", "witness", "officiant", "other"]);
 
-/** An association on an event (addendum D). Where the API returns them is not fixed yet. */
+/**
+ * Someone else's part in an event (`Event.associations[]`, `EventAssociation` in the API):
+ * a padrino, a witness, an officiant. `display_name` and `sex` let the page say «padrino» or
+ * «madrina» without fetching the person.
+ */
 export const associationSchema = z
   .object({
     id: z.string(),
-    event_id: z.string().optional(),
     person_id: z.string(),
-    display_name: optionalText,
+    display_name: z.string(),
+    sex: sexSchema,
     role: z.string(),
     phrase: optionalText,
   })

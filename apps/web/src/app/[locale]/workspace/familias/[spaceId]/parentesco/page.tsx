@@ -48,8 +48,11 @@ export default async function KinshipPage({ params, searchParams }: { params: Pa
       if (kinship.ok) {
         const label = locale === "en" ? kinship.data.label_en : kinship.data.label_es;
         answer = { kind: "result", text: t("result", { alter: alter.display_name, label, ego: ego.display_name }) };
-      } else if (kinship.code === "no_relation" || kinship.code === "not_found") {
+      } else if (kinship.code === "no_relation") {
         answer = { kind: "notice", text: t("noRelation") };
+      } else if (kinship.code === "not_found") {
+        // 404 person_not_found: `to` is not someone the caller can see in this space.
+        answer = { kind: "notice", text: t("personMissing") };
       } else {
         return <ApiErrorNotice locale={locale} code={kinship.code} returnTo={here} />;
       }

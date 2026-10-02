@@ -31,6 +31,7 @@ export function Section({ id, title, empty, children }: { id: string; title: str
 
 export async function NamesSection({ locale, person }: { locale: Locale; person: Person }) {
   const t = await getTranslations({ locale, namespace: "app.person" });
+  const names = await getTranslations({ locale, namespace: "family.names" });
   return (
     <Section id="nombres" title={t("namesTitle")} empty={t("noNames")}>
       {person.names.map((name, index) => {
@@ -38,7 +39,7 @@ export async function NamesSection({ locale, person }: { locale: Locale; person:
         return (
           <li key={name.id ?? index}>
             <p className="font-serif text-lg font-bold">{formatName(name) || person.display_name}</p>
-            {name.nombre_usado ? <p className="text-sm text-muted">{name.nombre_usado}</p> : null}
+            {name.nombre_usado ? <p className="text-sm text-muted">{names("used", { name: name.nombre_usado })}</p> : null}
             {nicknames.length > 0 ? <p className="text-sm text-muted">{t("nickname", { nickname: nicknames.join(", ") })}</p> : null}
           </li>
         );
@@ -48,15 +49,7 @@ export async function NamesSection({ locale, person }: { locale: Locale; person:
 }
 
 /** Events with humanized dates, sensitive markers and, on sacraments, their padrinos. */
-export async function EventsSection({
-  locale,
-  person,
-  known,
-}: {
-  locale: Locale;
-  person: Person;
-  known: ReadonlyMap<string, KnownPerson>;
-}) {
+export async function EventsSection({ locale, person }: { locale: Locale; person: Person }) {
   const t = await getTranslations({ locale, namespace: "family" });
   const personCopy = await getTranslations({ locale, namespace: "app.person" });
   return (
@@ -64,17 +57,14 @@ export async function EventsSection({
       {person.events.map((event, index) => {
         const key = eventTypeKey(event.type);
         const date = displayDate(event, locale);
-        const entries: GodparentEntry[] = event.associations.map((association) => {
-          const who = known.get(association.person_id);
-          return {
-            id: association.id,
-            personId: association.person_id,
-            name: association.display_name ?? who?.name ?? t("relationships.unknownPerson"),
-            sex: who?.sex ?? "U",
-            role: association.role,
-            phrase: association.phrase ?? null,
-          };
-        });
+        const entries: GodparentEntry[] = event.associations.map((association) => ({
+          id: association.id,
+          personId: association.person_id,
+          name: association.display_name,
+          sex: association.sex,
+          role: association.role,
+          phrase: association.phrase ?? null,
+        }));
         return (
           <li key={event.id ?? index}>
             <p className="font-semibold">{key === "other" ? event.type : t(`events.types.${key}`)}</p>

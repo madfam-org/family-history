@@ -318,8 +318,14 @@
     "no_relation": "No encontramos un parentesco registrado entre estas personas.",
     "relationship_exists": "Esa relación ya está registrada.",
     "file_too_large": "El archivo es demasiado grande. El límite es 25 MiB.",
-    "unsupported_file": "No reconocemos ese tipo de archivo. Usa un .ged o un .gdz.",
+    "unsupported_file": "No reconocemos ese tipo de archivo. Usa un .ged, un .gdz o un .json de «Llévate todo».",
     "download_expired": "El enlace de descarga ya venció. Prepara otra descarga.",
+    "gedcom_invalid": "No pudimos leer ese archivo como GEDCOM. Revisa que sea un .ged o un .gdz exportado por un programa de genealogía.",
+    "native_export_invalid": "Ese archivo .json no es una copia completa exportada desde aquí («Llévate todo»), o está dañado.",
+    "empty_file": "El archivo está vacío.",
+    "job_not_ready": "El archivo todavía se está preparando. Espera un momento.",
+    "association_is_principal": "Esa persona es la protagonista del evento; elige a otra como padrino, madrina o testigo.",
+    "worker_timeout": "El proceso tardó demasiado y se detuvo. Intenta de nuevo; si vuelve a pasar, prueba con un archivo más pequeño.",
     "unknown": "Ocurrió un error inesperado."
   },
   "notFound": {

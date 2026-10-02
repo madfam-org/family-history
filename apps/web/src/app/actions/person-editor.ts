@@ -5,7 +5,7 @@ import { refresh } from "next/cache";
 import { createEvent, getPerson, patchEvent, patchPerson } from "@/lib/api/endpoints";
 import { requireApi } from "@/lib/auth/server";
 import { DATE_INPUT_MAX, normalizeDateInput } from "@/lib/dates/hints";
-import { DESCRIPTION_MAX, formId, isEditableEventType, takesSpouse } from "@/lib/forms/family";
+import { DESCRIPTION_MAX, eventCreateBody, formId, isEditableEventType } from "@/lib/forms/family";
 import { readNameValues, replacePrimaryName, toNameFormBody } from "@/lib/forms/names";
 import type { EditorState } from "@/lib/forms/types";
 
@@ -46,19 +46,9 @@ export async function addEventAction(previous: EditorState, form: FormData): Pro
     return { status: "invalid", error: "tooLong", values };
   }
 
-  const participants: Array<{ person_id: string; role: "principal" | "spouse" }> = [
-    { person_id: personId, role: "principal" },
-  ];
-  if (spouseId && spouseId !== personId && takesSpouse(type)) participants.push({ person_id: spouseId, role: "spouse" });
-
   const { api } = await requireApi();
   try {
-    await createEvent(api, spaceId, {
-      type,
-      ...(date ? { date_original: date } : {}),
-      ...(description ? { description } : {}),
-      participants,
-    });
+    await createEvent(api, spaceId, eventCreateBody({ type, personId, date, description, spouseId }));
   } catch (error) {
     return failedState(error, values, { dateText: date });
   }

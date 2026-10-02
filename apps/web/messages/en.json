@@ -318,8 +318,14 @@
     "no_relation": "We found no recorded relationship between these people.",
     "relationship_exists": "That relationship is already recorded.",
     "file_too_large": "The file is too large. The limit is 25 MiB.",
-    "unsupported_file": "We do not recognise that kind of file. Use a .ged or .gdz file.",
+    "unsupported_file": "We do not recognise that kind of file. Use a .ged, a .gdz or a .json from “Take everything”.",
     "download_expired": "The download link has expired. Prepare another download.",
+    "gedcom_invalid": "We could not read that file as GEDCOM. Check that it is a .ged or .gdz exported by a genealogy program.",
+    "native_export_invalid": "That .json file is not a complete copy exported from here (“Take everything”), or it is damaged.",
+    "empty_file": "The file is empty.",
+    "job_not_ready": "The file is still being prepared. Wait a moment.",
+    "association_is_principal": "That person is the event's principal; choose someone else as godparent or witness.",
+    "worker_timeout": "The process took too long and stopped. Try again; if it happens again, try a smaller file.",
     "unknown": "An unexpected error occurred."
   },
   "notFound": {

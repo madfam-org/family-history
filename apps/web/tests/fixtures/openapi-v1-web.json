@@ -1,0 +1,1893 @@
+{
+ "_source": "Component schemas from packages/contracts/openapi.json at family-history#17 (feat/api-integration-domain-gedcom, d1dd43b): the responses the web parses and the request bodies it sends, with their dependencies. tests/openapi-conformance.test.ts compares this copy with packages/contracts/openapi.json once that file holds the #17 contract.",
+ "components": {
+  "schemas": {
+   "Association": {
+    "properties": {
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "event_id": {
+      "format": "uuid",
+      "title": "Event Id",
+      "type": "string"
+     },
+     "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+     },
+     "person_id": {
+      "format": "uuid",
+      "title": "Person Id",
+      "type": "string"
+     },
+     "phrase": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Phrase"
+     },
+     "role": {
+      "$ref": "#/components/schemas/AssociationRole"
+     },
+     "space_id": {
+      "format": "uuid",
+      "title": "Space Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "space_id",
+     "event_id",
+     "person_id",
+     "role",
+     "phrase",
+     "created_at"
+    ],
+    "title": "Association",
+    "type": "object"
+   },
+   "AssociationCreate": {
+    "additionalProperties": false,
+    "description": "`person_id` took part in someone else's event: the padrino at a baptism, a witness at a\ncivil marriage. The godchild is the event's principal. `other` needs a `phrase`.",
+    "properties": {
+     "event_id": {
+      "format": "uuid",
+      "title": "Event Id",
+      "type": "string"
+     },
+     "person_id": {
+      "format": "uuid",
+      "title": "Person Id",
+      "type": "string"
+     },
+     "phrase": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "minLength": 1,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Phrase"
+     },
+     "role": {
+      "$ref": "#/components/schemas/AssociationRole"
+     }
+    },
+    "required": [
+     "event_id",
+     "person_id",
+     "role"
+    ],
+    "title": "AssociationCreate",
+    "type": "object"
+   },
+   "AssociationRole": {
+    "description": "A person's role at someone else's event. Maps to `domain.events.AssociationRole`\n(GEDCOM `ROLE`: GODP, WITN, OFFICIATOR, OTHER with a phrase).",
+    "enum": [
+     "godparent",
+     "witness",
+     "officiant",
+     "other"
+    ],
+    "title": "AssociationRole",
+    "type": "string"
+   },
+   "Citation": {
+    "properties": {
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "extracted_text": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Extracted Text"
+     },
+     "foja": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Foja"
+     },
+     "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+     },
+     "page": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Page"
+     },
+     "partida": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Partida"
+     },
+     "quality": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Quality"
+     },
+     "source_id": {
+      "format": "uuid",
+      "title": "Source Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "source_id",
+     "page",
+     "foja",
+     "partida",
+     "quality",
+     "extracted_text",
+     "created_at"
+    ],
+    "title": "Citation",
+    "type": "object"
+   },
+   "CompadrazgoItem": {
+    "properties": {
+     "display_name": {
+      "title": "Display Name",
+      "type": "string"
+     },
+     "label_en": {
+      "title": "Label En",
+      "type": "string"
+     },
+     "label_es": {
+      "description": "«madrina de bautizo», «compadre de boda».",
+      "title": "Label Es",
+      "type": "string"
+     },
+     "person_id": {
+      "format": "uuid",
+      "title": "Person Id",
+      "type": "string"
+     },
+     "relation": {
+      "$ref": "#/components/schemas/CompadrazgoRole",
+      "description": "What that person is to this one."
+     },
+     "sacrament": {
+      "$ref": "#/components/schemas/Occasion"
+     }
+    },
+    "required": [
+     "person_id",
+     "display_name",
+     "relation",
+     "sacrament",
+     "label_es",
+     "label_en"
+    ],
+    "title": "CompadrazgoItem",
+    "type": "object"
+   },
+   "CompadrazgoList": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/CompadrazgoItem"
+      },
+      "title": "Items",
+      "type": "array"
+     }
+    },
+    "required": [
+     "items"
+    ],
+    "title": "CompadrazgoList",
+    "type": "object"
+   },
+   "CompadrazgoRole": {
+    "description": "What the other person is to ego.",
+    "enum": [
+     "godparent",
+     "godchild",
+     "compadre"
+    ],
+    "title": "CompadrazgoRole",
+    "type": "string"
+   },
+   "DateDisplay": {
+    "description": "A date in words: «hacia 1891» / \"about 1891\" (`domain.dates.humanize_es`/`_en`).",
+    "properties": {
+     "en": {
+      "title": "En",
+      "type": "string"
+     },
+     "es": {
+      "title": "Es",
+      "type": "string"
+     }
+    },
+    "required": [
+     "es",
+     "en"
+    ],
+    "title": "DateDisplay",
+    "type": "object"
+   },
+   "ErrorBody": {
+    "properties": {
+     "code": {
+      "title": "Code",
+      "type": "string"
+     },
+     "message": {
+      "title": "Message",
+      "type": "string"
+     }
+    },
+    "required": [
+     "code",
+     "message"
+    ],
+    "title": "ErrorBody",
+    "type": "object"
+   },
+   "ErrorEnvelope": {
+    "properties": {
+     "error": {
+      "$ref": "#/components/schemas/ErrorBody"
+     }
+    },
+    "required": [
+     "error"
+    ],
+    "title": "ErrorEnvelope",
+    "type": "object"
+   },
+   "Event": {
+    "properties": {
+     "associations": {
+      "items": {
+       "$ref": "#/components/schemas/EventAssociation"
+      },
+      "title": "Associations",
+      "type": "array"
+     },
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "created_by": {
+      "title": "Created By",
+      "type": "string"
+     },
+     "date_display": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/DateDisplay"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "date_earliest": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Inclusive lower bound (ISO date).",
+      "title": "Date Earliest"
+     },
+     "date_latest": {
+      "anyOf": [
+       {
+        "format": "date",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Inclusive upper bound (ISO date).",
+      "title": "Date Latest"
+     },
+     "date_original": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The date as typed, when it was typed.",
+      "title": "Date Original"
+     },
+     "date_value": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Canonical GEDCOM 7 DateValue.",
+      "title": "Date Value"
+     },
+     "description": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Description"
+     },
+     "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+     },
+     "participants": {
+      "items": {
+       "$ref": "#/components/schemas/Participant"
+      },
+      "title": "Participants",
+      "type": "array"
+     },
+     "place": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Place"
+     },
+     "place_id": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Place Id"
+     },
+     "sensitivity": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Sensitivity"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "space_id": {
+      "format": "uuid",
+      "title": "Space Id",
+      "type": "string"
+     },
+     "type": {
+      "$ref": "#/components/schemas/EventType"
+     },
+     "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "space_id",
+     "type",
+     "date_value",
+     "date_original",
+     "date_display",
+     "date_earliest",
+     "date_latest",
+     "place_id",
+     "place",
+     "description",
+     "sensitivity",
+     "participants",
+     "associations",
+     "created_by",
+     "created_at",
+     "updated_at"
+    ],
+    "title": "Event",
+    "type": "object"
+   },
+   "EventAssociation": {
+    "description": "Someone else's part in the event (padrino, witness, officiant). `display_name` and `sex`\nlet the UI say «padrino» or «madrina» without fetching the person.",
+    "properties": {
+     "display_name": {
+      "title": "Display Name",
+      "type": "string"
+     },
+     "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+     },
+     "person_id": {
+      "format": "uuid",
+      "title": "Person Id",
+      "type": "string"
+     },
+     "phrase": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Phrase"
+     },
+     "role": {
+      "$ref": "#/components/schemas/AssociationRole"
+     },
+     "sex": {
+      "$ref": "#/components/schemas/Sex"
+     }
+    },
+    "required": [
+     "id",
+     "person_id",
+     "display_name",
+     "sex",
+     "role",
+     "phrase"
+    ],
+    "title": "EventAssociation",
+    "type": "object"
+   },
+   "EventBrief": {
+    "properties": {
+     "date_display": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/DateDisplay"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "date_value": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Date Value"
+     },
+     "place": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Place"
+     }
+    },
+    "required": [
+     "date_value",
+     "date_display",
+     "place"
+    ],
+    "title": "EventBrief",
+    "type": "object"
+   },
+   "EventCreate": {
+    "additionalProperties": false,
+    "properties": {
+     "date_original": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "minLength": 1,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Send `date_value` (GEDCOM 7 DateValue) or `date_original` (free text, read as es-MX), never both. Errors: `422 invalid_date`, `422 ambiguous_date`.",
+      "title": "Date Original"
+     },
+     "date_value": {
+      "anyOf": [
+       {
+        "maxLength": 100,
+        "minLength": 1,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Send `date_value` (GEDCOM 7 DateValue) or `date_original` (free text, read as es-MX), never both. Errors: `422 invalid_date`, `422 ambiguous_date`.",
+      "title": "Date Value"
+     },
+     "description": {
+      "anyOf": [
+       {
+        "maxLength": 20000,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Description"
+     },
+     "participants": {
+      "items": {
+       "$ref": "#/components/schemas/ParticipantIn"
+      },
+      "maxItems": 50,
+      "minItems": 1,
+      "title": "Participants",
+      "type": "array"
+     },
+     "place_id": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Place Id"
+     },
+     "sensitivity": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Sensitivity"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Defaults to `religion` for sacraments and `health` for medical events."
+     },
+     "type": {
+      "$ref": "#/components/schemas/EventType"
+     }
+    },
+    "required": [
+     "type",
+     "participants"
+    ],
+    "title": "EventCreate",
+    "type": "object"
+   },
+   "EventPatch": {
+    "additionalProperties": false,
+    "properties": {
+     "date_original": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "minLength": 1,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Send `date_value` (GEDCOM 7 DateValue) or `date_original` (free text, read as es-MX), never both. Errors: `422 invalid_date`, `422 ambiguous_date`.",
+      "title": "Date Original"
+     },
+     "date_value": {
+      "anyOf": [
+       {
+        "maxLength": 100,
+        "minLength": 1,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Send `date_value` (GEDCOM 7 DateValue) or `date_original` (free text, read as es-MX), never both. Errors: `422 invalid_date`, `422 ambiguous_date`.",
+      "title": "Date Value"
+     },
+     "description": {
+      "anyOf": [
+       {
+        "maxLength": 20000,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Description"
+     },
+     "participants": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/ParticipantIn"
+        },
+        "maxItems": 50,
+        "minItems": 1,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Participants"
+     },
+     "place_id": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Place Id"
+     },
+     "sensitivity": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Sensitivity"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "type": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/EventType"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "title": "EventPatch",
+    "type": "object"
+   },
+   "EventType": {
+    "description": "Events a person or a couple can have.",
+    "enum": [
+     "birth",
+     "baptism",
+     "christening",
+     "confirmation",
+     "first_communion",
+     "marriage",
+     "civil_marriage",
+     "religious_marriage",
+     "divorce",
+     "death",
+     "burial",
+     "cremation",
+     "emigration",
+     "immigration",
+     "naturalization",
+     "residence",
+     "occupation",
+     "education",
+     "quinceanera",
+     "bracero_contract",
+     "border_crossing",
+     "other"
+    ],
+    "title": "EventType",
+    "type": "string"
+   },
+   "ExportFormat": {
+    "enum": [
+     "gedcom7",
+     "gedzip",
+     "gedcom551",
+     "native_json"
+    ],
+    "title": "ExportFormat",
+    "type": "string"
+   },
+   "ExportRequest": {
+    "additionalProperties": false,
+    "properties": {
+     "format": {
+      "$ref": "#/components/schemas/ExportFormat",
+      "description": "`gedcom7` (.ged), `gedzip` (.gdz, GEDCOM 7 in a zip), `gedcom551` (.ged, legacy) or `native_json` (lossless `family-history-tree/v1`)."
+     }
+    },
+    "required": [
+     "format"
+    ],
+    "title": "ExportRequest",
+    "type": "object"
+   },
+   "Job": {
+    "properties": {
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "error_code": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error Code"
+     },
+     "finished_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Finished At"
+     },
+     "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+     },
+     "kind": {
+      "$ref": "#/components/schemas/JobKind"
+     },
+     "report": {
+      "additionalProperties": true,
+      "description": "Imports (the GEDCOM engine's ImportReport): `source_version`, `source_product`, `record_counts` (records in the file), `created_records` (rows created), `diagnostics` [{severity, code, message, line}], `extension_tags`. Exports: `format`, `record_counts`, `diagnostics`. Failed jobs: `diagnostics` with one error whose code equals `error_code`.",
+      "title": "Report",
+      "type": "object"
+     },
+     "status": {
+      "$ref": "#/components/schemas/JobStatus"
+     }
+    },
+    "required": [
+     "id",
+     "kind",
+     "status",
+     "report",
+     "error_code",
+     "created_at",
+     "finished_at"
+    ],
+    "title": "Job",
+    "type": "object"
+   },
+   "JobAccepted": {
+    "properties": {
+     "job_id": {
+      "format": "uuid",
+      "title": "Job Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "job_id"
+    ],
+    "title": "JobAccepted",
+    "type": "object"
+   },
+   "JobKind": {
+    "enum": [
+     "gedcom_import",
+     "export"
+    ],
+    "title": "JobKind",
+    "type": "string"
+   },
+   "JobStatus": {
+    "enum": [
+     "queued",
+     "running",
+     "succeeded",
+     "failed"
+    ],
+    "title": "JobStatus",
+    "type": "string"
+   },
+   "KinshipKind": {
+    "enum": [
+     "self",
+     "partner",
+     "blood",
+     "foster",
+     "step",
+     "in_law"
+    ],
+    "title": "KinshipKind",
+    "type": "string"
+   },
+   "KinshipOut": {
+    "properties": {
+     "kinship": {
+      "$ref": "#/components/schemas/KinshipStructure"
+     },
+     "label_en": {
+      "title": "Label En",
+      "type": "string"
+     },
+     "label_es": {
+      "description": "«tía abuela», «primo segundo», «cuñada».",
+      "title": "Label Es",
+      "type": "string"
+     }
+    },
+    "required": [
+     "kinship",
+     "label_es",
+     "label_en"
+    ],
+    "title": "KinshipOut",
+    "type": "object"
+   },
+   "KinshipStructure": {
+    "description": "What `to` is to the person (`domain.kinship.Kinship`). `up`/`down` are generations to the\ncommon ancestor; `half` is null when unknown; `via` is the partner or parent an in-law or\nstep relation goes through.",
+    "properties": {
+     "adoptive": {
+      "title": "Adoptive",
+      "type": "boolean"
+     },
+     "down": {
+      "title": "Down",
+      "type": "integer"
+     },
+     "half": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Half"
+     },
+     "kind": {
+      "$ref": "#/components/schemas/KinshipKind"
+     },
+     "partner_status": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/PartnerStatus"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "up": {
+      "title": "Up",
+      "type": "integer"
+     },
+     "via": {
+      "anyOf": [
+       {
+        "format": "uuid",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Via"
+     }
+    },
+    "required": [
+     "kind",
+     "up",
+     "down",
+     "half",
+     "adoptive",
+     "partner_status",
+     "via"
+    ],
+    "title": "KinshipStructure",
+    "type": "object"
+   },
+   "LivingStatus": {
+    "description": "Whether a person is treated as living.",
+    "enum": [
+     "living",
+     "deceased",
+     "presumed_deceased",
+     "unknown"
+    ],
+    "title": "LivingStatus",
+    "type": "string"
+   },
+   "Me": {
+    "properties": {
+     "early_access": {
+      "title": "Early Access",
+      "type": "boolean"
+     },
+     "email": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Email"
+     },
+     "name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "spaces": {
+      "items": {
+       "$ref": "#/components/schemas/SpaceSummary"
+      },
+      "title": "Spaces",
+      "type": "array"
+     },
+     "sub": {
+      "title": "Sub",
+      "type": "string"
+     }
+    },
+    "required": [
+     "sub",
+     "email",
+     "name",
+     "early_access",
+     "spaces"
+    ],
+    "title": "Me",
+    "type": "object"
+   },
+   "NameFormIn": {
+    "additionalProperties": false,
+    "properties": {
+     "apellido_materno": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "minLength": 1,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Apellido Materno"
+     },
+     "apellido_paterno": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "minLength": 1,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Apellido Paterno"
+     },
+     "extra_surnames": {
+      "items": {
+       "maxLength": 200,
+       "minLength": 1,
+       "type": "string"
+      },
+      "maxItems": 6,
+      "title": "Extra Surnames",
+      "type": "array"
+     },
+     "given": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "minLength": 1,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Given"
+     },
+     "is_primary": {
+      "default": false,
+      "title": "Is Primary",
+      "type": "boolean"
+     },
+     "lang": {
+      "default": "es-MX",
+      "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$",
+      "title": "Lang",
+      "type": "string"
+     },
+     "name_type": {
+      "$ref": "#/components/schemas/NameType",
+      "default": "birth"
+     },
+     "nicknames": {
+      "items": {
+       "maxLength": 200,
+       "minLength": 1,
+       "type": "string"
+      },
+      "maxItems": 10,
+      "title": "Nicknames",
+      "type": "array"
+     },
+     "nombre_de_pila": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "minLength": 1,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Nombre De Pila"
+     },
+     "nombre_usado": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "minLength": 1,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Nombre Usado"
+     },
+     "particles": {
+      "$ref": "#/components/schemas/NameParticles"
+     },
+     "surname_order": {
+      "$ref": "#/components/schemas/SurnameOrder",
+      "default": "paterno_materno"
+     }
+    },
+    "title": "NameFormIn",
+    "type": "object"
+   },
+   "NameFormOut": {
+    "properties": {
+     "apellido_materno": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Apellido Materno"
+     },
+     "apellido_paterno": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Apellido Paterno"
+     },
+     "extra_surnames": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Extra Surnames",
+      "type": "array"
+     },
+     "given": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Given"
+     },
+     "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+     },
+     "is_primary": {
+      "title": "Is Primary",
+      "type": "boolean"
+     },
+     "lang": {
+      "title": "Lang",
+      "type": "string"
+     },
+     "name_type": {
+      "$ref": "#/components/schemas/NameType"
+     },
+     "nicknames": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Nicknames",
+      "type": "array"
+     },
+     "nombre_de_pila": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Nombre De Pila"
+     },
+     "nombre_usado": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Nombre Usado"
+     },
+     "particles": {
+      "additionalProperties": {
+       "type": "string"
+      },
+      "title": "Particles",
+      "type": "object"
+     },
+     "position": {
+      "title": "Position",
+      "type": "integer"
+     },
+     "surname_order": {
+      "$ref": "#/components/schemas/SurnameOrder"
+     }
+    },
+    "required": [
+     "id",
+     "position",
+     "given",
+     "apellido_paterno",
+     "apellido_materno",
+     "extra_surnames",
+     "particles",
+     "nombre_de_pila",
+     "nombre_usado",
+     "nicknames",
+     "name_type",
+     "lang",
+     "surname_order",
+     "is_primary"
+    ],
+    "title": "NameFormOut",
+    "type": "object"
+   },
+   "NameParticles": {
+    "additionalProperties": false,
+    "description": "Particles that precede each surname, such as `de`, `de la` or `del`.",
+    "properties": {
+     "materno": {
+      "anyOf": [
+       {
+        "maxLength": 20,
+        "minLength": 1,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Materno"
+     },
+     "paterno": {
+      "anyOf": [
+       {
+        "maxLength": 20,
+        "minLength": 1,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Paterno"
+     }
+    },
+    "title": "NameParticles",
+    "type": "object"
+   },
+   "NameType": {
+    "enum": [
+     "birth",
+     "baptismal",
+     "married",
+     "religious",
+     "aka",
+     "immigrant",
+     "other"
+    ],
+    "title": "NameType",
+    "type": "string"
+   },
+   "Occasion": {
+    "description": "The sacrament or celebration a godparent sponsored.",
+    "enum": [
+     "bautizo",
+     "confirmacion",
+     "primera_comunion",
+     "boda",
+     "xv_anos",
+     "presentacion"
+    ],
+    "title": "Occasion",
+    "type": "string"
+   },
+   "Participant": {
+    "properties": {
+     "person_id": {
+      "format": "uuid",
+      "title": "Person Id",
+      "type": "string"
+     },
+     "role": {
+      "$ref": "#/components/schemas/ParticipantRole"
+     }
+    },
+    "required": [
+     "person_id",
+     "role"
+    ],
+    "title": "Participant",
+    "type": "object"
+   },
+   "ParticipantIn": {
+    "additionalProperties": false,
+    "properties": {
+     "person_id": {
+      "format": "uuid",
+      "title": "Person Id",
+      "type": "string"
+     },
+     "role": {
+      "$ref": "#/components/schemas/ParticipantRole"
+     }
+    },
+    "required": [
+     "person_id",
+     "role"
+    ],
+    "title": "ParticipantIn",
+    "type": "object"
+   },
+   "ParticipantRole": {
+    "enum": [
+     "principal",
+     "spouse",
+     "parent",
+     "godparent",
+     "witness",
+     "officiant",
+     "informant",
+     "other"
+    ],
+    "title": "ParticipantRole",
+    "type": "string"
+   },
+   "PartnerStatus": {
+    "description": "The state of a couple's union.",
+    "enum": [
+     "married",
+     "union_libre",
+     "partner",
+     "separated",
+     "divorced"
+    ],
+    "title": "PartnerStatus",
+    "type": "string"
+   },
+   "Person": {
+    "properties": {
+     "citations": {
+      "items": {
+       "$ref": "#/components/schemas/Citation"
+      },
+      "title": "Citations",
+      "type": "array"
+     },
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "created_by": {
+      "title": "Created By",
+      "type": "string"
+     },
+     "display_name": {
+      "description": "The primary name in the FORMAL style of `domain.names.display_name`.",
+      "title": "Display Name",
+      "type": "string"
+     },
+     "events": {
+      "items": {
+       "$ref": "#/components/schemas/Event"
+      },
+      "title": "Events",
+      "type": "array"
+     },
+     "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+     },
+     "is_private": {
+      "description": "True when the person is private by default (living or unknown) or marked `private`.",
+      "title": "Is Private",
+      "type": "boolean"
+     },
+     "living_status": {
+      "$ref": "#/components/schemas/LivingStatus"
+     },
+     "names": {
+      "items": {
+       "$ref": "#/components/schemas/NameFormOut"
+      },
+      "title": "Names",
+      "type": "array"
+     },
+     "relationships": {
+      "items": {
+       "$ref": "#/components/schemas/Relationship"
+      },
+      "title": "Relationships",
+      "type": "array"
+     },
+     "sex": {
+      "$ref": "#/components/schemas/Sex"
+     },
+     "sort_name": {
+      "description": "The primary name in the SORTING style («Garza Treviño, María Guadalupe de la»).",
+      "title": "Sort Name",
+      "type": "string"
+     },
+     "space_id": {
+      "format": "uuid",
+      "title": "Space Id",
+      "type": "string"
+     },
+     "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+     },
+     "visibility": {
+      "$ref": "#/components/schemas/Visibility"
+     }
+    },
+    "required": [
+     "id",
+     "space_id",
+     "display_name",
+     "sort_name",
+     "sex",
+     "living_status",
+     "is_private",
+     "visibility",
+     "names",
+     "events",
+     "relationships",
+     "citations",
+     "created_by",
+     "created_at",
+     "updated_at"
+    ],
+    "title": "Person",
+    "type": "object"
+   },
+   "PersonCreate": {
+    "additionalProperties": false,
+    "properties": {
+     "names": {
+      "items": {
+       "$ref": "#/components/schemas/NameFormIn"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Names",
+      "type": "array"
+     },
+     "sex": {
+      "$ref": "#/components/schemas/Sex",
+      "default": "U"
+     },
+     "visibility": {
+      "$ref": "#/components/schemas/Visibility",
+      "default": "space"
+     }
+    },
+    "required": [
+     "names"
+    ],
+    "title": "PersonCreate",
+    "type": "object"
+   },
+   "PersonPage": {
+    "properties": {
+     "items": {
+      "items": {
+       "$ref": "#/components/schemas/PersonSummary"
+      },
+      "title": "Items",
+      "type": "array"
+     },
+     "next_cursor": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Next Cursor"
+     }
+    },
+    "required": [
+     "items",
+     "next_cursor"
+    ],
+    "title": "PersonPage",
+    "type": "object"
+   },
+   "PersonPatch": {
+    "additionalProperties": false,
+    "properties": {
+     "names": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/NameFormIn"
+        },
+        "maxItems": 20,
+        "minItems": 1,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Names"
+     },
+     "sex": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Sex"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "visibility": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Visibility"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "title": "PersonPatch",
+    "type": "object"
+   },
+   "PersonSummary": {
+    "properties": {
+     "birth": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/EventBrief"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "death": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/EventBrief"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "display_name": {
+      "description": "The primary name in the FORMAL style of `domain.names.display_name`.",
+      "title": "Display Name",
+      "type": "string"
+     },
+     "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+     },
+     "is_private": {
+      "description": "True when the person is private by default (living or unknown) or marked `private`.",
+      "title": "Is Private",
+      "type": "boolean"
+     },
+     "living_status": {
+      "$ref": "#/components/schemas/LivingStatus"
+     },
+     "sex": {
+      "$ref": "#/components/schemas/Sex"
+     },
+     "sort_name": {
+      "description": "The primary name in the SORTING style («Garza Treviño, María Guadalupe de la»).",
+      "title": "Sort Name",
+      "type": "string"
+     },
+     "visibility": {
+      "$ref": "#/components/schemas/Visibility"
+     }
+    },
+    "required": [
+     "id",
+     "display_name",
+     "sort_name",
+     "sex",
+     "living_status",
+     "is_private",
+     "birth",
+     "death",
+     "visibility"
+    ],
+    "title": "PersonSummary",
+    "type": "object"
+   },
+   "Relationship": {
+    "properties": {
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "from_person_id": {
+      "format": "uuid",
+      "title": "From Person Id",
+      "type": "string"
+     },
+     "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+     },
+     "qualifier": {
+      "title": "Qualifier",
+      "type": "string"
+     },
+     "space_id": {
+      "format": "uuid",
+      "title": "Space Id",
+      "type": "string"
+     },
+     "to_person_id": {
+      "format": "uuid",
+      "title": "To Person Id",
+      "type": "string"
+     },
+     "type": {
+      "$ref": "#/components/schemas/RelationshipType"
+     }
+    },
+    "required": [
+     "id",
+     "space_id",
+     "type",
+     "from_person_id",
+     "to_person_id",
+     "qualifier",
+     "created_at"
+    ],
+    "title": "Relationship",
+    "type": "object"
+   },
+   "RelationshipCreate": {
+    "additionalProperties": false,
+    "description": "`qualifier` is the pedigree for `parent_child` (`birth`, `adopted`, `foster`, `step`;\n`from_person_id` is the parent) and the partner status for `union` (`married`,\n`union_libre`, `partner`, `separated`, `divorced`). Civil and religious marriages are\nevents, not qualifiers.",
+    "properties": {
+     "from_person_id": {
+      "format": "uuid",
+      "title": "From Person Id",
+      "type": "string"
+     },
+     "qualifier": {
+      "title": "Qualifier",
+      "type": "string"
+     },
+     "to_person_id": {
+      "format": "uuid",
+      "title": "To Person Id",
+      "type": "string"
+     },
+     "type": {
+      "$ref": "#/components/schemas/RelationshipType"
+     }
+    },
+    "required": [
+     "type",
+     "from_person_id",
+     "to_person_id",
+     "qualifier"
+    ],
+    "title": "RelationshipCreate",
+    "type": "object"
+   },
+   "RelationshipType": {
+    "enum": [
+     "parent_child",
+     "union"
+    ],
+    "title": "RelationshipType",
+    "type": "string"
+   },
+   "Role": {
+    "enum": [
+     "steward",
+     "editor",
+     "contributor",
+     "viewer"
+    ],
+    "title": "Role",
+    "type": "string"
+   },
+   "Sensitivity": {
+    "enum": [
+     "religion",
+     "health",
+     "genetic",
+     "ethnicity",
+     "sexual",
+     "political"
+    ],
+    "title": "Sensitivity",
+    "type": "string"
+   },
+   "Sex": {
+    "enum": [
+     "M",
+     "F",
+     "X",
+     "U"
+    ],
+    "title": "Sex",
+    "type": "string"
+   },
+   "Space": {
+    "properties": {
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+     },
+     "janua_organization_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Janua Organization Id"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "people_count": {
+      "title": "People Count",
+      "type": "integer"
+     },
+     "role": {
+      "$ref": "#/components/schemas/Role"
+     },
+     "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "name",
+     "role",
+     "people_count",
+     "janua_organization_id",
+     "created_at",
+     "updated_at"
+    ],
+    "title": "Space",
+    "type": "object"
+   },
+   "SpaceSummary": {
+    "properties": {
+     "id": {
+      "format": "uuid",
+      "title": "Id",
+      "type": "string"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "people_count": {
+      "title": "People Count",
+      "type": "integer"
+     },
+     "role": {
+      "$ref": "#/components/schemas/Role"
+     }
+    },
+    "required": [
+     "id",
+     "name",
+     "role",
+     "people_count"
+    ],
+    "title": "SpaceSummary",
+    "type": "object"
+   },
+   "SurnameOrder": {
+    "enum": [
+     "paterno_materno",
+     "materno_paterno",
+     "single"
+    ],
+    "title": "SurnameOrder",
+    "type": "string"
+   },
+   "Visibility": {
+    "enum": [
+     "space",
+     "private",
+     "public_memorial"
+    ],
+    "title": "Visibility",
+    "type": "string"
+   }
+  }
+ }
+}

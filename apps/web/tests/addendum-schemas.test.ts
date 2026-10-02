@@ -144,12 +144,12 @@ describe("addendum A and B: people and events", () => {
           {
             id: EVENT,
             type: "baptism",
-            associations: [{ id: "a-1", person_id: JESUS, role: "godparent", phrase: null, display_name: "Jesús Ortega Vega" }],
+            associations: [{ id: "a-1", person_id: JESUS, display_name: "Jesús Ortega Vega", sex: "M", role: "godparent", phrase: null }],
           },
         ],
       }),
     );
-    expect(person.events[0]?.associations[0]?.role).toBe("godparent");
+    expect(person.events[0]?.associations[0]).toMatchObject({ role: "godparent", display_name: "Jesús Ortega Vega", sex: "M" });
   });
 
   it("decides privacy from is_private, and errs toward private without it", () => {
@@ -172,14 +172,14 @@ describe("addendum A and B: people and events", () => {
 });
 
 describe("addendum D: kinship and compadrazgo", () => {
-  it("parses a kinship answer, with the structure the API lane returns or a bare kind", () => {
-    expect(kinshipSchema.parse({ kinship: "blood", label_es: "tío abuelo", label_en: "great-uncle" }).label_es).toBe("tío abuelo");
+  it("parses a kinship answer with its structure, and refuses a bare kind", () => {
+    expect(kinshipSchema.safeParse({ kinship: "blood", label_es: "tío abuelo", label_en: "great-uncle" }).success).toBe(false);
     const structured = kinshipSchema.parse({
       kinship: { kind: "blood", up: 3, down: 1, half: null, adoptive: false, partner_status: null, via: null },
       label_es: "tío abuelo",
       label_en: "great-uncle",
     });
-    expect(typeof structured.kinship === "object" && structured.kinship.kind).toBe("blood");
+    expect(structured.kinship.kind).toBe("blood");
     expect(kinshipSchema.safeParse({ kinship: "blood", label_es: "tío abuelo" }).success).toBe(false);
   });
 
@@ -268,7 +268,11 @@ describe("addendum endpoints", () => {
   it("asks for kinship with ?to= and for compadrazgo", async () => {
     const { api, calls } = recorder((url) =>
       url.pathname.endsWith("/kinship")
-        ? Response.json({ kinship: "in_law", label_es: "concuño", label_en: "co-brother-in-law" })
+        ? Response.json({
+            kinship: { kind: "in_law", up: 0, down: 0, half: null, adoptive: false, partner_status: null, via: PETRA },
+            label_es: "concuño",
+            label_en: "co-brother-in-law",
+          })
         : Response.json({ items: [] }),
     );
     expect((await getKinship(api, PETRA, JESUS)).label_es).toBe("concuño");

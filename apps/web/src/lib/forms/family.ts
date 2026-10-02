@@ -3,6 +3,7 @@
  * like «Agregar madre» creates, which events take padrinos, and how the editors' fields are read.
  */
 import {
+  type EventCreateBody,
   PARTNER_STATUSES,
   PEDIGREES,
   type AssociationRole,
@@ -102,6 +103,26 @@ export function isEditableEventType(value: unknown): value is EditableEventType 
 /** Marriage events can name the spouse as a second participant. */
 export function takesSpouse(eventType: string): boolean {
   return eventType === "civil_marriage" || eventType === "religious_marriage" || eventType === "divorce";
+}
+
+/** The body «Agregar evento» posts: the person as principal, and the spouse on marriages. */
+export function eventCreateBody(input: {
+  type: string;
+  personId: string;
+  date: string;
+  description: string;
+  spouseId: string | null;
+}): EventCreateBody {
+  const participants: EventCreateBody["participants"] = [{ person_id: input.personId, role: "principal" }];
+  if (input.spouseId && input.spouseId !== input.personId && takesSpouse(input.type)) {
+    participants.push({ person_id: input.spouseId, role: "spouse" });
+  }
+  return {
+    type: input.type,
+    ...(input.date ? { date_original: input.date } : {}),
+    ...(input.description ? { description: input.description } : {}),
+    participants,
+  };
 }
 
 export const ASSOCIATION_ROLES: readonly AssociationRole[] = ["godparent", "witness", "officiant", "other"];

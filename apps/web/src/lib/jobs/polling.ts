@@ -45,7 +45,8 @@ export function downloadHref(jobId: string, back: string): string {
   return `/api/app/jobs/${encodeURIComponent(jobId)}/download?${new URLSearchParams({ volver: back }).toString()}`;
 }
 
-export const IMPORT_EXTENSIONS = [".ged", ".gdz"] as const;
+/** GEDCOM 7 or 5.5.1, GEDZIP, or a native «Llévate todo» copy (`family-history-tree/v1`). */
+export const IMPORT_EXTENSIONS = [".ged", ".gdz", ".json"] as const;
 
 export type ImportFileProblem = "noFile" | "wrongType" | "tooLarge";
 

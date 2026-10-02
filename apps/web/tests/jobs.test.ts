@@ -65,6 +65,7 @@ describe("polling helpers", () => {
     expect(checkImportFile(null, IMPORT_MAX_BYTES)).toBe("noFile");
     expect(checkImportFile({ name: "arbol.txt", size: 10 }, IMPORT_MAX_BYTES)).toBe("wrongType");
     expect(checkImportFile({ name: "ARBOL.GED", size: 10 }, IMPORT_MAX_BYTES)).toBeNull();
+    expect(checkImportFile({ name: "family-history-2026-10-01.json", size: 10 }, IMPORT_MAX_BYTES)).toBeNull();
     expect(checkImportFile({ name: "arbol.gdz", size: IMPORT_MAX_BYTES + 1 }, IMPORT_MAX_BYTES)).toBe("tooLarge");
     expect(checkImportFile({ name: "arbol.gdz", size: IMPORT_MAX_BYTES }, IMPORT_MAX_BYTES)).toBeNull();
   });

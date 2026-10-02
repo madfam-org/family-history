@@ -191,6 +191,31 @@ describe("jobs", () => {
     expect(screen.getByText(/Origen: Programa de ejemplo/)).toBeTruthy();
   });
 
+  it("explains known diagnostic codes in Spanish and labels a native file's sections", () => {
+    render(
+      wrap(
+        <ImportReport
+          report={{
+            source_version: null,
+            source_product: null,
+            record_counts: { people: 2, unions: 1 },
+            created_records: { people: 2, parent_child: 1 },
+            diagnostics: [
+              { severity: "warning", code: "date_kept_as_text", message: "Kept as text", line: null },
+              { severity: "info", code: "brand-new-code", message: "Something new", line: 4 },
+            ],
+            extension_tags: {},
+          }}
+        />,
+      ),
+    );
+    expect(screen.getAllByText("Personas")).toHaveLength(2);
+    expect(screen.getByText("Vínculos de madre o padre con hijos")).toBeTruthy();
+    expect(screen.getByText(/se guardó tal como venía escrita/)).toBeTruthy();
+    expect(screen.getByText("brand-new-code")).toBeTruthy();
+    expect(screen.getByText(/Detalle técnico \(en inglés\): Something new/)).toBeTruthy();
+  });
+
   it("says when a finished import sent no report", () => {
     render(wrap(<ImportReport report={null} />));
     expect(screen.getByText(/no envió el detalle/)).toBeTruthy();
@@ -201,7 +226,7 @@ describe("jobs", () => {
       wrap(
         <JobStatusLine
           view={{
-            job: { id: "j", kind: "import", status: "failed", error_code: "unsupported_file", created_at: "2026-10-01T12:00:00Z" },
+            job: { id: "j", kind: "gedcom_import", status: "failed", error_code: "gedcom_invalid", created_at: "2026-10-01T12:00:00Z" },
             error: null,
             stopped: false,
           }}
@@ -209,7 +234,7 @@ describe("jobs", () => {
       ),
     );
     expect(screen.getByRole("status").textContent).toContain("No se pudo completar");
-    expect(screen.getByRole("alert").textContent).toContain("Usa un .ged o un .gdz");
+    expect(screen.getByRole("alert").textContent).toContain("No pudimos leer ese archivo como GEDCOM");
   });
 
   it("offers the four export formats, explained in plain language", () => {

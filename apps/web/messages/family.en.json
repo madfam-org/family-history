@@ -259,7 +259,8 @@
       "noRelation": "We found no recorded relationship between these two people. A link may be missing from the tree.",
       "samePerson": "Choose two different people.",
       "pickBoth": "Choose both people.",
-      "swap": "See it the other way round"
+      "swap": "See it the other way round",
+      "personMissing": "We could not find one of the two people in this space."
     },
     "tree": {
       "pageTitle": "Family tree",
@@ -306,13 +307,13 @@
     "import": {
       "pageTitle": "Import GEDCOM",
       "title": "Import a tree (GEDCOM)",
-      "lead": "Bring your tree from another program. People, families and sources are added to this space; nothing already here is deleted.",
-      "file": "GEDCOM file",
-      "fileHint": ".ged files (GEDCOM 7 or 5.5.1) or .gdz files (GEDZIP, with photos), up to 25 MiB.",
+      "lead": "Bring your tree from another program, or upload a complete copy from “Take everything” again. People, families and sources are added to this space; nothing already here is deleted.",
+      "file": "File",
+      "fileHint": ".ged files (GEDCOM 7 or 5.5.1), .gdz (GEDZIP) or .json (a complete copy from “Take everything”), up to 25 MiB. Photos inside a .gdz are not imported yet.",
       "submit": "Import",
       "uploading": "Uploading…",
       "noFile": "Choose a file.",
-      "wrongType": "The file must end in .ged or .gdz.",
+      "wrongType": "The file must end in .ged, .gdz or .json.",
       "tooLarge": "The file is {size}; the limit is 25 MiB.",
       "notAllowed": "Only the space's stewards and editors can import.",
       "started": "We received your file and are reading it; you can stay on this page.",
@@ -333,7 +334,7 @@
         "other": "Other records ({tag})"
       },
       "diagnosticsTitle": "{count, plural, =0 {No notices} one {# notice} other {# notices}}",
-      "diagnosticsLead": "What we had to adjust or could not read. Nothing is lost: what we do not understand is kept as is.",
+      "diagnosticsLead": "What we had to adjust, skip or could not read. Data from other programs that we do not understand is kept as is.",
       "severity": {
         "error": "Error",
         "warning": "Notice",
@@ -345,7 +346,54 @@
       "extensionsLead": "Data only the source program understands. We keep it so it comes back out when you export.",
       "noReport": "The import finished, but the server sent no details.",
       "another": "Import another file",
-      "openSpace": "See the people in this space"
+      "openSpace": "See the people in this space",
+      "diagnostics": {
+        "gedzip_media_skipped": "Photos and documents inside the .gdz were not imported yet.",
+        "media_skipped": "A photo or document was not imported yet.",
+        "person_without_name": "A person had no name; they were saved without one.",
+        "structure_skipped": "A piece of data we do not understand was skipped.",
+        "event_without_person": "An event did not belong to anyone and was skipped.",
+        "event_as_other": "An unknown event type was saved as “Other event”.",
+        "date_kept_as_text": "A date could not be read; it was kept exactly as written.",
+        "sensitivity_narrowed": "A sensitive fact was marked with its class (religion, health…).",
+        "association_skipped": "A godparent or witness could not be linked and was skipped.",
+        "citation_skipped": "A source citation could not be linked and was skipped.",
+        "pedigree_sealing": "A “sealing” link was saved as parentage by birth.",
+        "pedigree_other": "An unknown kind of parentage was saved as by birth.",
+        "diagnostics_truncated": "There were more notices; we show the first 500.",
+        "ansel-decoded": "The file used the old ANSEL encoding; we converted it.",
+        "charset-fallback": "We did not know the file's encoding; we used the most likely one.",
+        "charset-mismatch": "The file declared a different encoding from the one it used.",
+        "charset-missing": "The file did not declare its encoding.",
+        "date-normalized": "A date was rewritten in the standard form.",
+        "date-upgraded": "A 5.5.1 date was converted to GEDCOM 7.",
+        "dangling-pointer": "A reference pointed to a record that does not exist.",
+        "duplicate-xref": "Two records had the same identifier; one was renamed.",
+        "xref-renamed": "An internal identifier was renamed.",
+        "missing-trlr": "The file had no end marker; it was read as far as it went.",
+        "missing-head": "The file had no header.",
+        "unknown-record": "An unknown kind of record was kept unchanged.",
+        "undocumented-extensions": "There are tags specific to another program; they were kept.",
+        "sex-normalized": "A sex value was rewritten in the standard form.",
+        "sex-unknown": "An unknown sex value was saved as “Unknown”.",
+        "enum-mapped": "A value was translated to its GEDCOM 7 equivalent.",
+        "role-mapped": "A role (godparent, witness…) was translated to its GEDCOM 7 equivalent.",
+        "asso-lifted": "A godparent or witness was moved to the event they belong to.",
+        "level-jump": "A line skipped levels; it was fixed.",
+        "unparseable-line": "A line could not be read and was skipped.",
+        "not-utf8": "The file was not UTF-8; we converted it.",
+        "blank-line": "There were blank lines; they were ignored."
+      },
+      "createdTypes": {
+        "people": "People",
+        "places": "Places",
+        "sources": "Sources",
+        "citations": "Citations",
+        "events": "Events",
+        "unions": "Couples",
+        "parent_child": "Parent–child links",
+        "assertions": "Facts with their source"
+      }
     },
     "export": {
       "pageTitle": "Take everything",
@@ -368,7 +416,7 @@
         },
         "native_json": {
           "name": "Complete copy (JSON)",
-          "body": "Everything exactly as it is here, with nothing lost. To keep as a backup or to import again."
+          "body": "Everything exactly as it is here, with nothing lost. To keep as a backup or to import here again."
         }
       },
       "start": "Prepare download",
@@ -378,6 +426,10 @@
       "expires": "The link works until {date}. After that, prepare another download.",
       "expired": "This link has expired. Prepare another download.",
       "another": "Prepare another format"
+    },
+    "names": {
+      "used": "Went by: {name}",
+      "nicknames": "Nicknames: {names}"
     }
   }
 }
