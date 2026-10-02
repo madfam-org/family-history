@@ -100,7 +100,7 @@ def test_notes_ages_sex_and_enumerations() -> None:
 
 def test_associations_identifiers_and_citation_roles() -> None:
     body = (
-        "0 HEAD\n"[0:0] + "0 @I1@ INDI\n1 ASSO @I2@\n2 TYPE INDI\n2 RELA Testigo\n1 ASSO @I2@\n"
+        "0 @I1@ INDI\n1 ASSO @I2@\n2 TYPE INDI\n2 RELA Testigo\n1 ASSO @I2@\n"
         "1 AFN 12AB-3CD\n1 RFN ABC:777\n1 RIN 42\n"
         "1 SOUR @S1@\n2 EVEN BIRT\n3 ROLE (Godmother)\n"
         "0 @I2@ INDI\n0 @S1@ SOUR\n"

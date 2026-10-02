@@ -278,7 +278,10 @@ class Upgrader:
         if bare.upper() in ENUM_SETS["ROLE"]:
             node.payload = bare.upper()
             return
-        node.payload = ROLE_WORDS.get(bare.lower(), "OTHER")
+        words = bare.lower().split()
+        node.payload = ROLE_WORDS.get(bare.lower()) or (
+            ROLE_WORDS.get(words[0], "OTHER") if words else "OTHER"
+        )
         if bare:
             node.children.insert(0, Structure(tag="PHRASE", payload=bare, line=node.line))
         self.d.info("role-mapped", f"role {text!r} -> {node.payload} + PHRASE", node.line)
