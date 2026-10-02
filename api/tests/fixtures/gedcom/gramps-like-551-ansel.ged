@@ -1,0 +1,49 @@
+0 HEAD
+1 SOUR Gramps
+2 VERS 5.2.3
+2 NAME Gramps
+1 DATE 1 OCT 2026
+2 TIME 12:00:00
+1 SUBM @SUBM@
+1 FILE /home/demo/familia.ged
+1 COPR Copyright (c) 2026 Sintâetico.
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR ANSEL
+0 @SUBM@ SUBM
+1 NAME Usuario sintâetico
+0 @I0000@ INDI
+1 NAME Josâe Marâia /Peäna Ibâaänez/
+2 GIVN Josâe Marâia
+2 SURN Peäna Ibâaänez
+1 SEX M
+1 BIRT
+2 TYPE Nacimiento
+2 DATE @#DJULIAN@ 3 MAR 1712
+1 CHR
+2 DATE @#DFRENCH R@ 1 VEND 3
+1 ASSO @I0001@
+2 RELA Godfather
+1 OBJE @O0000@
+1 NOTE @N0000@
+1 FAMC @F0000@
+2 PEDI foster
+0 @I0001@ INDI
+1 NAME Ramâon /Nâuänez/
+1 SEX M
+1 BIRT
+2 DATE 1690
+1 OCCU Sacristâan
+0 @F0000@ FAM
+1 CHIL @I0000@
+1 MARR
+2 DATE about 1705
+0 @O0000@ OBJE
+1 FILE /home/demo/fotos/retrato abuela.tif
+2 FORM tif
+3 TYPE photo
+2 TITL Retrato
+0 @N0000@ NOTE Nota con seänas: piänâon y gèuero.
+1 CONT Euro: È y un byte suelto: ü
+0 TRLR

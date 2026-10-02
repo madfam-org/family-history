@@ -19,7 +19,7 @@ from family_history.gedcom.diagnostics import Diagnostics
 from family_history.gedcom.structure import Structure, is_xref
 
 #: Characters the 7.0 ``banned`` production forbids anywhere in a data stream.
-BANNED_RE = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\x7f\x80-\x9f\ud800-\udfff￾￿]")
+BANNED_RE = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\x7f\x80-\x9f\ud800-\udfff\ufffe\uffff]")
 
 _LINE_RE = re.compile(r"^(\d+) (?:(@[^@ ]+@) )?([A-Za-z0-9_]+)(?: (.*))?$", re.DOTALL)
 _LOOSE_LINE_RE = re.compile(r"^\s*(\d+)\s+(?:(@[^@ ]+@)\s+)?([A-Za-z0-9_]+)(?: (.*))?$", re.DOTALL)
