@@ -15,8 +15,10 @@ from family_history.services.pagination import decode_cursor, encode_cursor
 from family_history.services.privacy import (
     LifeEvent,
     compute_living_status,
+    default_field_sensitivity,
     default_sensitivity,
     sensitive_visible,
+    treated_as_living,
 )
 from family_history.services.ratelimit import AddressHasher, SlidingWindowLimiter
 
@@ -67,19 +69,33 @@ def test_like_pattern_escapes_wildcards() -> None:
 
 def test_living_status_rules() -> None:
     today = date(2026, 10, 1)
-    assert compute_living_status([], today) is LivingStatus.LIVING
-    assert compute_living_status([LifeEvent("death", None)], today) is LivingStatus.DECEASED
+    assert compute_living_status([], today) is LivingStatus.UNKNOWN
+    assert compute_living_status([LifeEvent("birth", None)], today) is LivingStatus.UNKNOWN
+    for kind in ("death", "burial", "cremation"):
+        assert compute_living_status([LifeEvent(kind, None)], today) is LivingStatus.DECEASED
     old_birth = LifeEvent("birth", date(1900, 1, 1))
-    assert compute_living_status([old_birth], today) is LivingStatus.UNKNOWN
+    assert compute_living_status([old_birth], today) is LivingStatus.PRESUMED_DECEASED
+    old_baptism = LifeEvent("christening", date(1910, 1, 1))
+    assert compute_living_status([old_baptism], today) is LivingStatus.PRESUMED_DECEASED
     recent_birth = LifeEvent("birth", date(1950, 1, 1))
-    assert compute_living_status([recent_birth], today) is LivingStatus.LIVING
+    assert compute_living_status([recent_birth, old_birth], today) is LivingStatus.LIVING
 
 
-def test_sacraments_default_to_religion_and_medical_to_health() -> None:
-    assert default_sensitivity("baptism") is Sensitivity.RELIGION
+def test_living_and_unknown_are_private_by_default() -> None:
+    assert treated_as_living("living") and treated_as_living("unknown")
+    assert not treated_as_living("deceased") and not treated_as_living("presumed_deceased")
+
+
+def test_sacraments_default_to_religion_and_medical_facts_to_health() -> None:
+    for sacrament in ("baptism", "christening", "confirmation", "first_communion"):
+        assert default_sensitivity(sacrament) is Sensitivity.RELIGION
     assert default_sensitivity("religious_marriage") is Sensitivity.RELIGION
-    assert default_sensitivity("medical") is Sensitivity.HEALTH
+    assert default_sensitivity("civil_marriage") is None
     assert default_sensitivity("birth") is None
+    assert default_field_sensitivity("cause_of_death") is Sensitivity.HEALTH
+    assert default_field_sensitivity("medical_note") is Sensitivity.HEALTH
+    assert default_field_sensitivity("ethnic_origin") is Sensitivity.ETHNICITY
+    assert default_field_sensitivity("occupation") is None
 
 
 def test_sensitive_facts_about_the_living_stay_with_the_author() -> None:

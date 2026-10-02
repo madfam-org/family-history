@@ -20,7 +20,6 @@ from family_history.models.enums import (
     Sex,
     SubjectType,
     SurnameOrder,
-    UnionStatus,
     Visibility,
 )
 from family_history.routers.schemas.common import EventBrief
@@ -179,7 +178,6 @@ def relationships_out(ctx: SpaceContext, rows: Sequence[Relationship]) -> list[R
             from_person_id=r.from_person_id,
             to_person_id=r.to_person_id,
             qualifier=r.qualifier,
-            status=UnionStatus(r.status) if r.status else None,
             created_at=r.created_at,
         )
         for r in rows

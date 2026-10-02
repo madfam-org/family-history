@@ -36,7 +36,12 @@ def create_relationship(body: RelationshipCreate, ctx: SpaceCtx) -> Relationship
             Relationship.type == body.type.value,
             Relationship.from_person_id == body.from_person_id,
             Relationship.to_person_id == body.to_person_id,
-            Relationship.qualifier == body.qualifier,
+            Relationship.pedigree.is_not_distinct_from(
+                body.pedigree.value if body.pedigree else None
+            ),
+            Relationship.partner_status.is_not_distinct_from(
+                body.partner_status.value if body.partner_status else None
+            ),
         )
     )
     if duplicate is not None:
@@ -47,8 +52,8 @@ def create_relationship(body: RelationshipCreate, ctx: SpaceCtx) -> Relationship
         type=body.type.value,
         from_person_id=body.from_person_id,
         to_person_id=body.to_person_id,
-        qualifier=body.qualifier,
-        status=body.status.value if body.status else None,
+        pedigree=body.pedigree.value if body.pedigree else None,
+        partner_status=body.partner_status.value if body.partner_status else None,
         created_by=ctx.sub,
     )
     ctx.db.add(relationship)
@@ -91,8 +96,8 @@ def delete_relationship(
             "type": relationship.type,
             "from_person_id": relationship.from_person_id,
             "to_person_id": relationship.to_person_id,
-            "qualifier": relationship.qualifier,
-            "status": relationship.status,
+            "pedigree": relationship.pedigree,
+            "partner_status": relationship.partner_status,
         },
     )
     db.delete(relationship)

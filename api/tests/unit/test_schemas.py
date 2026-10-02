@@ -30,19 +30,33 @@ def test_person_needs_a_name_and_rejects_unknown_fields() -> None:
 
 def test_relationship_qualifiers_follow_type() -> None:
     union = RelationshipCreate(
-        type="union", from_person_id=A, to_person_id=B, qualifier="free_union"
+        type="union", from_person_id=A, to_person_id=B, qualifier="union_libre"
     )
-    assert union.status is not None and union.status.value == "active"
-    RelationshipCreate(type="parent_child", from_person_id=A, to_person_id=B, qualifier="adopted")
+    assert union.partner_status is not None and union.pedigree is None
+    child = RelationshipCreate(
+        type="parent_child", from_person_id=A, to_person_id=B, qualifier="adopted"
+    )
+    assert child.pedigree is not None and child.partner_status is None
     for bad in (
-        {"type": "parent_child", "qualifier": "civil_marriage"},
+        {"type": "parent_child", "qualifier": "married"},
+        {"type": "parent_child", "qualifier": "guardian"},
         {"type": "union", "qualifier": "adopted"},
-        {"type": "parent_child", "qualifier": "birth", "status": "divorced"},
+        {"type": "union", "qualifier": "civil_marriage"},
+        {"type": "union", "qualifier": "widowed"},
     ):
         with pytest.raises(ValidationError):
             RelationshipCreate.model_validate({"from_person_id": A, "to_person_id": B, **bad})
     with pytest.raises(ValidationError):
-        RelationshipCreate(type="union", from_person_id=A, to_person_id=A, qualifier="free_union")
+        RelationshipCreate(type="union", from_person_id=A, to_person_id=A, qualifier="married")
+
+
+def test_event_types_follow_the_domain_vocabulary() -> None:
+    participants = [{"person_id": A, "role": "principal"}]
+    assert EventCreate(type="civil_marriage", participants=participants).type.value == (
+        "civil_marriage"
+    )
+    with pytest.raises(ValidationError):
+        EventCreate(type="medical", participants=participants)
 
 
 @pytest.mark.parametrize("value", ["ABT 1890", "BET 1850 AND 1860", "12 MAR 1901", "JULIAN 1700"])

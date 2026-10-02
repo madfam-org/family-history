@@ -28,8 +28,11 @@ class Sex(StrEnum):
 
 
 class LivingStatus(StrEnum):
+    """Mirrors `family_history.domain.living.LivingStatus`."""
+
     LIVING = "living"
     DECEASED = "deceased"
+    PRESUMED_DECEASED = "presumed_deceased"
     UNKNOWN = "unknown"
 
 
@@ -60,28 +63,54 @@ class RelationshipType(StrEnum):
     UNION = "union"
 
 
-class ParentChildQualifier(StrEnum):
+class Pedigree(StrEnum):
+    """How a child is linked to a parent. Mirrors `family_history.domain.kinship.Pedigree`."""
+
     BIRTH = "birth"
     ADOPTED = "adopted"
     FOSTER = "foster"
     STEP = "step"
-    GUARDIAN = "guardian"
-    UNKNOWN = "unknown"
 
 
-class UnionQualifier(StrEnum):
+class PartnerStatus(StrEnum):
+    """The state of a couple's union. Mirrors `family_history.domain.kinship.PartnerStatus`.
+
+    Civil and religious marriage are events, not union qualifiers; widowhood is derived from a
+    death.
+    """
+
+    MARRIED = "married"
+    UNION_LIBRE = "union_libre"
+    PARTNER = "partner"
+    SEPARATED = "separated"
+    DIVORCED = "divorced"
+
+
+class EventType(StrEnum):
+    """Event type codes. Mirrors `family_history.domain.events.EventType`."""
+
+    BIRTH = "birth"
+    BAPTISM = "baptism"
+    CHRISTENING = "christening"
+    CONFIRMATION = "confirmation"
+    FIRST_COMMUNION = "first_communion"
+    MARRIAGE = "marriage"
     CIVIL_MARRIAGE = "civil_marriage"
     RELIGIOUS_MARRIAGE = "religious_marriage"
-    FREE_UNION = "free_union"
-    COHABITATION = "cohabitation"
-
-
-class UnionStatus(StrEnum):
-    ACTIVE = "active"
-    DIVORCED = "divorced"
-    SEPARATED = "separated"
-    WIDOWED = "widowed"
-    ANNULLED = "annulled"
+    DIVORCE = "divorce"
+    DEATH = "death"
+    BURIAL = "burial"
+    CREMATION = "cremation"
+    EMIGRATION = "emigration"
+    IMMIGRATION = "immigration"
+    NATURALIZATION = "naturalization"
+    RESIDENCE = "residence"
+    OCCUPATION = "occupation"
+    EDUCATION = "education"
+    QUINCEANERA = "quinceanera"
+    BRACERO_CONTRACT = "bracero_contract"
+    BORDER_CROSSING = "border_crossing"
+    OTHER = "other"
 
 
 class ParticipantRole(StrEnum):

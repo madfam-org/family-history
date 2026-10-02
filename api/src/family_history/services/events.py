@@ -11,7 +11,13 @@ from sqlalchemy import select
 
 from family_history.errors import unprocessable
 from family_history.models import Event, EventParticipant, Person, Place
-from family_history.models.enums import ParticipantRole, RevisionAction, Sensitivity, Visibility
+from family_history.models.enums import (
+    EventType,
+    ParticipantRole,
+    RevisionAction,
+    Sensitivity,
+    Visibility,
+)
 from family_history.routers.schemas.events import Event as EventOut
 from family_history.routers.schemas.events import Participant, ParticipantIn
 from family_history.services import audit
@@ -173,7 +179,7 @@ def events_out(ctx: SpaceContext, events: Sequence[Event]) -> list[EventOut]:
             EventOut(
                 id=event.id,
                 space_id=event.family_space_id,
-                type=event.type,
+                type=EventType(event.type),
                 date_value=event.date_value,
                 date_earliest=event.date_earliest,
                 date_latest=event.date_latest,

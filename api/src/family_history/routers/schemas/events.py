@@ -9,13 +9,13 @@ from typing import Annotated
 from pydantic import Field, StringConstraints, model_validator
 
 from family_history.models.enums import (
-    ParentChildQualifier,
+    EventType,
     ParticipantRole,
+    PartnerStatus,
+    Pedigree,
     PlaceKind,
     RelationshipType,
     Sensitivity,
-    UnionQualifier,
-    UnionStatus,
 )
 from family_history.routers.schemas.common import (
     ApiModel,
@@ -25,7 +25,6 @@ from family_history.routers.schemas.common import (
     UtcDateTime,
 )
 
-EventType = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{1,49}$")]
 # GEDCOM 7 DateValue text: uppercase tokens such as `ABT 1890`, `BET 1850 AND 1860`,
 # `12 MAR 1901` or `JULIAN 1700`. The domain library parses it; the API keeps it verbatim.
 DateValue = Annotated[str, StringConstraints(pattern=r"^[A-Z0-9_]+( [A-Z0-9_]+)*$", max_length=100)]
@@ -66,7 +65,7 @@ class EventPatch(InputModel):
 class Event(ApiModel):
     id: uuid.UUID
     space_id: uuid.UUID
-    type: str
+    type: EventType
     date_value: str | None
     date_earliest: date | None
     date_latest: date | None
@@ -80,30 +79,38 @@ class Event(ApiModel):
     updated_at: UtcDateTime
 
 
+_QUALIFIERS: dict[RelationshipType, frozenset[str]] = {
+    RelationshipType.PARENT_CHILD: frozenset(p.value for p in Pedigree),
+    RelationshipType.UNION: frozenset(p.value for p in PartnerStatus),
+}
+
+
 class RelationshipCreate(InputModel):
-    """For `parent_child`, `from_person_id` is the parent and `to_person_id` the child."""
+    """`qualifier` is the pedigree for `parent_child` (`birth`, `adopted`, `foster`, `step`;
+    `from_person_id` is the parent) and the partner status for `union` (`married`,
+    `union_libre`, `partner`, `separated`, `divorced`). Civil and religious marriages are
+    events, not qualifiers."""
 
     type: RelationshipType
     from_person_id: uuid.UUID
     to_person_id: uuid.UUID
     qualifier: str
-    status: UnionStatus | None = None
 
     @model_validator(mode="after")
     def _qualifier_matches_type(self) -> RelationshipCreate:
         if self.from_person_id == self.to_person_id:
             raise ValueError("a relationship needs two different people")
-        if self.type is RelationshipType.PARENT_CHILD:
-            if self.qualifier not in {q.value for q in ParentChildQualifier}:
-                raise ValueError("qualifier is not valid for parent_child")
-            if self.status is not None:
-                raise ValueError("status applies to unions only")
-        else:
-            if self.qualifier not in {q.value for q in UnionQualifier}:
-                raise ValueError("qualifier is not valid for union")
-            if self.status is None:
-                self.status = UnionStatus.ACTIVE
+        if self.qualifier not in _QUALIFIERS[self.type]:
+            raise ValueError(f"qualifier is not valid for {self.type.value}")
         return self
+
+    @property
+    def pedigree(self) -> Pedigree | None:
+        return Pedigree(self.qualifier) if self.type is RelationshipType.PARENT_CHILD else None
+
+    @property
+    def partner_status(self) -> PartnerStatus | None:
+        return PartnerStatus(self.qualifier) if self.type is RelationshipType.UNION else None
 
 
 class Relationship(ApiModel):
@@ -113,7 +120,6 @@ class Relationship(ApiModel):
     from_person_id: uuid.UUID
     to_person_id: uuid.UUID
     qualifier: str
-    status: UnionStatus | None
     created_at: UtcDateTime
 
 

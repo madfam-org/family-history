@@ -85,7 +85,7 @@ def test_person_create_get_patch_and_soft_delete(
         ],
     )
     assert person["display_name"] == "Lupita de la Garza Treviño"
-    assert person["living_status"] == "living"
+    assert person["living_status"] == "unknown"
     assert [n["is_primary"] for n in person["names"]] == [True, False]
     fetched = client.get(f"/v1/people/{person['id']}", headers=auth(ANA)).json()
     assert fetched == person
@@ -180,15 +180,15 @@ def test_relationships(client: TestClient, auth: AuthHeaders) -> None:
     created = client.post(f"/v1/spaces/{space}/relationships", json=body, headers=auth(ANA))
     assert created.status_code == 201
     rel = created.json()
-    assert rel["qualifier"] == "adopted" and rel["status"] is None
+    assert rel["qualifier"] == "adopted"
     duplicate = client.post(f"/v1/spaces/{space}/relationships", json=body, headers=auth(ANA))
     assert duplicate.json()["error"]["code"] == "relationship_exists"
     union = client.post(
         f"/v1/spaces/{space}/relationships",
-        json={**body, "type": "union", "qualifier": "free_union"},
+        json={**body, "type": "union", "qualifier": "union_libre"},
         headers=auth(ANA),
     ).json()
-    assert union["status"] == "active"
+    assert union["qualifier"] == "union_libre"
     detail = client.get(f"/v1/people/{child['id']}", headers=auth(ANA)).json()
     assert {r["id"] for r in detail["relationships"]} == {rel["id"], union["id"]}
     assert client.delete(f"/v1/relationships/{rel['id']}", headers=auth(ANA)).status_code == 204
@@ -207,7 +207,7 @@ def test_cross_space_references_are_rejected(client: TestClient, auth: AuthHeade
             "type": "union",
             "from_person_id": own["id"],
             "to_person_id": stranger["id"],
-            "qualifier": "civil_marriage",
+            "qualifier": "married",
         },
         headers=auth(ANA),
     )
@@ -257,7 +257,7 @@ def test_events_update_living_status(client: TestClient, auth: AuthHeaders) -> N
     assert updated.json()["date_value"] == "1990"
     assert client.delete(f"/v1/events/{death['id']}", headers=auth(ANA)).status_code == 204
     detail = client.get(f"/v1/people/{person['id']}", headers=auth(ANA)).json()
-    assert detail["living_status"] == "living"
+    assert detail["living_status"] == "unknown"
     assert detail["visibility"] == "space"
 
 

@@ -27,7 +27,7 @@ def _check_visibility(visibility: Visibility, living_status: str) -> None:
     if visibility is Visibility.PUBLIC_MEMORIAL and treated_as_living(living_status):
         raise unprocessable(
             "living_person_not_public",
-            "A living person cannot be public; record a death event first.",
+            "A person who may be living cannot be public; record a death event first.",
         )
 
 
@@ -47,14 +47,14 @@ def list_people(
 )
 def create_person(body: PersonCreate, ctx: SpaceCtx) -> PersonOut:
     ctx.require(Role.CONTRIBUTOR)
-    # A new person has no death event yet, so they start as living.
-    _check_visibility(body.visibility, LivingStatus.LIVING.value)
+    # A new person has no events yet, so their status is unknown (treated as living).
+    _check_visibility(body.visibility, LivingStatus.UNKNOWN.value)
     person = Person(
         id=uuid.uuid4(),
         family_space_id=ctx.space_id,
         sex=body.sex.value,
         visibility=body.visibility.value,
-        living_status=LivingStatus.LIVING.value,
+        living_status=LivingStatus.UNKNOWN.value,
         created_by=ctx.sub,
     )
     people_service.set_names(person, body.names)

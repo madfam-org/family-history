@@ -26,6 +26,7 @@ from family_history.services.access import (
     enter_space,
     user_scoped,
 )
+from family_history.services.privacy import default_field_sensitivity
 
 router = APIRouter(prefix="/v1", tags=["assertions"], responses=ERROR_RESPONSES)
 
@@ -77,6 +78,7 @@ def create_assertion(body: AssertionCreate, ctx: SpaceCtx) -> AssertionOut:
         )
     evidence_service.require_subject(ctx, body.subject_type, body.subject_id)
     citation_ids = evidence_service.require_citations(ctx, body.citation_ids)
+    sensitivity = body.sensitivity or default_field_sensitivity(body.field)
     assertion = Assertion(
         id=uuid.uuid4(),
         family_space_id=ctx.space_id,
@@ -87,7 +89,7 @@ def create_assertion(body: AssertionCreate, ctx: SpaceCtx) -> AssertionOut:
         status=body.status.value,
         asserted_by=ctx.sub,
         citation_ids=citation_ids,
-        sensitivity=body.sensitivity.value if body.sensitivity else None,
+        sensitivity=sensitivity.value if sensitivity else None,
     )
     ctx.db.add(assertion)
     audit.record(

@@ -75,7 +75,7 @@ def create_event(body: EventCreate, ctx: SpaceCtx) -> EventOut:
     event = Event(
         id=uuid.uuid4(),
         family_space_id=ctx.space_id,
-        type=body.type,
+        type=body.type.value,
         date_value=body.date_value,
         place_id=body.place_id,
         description=body.description,
@@ -107,7 +107,7 @@ def update_event(
     before = {**event_snapshot(event), "participants": before_participants}
     fields = body.model_fields_set
     if "type" in fields and body.type is not None:
-        event.type = body.type
+        event.type = body.type.value
     if "date_value" in fields:
         event.date_value = body.date_value
         # The bounds belong to the old value; the domain library recomputes them.

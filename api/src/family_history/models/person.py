@@ -21,12 +21,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from family_history.models.base import AuthoredMixin, Base, IdMixin, TenantMixin, TimestampMixin
 from family_history.models.enums import (
     LivingStatus,
-    ParentChildQualifier,
+    PartnerStatus,
+    Pedigree,
     RelationshipType,
     Sex,
     SurnameOrder,
-    UnionQualifier,
-    UnionStatus,
     Visibility,
     sql_in,
 )
@@ -43,7 +42,7 @@ class Person(IdMixin, TimestampMixin, TenantMixin, AuthoredMixin, Base):
     )
 
     sex: Mapped[str] = mapped_column(String(1), default=Sex.U.value)
-    living_status: Mapped[str] = mapped_column(String(10), default=LivingStatus.LIVING.value)
+    living_status: Mapped[str] = mapped_column(String(20), default=LivingStatus.UNKNOWN.value)
     visibility: Mapped[str] = mapped_column(String(20), default=Visibility.SPACE.value)
     # Maintained by the application from every name form: lowercase, accents stripped.
     search_text: Mapped[str] = mapped_column(Text, default="")
@@ -91,15 +90,15 @@ class NameForm(IdMixin, TimestampMixin, TenantMixin, Base):
     person: Mapped[Person] = relationship(back_populates="names")
 
 
-_QUALIFIER_CHECK = (
-    f"(type = 'parent_child' AND {sql_in('qualifier', ParentChildQualifier)} AND status IS NULL)"
-    f" OR (type = 'union' AND {sql_in('qualifier', UnionQualifier)}"
-    f" AND {sql_in('status', UnionStatus)})"
+_KIND_CHECK = (
+    f"(type = 'parent_child' AND {sql_in('pedigree', Pedigree)} AND partner_status IS NULL)"
+    f" OR (type = 'union' AND {sql_in('partner_status', PartnerStatus)} AND pedigree IS NULL)"
 )
 
 
 class Relationship(IdMixin, TimestampMixin, TenantMixin, AuthoredMixin, Base):
-    """A graph edge. For `parent_child`, `from_person_id` is the parent."""
+    """A graph edge. For `parent_child`, `from_person_id` is the parent and `pedigree` says how
+    the child is linked; a `union` carries its `partner_status`."""
 
     __tablename__ = "relationship"
     __table_args__ = (
@@ -114,7 +113,7 @@ class Relationship(IdMixin, TimestampMixin, TenantMixin, AuthoredMixin, Base):
             ondelete="CASCADE",
         ),
         CheckConstraint(sql_in("type", RelationshipType), name="type"),
-        CheckConstraint(_QUALIFIER_CHECK, name="qualifier"),
+        CheckConstraint(_KIND_CHECK, name="kind"),
         CheckConstraint("from_person_id <> to_person_id", name="not_self"),
         Index("ix_relationship_from", "family_space_id", "from_person_id"),
         Index("ix_relationship_to", "family_space_id", "to_person_id"),
@@ -123,5 +122,10 @@ class Relationship(IdMixin, TimestampMixin, TenantMixin, AuthoredMixin, Base):
     type: Mapped[str] = mapped_column(String(20))
     from_person_id: Mapped[uuid.UUID] = mapped_column()
     to_person_id: Mapped[uuid.UUID] = mapped_column()
-    qualifier: Mapped[str] = mapped_column(String(30))
-    status: Mapped[str | None] = mapped_column(String(20))
+    pedigree: Mapped[str | None] = mapped_column(String(20))
+    partner_status: Mapped[str | None] = mapped_column(String(20))
+
+    @property
+    def qualifier(self) -> str:
+        """The v1 API's single `qualifier`: the pedigree or the partner status."""
+        return self.pedigree or self.partner_status or ""

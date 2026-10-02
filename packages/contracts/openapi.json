@@ -487,8 +487,7 @@
             "type": "string"
           },
           "type": {
-            "title": "Type",
-            "type": "string"
+            "$ref": "#/components/schemas/EventType"
           },
           "updated_at": {
             "format": "date-time",
@@ -608,9 +607,7 @@
             "description": "Defaults to `religion` for sacraments and `health` for medical events."
           },
           "type": {
-            "pattern": "^[a-z][a-z0-9_]{1,49}$",
-            "title": "Type",
-            "type": "string"
+            "$ref": "#/components/schemas/EventType"
           }
         },
         "required": [
@@ -689,18 +686,45 @@
           "type": {
             "anyOf": [
               {
-                "pattern": "^[a-z][a-z0-9_]{1,49}$",
-                "type": "string"
+                "$ref": "#/components/schemas/EventType"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Type"
+            ]
           }
         },
         "title": "EventPatch",
         "type": "object"
+      },
+      "EventType": {
+        "description": "Event type codes. Mirrors `family_history.domain.events.EventType`.",
+        "enum": [
+          "birth",
+          "baptism",
+          "christening",
+          "confirmation",
+          "first_communion",
+          "marriage",
+          "civil_marriage",
+          "religious_marriage",
+          "divorce",
+          "death",
+          "burial",
+          "cremation",
+          "emigration",
+          "immigration",
+          "naturalization",
+          "residence",
+          "occupation",
+          "education",
+          "quinceanera",
+          "bracero_contract",
+          "border_crossing",
+          "other"
+        ],
+        "title": "EventType",
+        "type": "string"
       },
       "Health": {
         "properties": {
@@ -716,9 +740,11 @@
       },
       "JsonValue": {},
       "LivingStatus": {
+        "description": "Mirrors `family_history.domain.living.LivingStatus`.",
         "enum": [
           "living",
           "deceased",
+          "presumed_deceased",
           "unknown"
         ],
         "title": "LivingStatus",
@@ -1598,16 +1624,6 @@
             "title": "Space Id",
             "type": "string"
           },
-          "status": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/UnionStatus"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
           "to_person_id": {
             "format": "uuid",
             "title": "To Person Id",
@@ -1624,7 +1640,6 @@
           "from_person_id",
           "to_person_id",
           "qualifier",
-          "status",
           "created_at"
         ],
         "title": "Relationship",
@@ -1632,7 +1647,7 @@
       },
       "RelationshipCreate": {
         "additionalProperties": false,
-        "description": "For `parent_child`, `from_person_id` is the parent and `to_person_id` the child.",
+        "description": "`qualifier` is the pedigree for `parent_child` (`birth`, `adopted`, `foster`, `step`;\n`from_person_id` is the parent) and the partner status for `union` (`married`,\n`union_libre`, `partner`, `separated`, `divorced`). Civil and religious marriages are\nevents, not qualifiers.",
         "properties": {
           "from_person_id": {
             "format": "uuid",
@@ -1642,16 +1657,6 @@
           "qualifier": {
             "title": "Qualifier",
             "type": "string"
-          },
-          "status": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/UnionStatus"
-              },
-              {
-                "type": "null"
-              }
-            ]
           },
           "to_person_id": {
             "format": "uuid",
@@ -1955,17 +1960,6 @@
           "single"
         ],
         "title": "SurnameOrder",
-        "type": "string"
-      },
-      "UnionStatus": {
-        "enum": [
-          "active",
-          "divorced",
-          "separated",
-          "widowed",
-          "annulled"
-        ],
-        "title": "UnionStatus",
         "type": "string"
       },
       "Visibility": {
