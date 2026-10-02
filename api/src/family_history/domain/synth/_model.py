@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 
 from ..compadrazgo import GodparentLink, Occasion
@@ -156,15 +157,43 @@ class SyntheticFamily:
         return tuple(links)
 
 
+_LEXICON_FIELDS = (
+    "given_names",
+    "surnames",
+    "particles",
+    "nicknames",
+    "place_names",
+    "variant_spellings",
+)
+
+
 @dataclass(frozen=True, slots=True)
-class SyntheticLexicon:
-    """Every name and place the generator may use, for CI guards on fixtures."""
+class SyntheticLexicon(Mapping[str, frozenset[str]]):
+    """Every name and place the generator or the tests may use, for CI guards on fixtures.
+
+    It is also a read-only mapping from group name to a set of strings, so a guard can walk it
+    without knowing this class. `variant_spellings` (misspellings for search tests) and the
+    binational names are in the lexicon but never drawn by the generator.
+    """
 
     given_names: frozenset[str]
     surnames: frozenset[str]
     particles: frozenset[str]
     nicknames: frozenset[str]
     place_names: frozenset[str]
+    variant_spellings: frozenset[str]
+
+    def __getitem__(self, key: str) -> frozenset[str]:
+        if key not in _LEXICON_FIELDS:
+            raise KeyError(key)
+        value: frozenset[str] = getattr(self, key)
+        return value
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(_LEXICON_FIELDS)
+
+    def __len__(self) -> int:
+        return len(_LEXICON_FIELDS)
 
     def covers(self, form: NameForm) -> bool:
         """True when every part of `form` comes from this lexicon."""
@@ -194,6 +223,7 @@ def _given_names() -> frozenset[str]:
         name_data.MALE_COMPOUND, name_data.FEMALE_COMPOUND,
     )  # fmt: skip
     found = {name for pool in pools for name in pool}
+    found.update(name_data.OTHER_ORIGIN_GIVEN)
     # The name used of a compound name is one of its words («Jesús» of «María de Jesús»).
     found.update(word for name in name_data.MALE_COMPOUND + name_data.FEMALE_COMPOUND
                  for word in name.split() if word[0].isupper())  # fmt: skip
@@ -203,6 +233,7 @@ def _given_names() -> frozenset[str]:
 def synthetic_lexicon() -> SyntheticLexicon:
     """Return the lexicon the generator draws from."""
     surnames = set(name_data.SURNAMES) | {s for _, s in name_data.PARTICLE_SURNAMES}
+    surnames.update(name_data.OTHER_ORIGIN_SURNAMES)
     place_names = set(place_data.MX_STATES) | set(place_data.US_STATES)
     place_names.update(place_data.COUNTRIES.values())
     place_names.update(name for _, name in place_data.FICTIONAL_LOCALITIES)
@@ -217,4 +248,5 @@ def synthetic_lexicon() -> SyntheticLexicon:
             nickname_display(short) for shorts in HYPOCORISTICS.values() for short in shorts
         ),
         place_names=frozenset(place_names),
+        variant_spellings=frozenset(name_data.SPELLING_VARIANTS),
     )

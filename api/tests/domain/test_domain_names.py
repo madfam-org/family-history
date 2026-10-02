@@ -85,9 +85,9 @@ def test_partial_names() -> None:
     only_materno = NameForm(("Rosa",), apellido_materno="Díaz")
     assert display_name(only_materno, DisplayStyle.SORTING) == "Díaz, Rosa"
     assert only_materno.sort_surname() == "Díaz"
-    only_apodo = NameForm(apodos=("La Güera",))
-    assert display_name(only_apodo, DisplayStyle.SHORT) == "La Güera"
-    assert display_name(only_apodo, DisplayStyle.SORTING) == "La Güera"
+    only_apodo = NameForm(apodos=("Lupita",))
+    assert display_name(only_apodo, DisplayStyle.SHORT) == "Lupita"
+    assert display_name(only_apodo, DisplayStyle.SORTING) == "Lupita"
     only_given = NameForm(("Tomasa",))
     assert display_name(only_given, DisplayStyle.SORTING) == "Tomasa"
     assert only_given.sort_surname() == ""

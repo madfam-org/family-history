@@ -144,18 +144,18 @@ def test_parse_calendar_date() -> None:
     assert CalendarDate(1732).precision == "year"
 
 
-# Well-known Julian (Old Style) to Gregorian (New Style) conversions.
+# Julian (Old Style) to Gregorian (New Style) conversions from published concordance tables.
 @pytest.mark.parametrize(
     ("julian", "gregorian"),
     [
         ("JULIAN 4 OCT 1582", dt.date(1582, 10, 14)),
         ("JULIAN 5 OCT 1582", dt.date(1582, 10, 15)),
-        ("JULIAN 23 APR 1616", dt.date(1616, 5, 3)),  # Shakespeare's death
-        ("JULIAN 25 DEC 1642", dt.date(1643, 1, 4)),  # Newton's birth
-        ("JULIAN 11 FEB 1732", dt.date(1732, 2, 22)),  # Washington's birth
-        ("JULIAN 2 SEP 1752", dt.date(1752, 9, 13)),  # last Old Style day in Britain
+        ("JULIAN 23 APR 1616", dt.date(1616, 5, 3)),
+        ("JULIAN 25 DEC 1642", dt.date(1643, 1, 4)),
+        ("JULIAN 11 FEB 1732", dt.date(1732, 2, 22)),
+        ("JULIAN 2 SEP 1752", dt.date(1752, 9, 13)),  # last Old Style day before an 11-day switch
         ("JULIAN 29 FEB 1700", dt.date(1700, 3, 11)),
-        ("JULIAN 1 FEB 1918", dt.date(1918, 2, 14)),  # Russia's switch
+        ("JULIAN 1 FEB 1918", dt.date(1918, 2, 14)),  # first New Style day after a 13-day switch
         ("JULIAN 1 JAN 1900", dt.date(1900, 1, 13)),
         ("JULIAN 1 MAR 2100", dt.date(2100, 3, 15)),
     ],
@@ -168,9 +168,9 @@ def test_julian_converts_to_gregorian(julian: str, gregorian: dt.date) -> None:
 
 def test_julian_day_numbers_of_reference_epochs() -> None:
     assert parse_date_value("JULIAN 1 JAN 4713 BCE").jdn_bounds() == (0, 0)
-    assert parse_date_value("1 JAN 2000").jdn_bounds() == (2451545, 2451545)
-    assert jdn_from_date(dt.date(2000, 1, 1)) == 2451545
-    assert date_from_jdn(2451545) == dt.date(2000, 1, 1)
+    assert parse_date_value("1 JAN 2000").jdn_bounds() == (2_451_545, 2_451_545)
+    assert jdn_from_date(dt.date(2000, 1, 1)) == 2_451_545
+    assert date_from_jdn(2_451_545) == dt.date(2000, 1, 1)
 
 
 @pytest.mark.parametrize(
@@ -220,7 +220,7 @@ def test_bce_bounds_use_jdn() -> None:
     with pytest.raises(DateBoundsError, match="jdn_bounds"):
         _ = value.earliest
     lo, hi = value.jdn_bounds()
-    assert lo is not None and hi is not None and lo < hi < 1721426
+    assert lo is not None and hi is not None and lo < hi < 1_721_426
 
 
 @pytest.mark.parametrize(

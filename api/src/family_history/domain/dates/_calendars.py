@@ -89,8 +89,8 @@ _MONTHS: dict[Calendar, tuple[str, ...]] = {
 
 _DAYS_IN_MONTH = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
 
-# Proleptic Gregorian ordinal 1 (0001-01-01) is JDN 1721426.
-_ORDINAL_OFFSET = 1721425
+# Proleptic Gregorian ordinal 1 (0001-01-01) is JDN 1_721_426.
+_ORDINAL_OFFSET = 1_721_425
 
 
 def months_for(calendar: Calendar) -> tuple[str, ...]:

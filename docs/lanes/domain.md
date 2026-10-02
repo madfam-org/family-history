@@ -98,9 +98,9 @@ submodules also export their helpers.
 |---|---|
 | `generate_family(seed: int, generations: int = 4, today: date = DEFAULT_TODAY) -> SyntheticFamily` | Builds 3 to 6 generations and is deterministic. |
 | `SyntheticFamily` | Holds `people`, `parent_links`, `partner_links`, `events`, `associations`, `places`, `sources` and `citations` as tuples of plain dataclasses. Also offers `.graph()`, `.godparent_links()`, `.events_of(id)`, `.vital_events(id)`, `.living_status(id)` and `.person(id)`. |
-| `synthetic_lexicon() -> SyntheticLexicon` | Exposes `.given_names`, `.surnames`, `.particles`, `.nicknames`, `.place_names`, `.covers(form)` and `.covers_place(name)`. Use it for the CI fixture guard. |
+| `synthetic_lexicon() -> SyntheticLexicon` | Exposes `.given_names`, `.surnames`, `.particles`, `.nicknames`, `.place_names`, `.variant_spellings`, `.covers(form)` and `.covers_place(name)`. It is also a read-only `Mapping[str, frozenset[str]]` from group name to strings, so the PLAT fixture guard (`scripts/check-synthetic-fixtures.py`) can walk it as nested mappings and iterables of strings. |
 
-The lexicon data lives in `domain/data/names.py` and `domain/data/places.py` as plain tuples, so no file I/O is needed.
+The lexicon data lives in `domain/data/names.py` and `domain/data/places.py` as plain tuples, so no file I/O is needed. Besides the names the generator draws, the lexicon holds two groups that only tests use: binational names (João, Wei, Souza, Ma, Wong) and the misspellings that test search folding (`SPELLING_VARIANTS`: «Ernández», «Castiyo» and so on). A test (`test_name_fixtures_in_tests_come_from_the_lexicon`) checks that every capitalised name in the names, date-input, kinship and compadrazgo tests comes from the lexicon. The domain tests contain no real people's names, no CURP-, RFC-, phone- or email-shaped strings, and the long Julian Day Number literals use digit separators (`2_451_545`).
 
 ## Design decisions
 
@@ -245,7 +245,7 @@ The fold is idempotent (a property test checks this) and is a matching key only,
 
 ## Tests and coverage
 
-**Gates.** `ruff check .`, `mypy src` (strict) and `pytest -q`: **518 tests pass**. Line coverage of `family_history.domain` is 99%. The uncovered lines are defensive guards in the generator, plus one validation branch in each of `dates/_model.py`, `dates/_user_input.py`, `kinship/_compute.py` and `kinship/_labels.py`.
+**Gates.** `ruff check .`, `mypy src` (strict) and `pytest -q`: **523 tests pass**. Line coverage of `family_history.domain` is 99%. The uncovered lines are defensive guards in the generator, plus one validation branch in each of `dates/_model.py`, `dates/_user_input.py`, `kinship/_compute.py` and `kinship/_labels.py`.
 
 **Property tests (hypothesis).**
 - Dates:

@@ -8,6 +8,9 @@ No entry identifies a real person: these are lexicon entries, combined at random
 from __future__ import annotations
 
 __all__ = [
+    "OTHER_ORIGIN_GIVEN",
+    "OTHER_ORIGIN_SURNAMES",
+    "SPELLING_VARIANTS",
     "FEMALE_CLASSIC",
     "FEMALE_COMPOUND",
     "FEMALE_CONTEMPORARY",
@@ -42,14 +45,14 @@ MALE_CONTEMPORARY: tuple[str, ...] = (
     "Alberto", "Roberto", "Humberto", "Guillermo", "Eduardo", "Enrique", "Fernando", "Rodolfo",
     "Adolfo", "Carlos", "Jorge", "Javier", "Ricardo", "Sergio", "Arturo", "Alejandro", "Luis",
     "Raúl", "Óscar", "Héctor", "Armando", "Gerardo", "Mario", "Víctor", "Rafael", "Francisco",
-    "Antonio", "Manuel", "Salvador", "Ignacio",
+    "Antonio", "Manuel", "Salvador", "Ignacio", "Xavier",
 )  # fmt: skip
 
 FEMALE_CONTEMPORARY: tuple[str, ...] = (
     "Alicia", "Leticia", "Patricia", "Gabriela", "Verónica", "Adriana", "Claudia", "Mónica",
     "Elena", "Ana", "Rosa", "Luisa", "Carmen", "Esperanza", "Silvia", "Laura", "Martha",
     "Norma", "Yolanda", "Lourdes", "Beatriz", "Irma", "Teresa", "Mercedes", "Guadalupe",
-    "Margarita", "Consuelo", "Rosario",
+    "Margarita", "Consuelo", "Rosario", "Bárbara", "Cecilia", "Carla", "Karla", "Tomasa",
 )  # fmt: skip
 
 # Born after about 1995.
@@ -62,7 +65,7 @@ MALE_MODERN: tuple[str, ...] = (
 FEMALE_MODERN: tuple[str, ...] = (
     "Sofía", "Valentina", "Regina", "Ximena", "Camila", "Renata", "Fernanda", "Natalia",
     "Daniela", "Andrea", "Mariana", "Lucía", "Victoria", "Romina", "Isabella", "Valeria",
-    "Paula", "Emilia", "Aitana", "Julieta",
+    "Paula", "Emilia", "Aitana", "Julieta", "Jimena", "Itzel", "Citlali", "Xóchitl",
 )  # fmt: skip
 
 MALE_COMPOUND: tuple[str, ...] = (
@@ -87,7 +90,7 @@ SURNAMES: tuple[str, ...] = (
     "Solís", "Núñez", "Rosas", "Valdez", "Ibarra", "Campos", "Santos", "Camacho", "Navarro",
     "Peña", "Maldonado", "Rosales", "Acosta", "Miranda", "Trejo", "Valencia", "Nava",
     "Pacheco", "Robles", "Molina", "Rangel", "Huerta", "Cárdenas", "Fuentes", "Ponce",
-    "Zamora", "Ochoa", "Padilla", "Treviño",
+    "Zamora", "Ochoa", "Padilla", "Treviño", "Godoy", "Vásquez", "Giménez", "Mexía",
 )  # fmt: skip
 
 #: Surnames that take a particle, as `(particle, surname)`.
@@ -99,3 +102,15 @@ PARTICLE_SURNAMES: tuple[tuple[str, str], ...] = (
     ("del", "Valle"),
     ("de", "León"),
 )
+
+#: Names binational families bring (Brazilian, Chinese-Mexican). In the lexicon so tests of
+#: surname order and abbreviation rules can use them; the generator does not draw from them.
+OTHER_ORIGIN_GIVEN: tuple[str, ...] = ("João", "Wei")
+OTHER_ORIGIN_SURNAMES: tuple[str, ...] = ("Souza", "Ma", "Wong")
+
+#: Spellings that old records and hurried typing produce, used to test search folding
+#: («Ernández» for Hernández, «Castiyo» for Castillo). Not drawn by the generator.
+SPELLING_VARIANTS: tuple[str, ...] = (
+    "Ernández", "Velasques", "Várbara", "Sesilia", "Samora", "Godoi", "Castiyo", "Perez",
+    "Gonzalez", "Pena", "Cavez", "Jerrero", "Mejia", "Jose", "Maria", "Jesus",
+)  # fmt: skip

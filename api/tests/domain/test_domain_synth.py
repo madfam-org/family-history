@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import ast
 import datetime as dt
+import re
 from collections import Counter
+from collections.abc import Iterable, Mapping
+from pathlib import Path
 
 import pytest
 from hypothesis import given, settings
@@ -227,3 +231,57 @@ def test_any_seed_produces_a_consistent_family(seed: int, generations: int) -> N
     family = generate_family(seed, generations)
     _check_invariants(family)
     assert max(p.generation for p in family.people) == generations - 1
+
+
+def _flatten(value: object) -> set[str]:
+    if isinstance(value, str):
+        return {value}
+    if isinstance(value, Mapping):
+        return {s for item in value.values() for s in _flatten(item)}
+    if isinstance(value, Iterable):
+        return {s for item in value for s in _flatten(item)}
+    raise TypeError(type(value))
+
+
+def test_lexicon_is_walkable_as_nested_strings() -> None:
+    """The fixture guard walks mappings and iterables of strings; the lexicon is one."""
+    lexicon = synthetic_lexicon()
+    assert isinstance(lexicon, Mapping)
+    flat = _flatten(lexicon)
+    assert {"Hernández", "Jesús", "Chuy", "Villa Imaginaria", "Castiyo"} <= flat
+    with pytest.raises(KeyError):
+        lexicon["unknown"]
+
+
+_NAME_WORD = re.compile(r"\b[A-ZÁÉÍÓÚÑ][a-záéíóúñüã]+\b")
+# Capitalised words in these test files that are not names: labels, months, a weekday, and the
+# record abbreviations «Fco.» and «Gpe.» (of lexicon names Francisco and Guadalupe).
+_NOT_NAMES = {"Nombre", "Fco", "Gpe", "Cristo", "Gregorian", "Lunes", "March", "Marzo"}
+
+
+@pytest.mark.parametrize(
+    "test_file",
+    [
+        "test_domain_names.py",
+        "test_domain_dates_user_input.py",
+        "test_domain_kinship.py",
+        "test_domain_compadrazgo.py",
+    ],
+)
+def test_name_fixtures_in_tests_come_from_the_lexicon(test_file: str) -> None:
+    flat = _flatten(synthetic_lexicon())
+    tree = ast.parse((Path(__file__).parent / test_file).read_text(encoding="utf-8"))
+    docstrings = {
+        id(node.value)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant)
+    }
+    for node in ast.walk(tree):
+        if id(node) in docstrings:
+            continue
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            for word in _NAME_WORD.findall(node.value):
+                if word in _NOT_NAMES:
+                    continue
+                assert word in flat, (test_file, word)
+
