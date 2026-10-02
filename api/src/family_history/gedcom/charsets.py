@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from family_history.gedcom.ansel import decode_ansel, describe_replacements
 from family_history.gedcom.diagnostics import Diagnostics
 
-_CHAR_RE = re.compile(rb"^[ \t]*1[ \t]+CHAR[ \t]+([^\r\n]*?)[ \t]*$", re.MULTILINE)
+_CHAR_RE = re.compile(rb"(?:^|[\r\n])[ \t]*1[ \t]+CHAR[ \t]+([^\r\n]*)")
 _SNIFF_BYTES = 65536
 
 
