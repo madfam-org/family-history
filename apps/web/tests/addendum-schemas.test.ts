@@ -172,8 +172,14 @@ describe("addendum A and B: people and events", () => {
 });
 
 describe("addendum D: kinship and compadrazgo", () => {
-  it("parses a kinship answer", () => {
+  it("parses a kinship answer, with the structure the API lane returns or a bare kind", () => {
     expect(kinshipSchema.parse({ kinship: "blood", label_es: "tío abuelo", label_en: "great-uncle" }).label_es).toBe("tío abuelo");
+    const structured = kinshipSchema.parse({
+      kinship: { kind: "blood", up: 3, down: 1, half: null, adoptive: false, partner_status: null, via: null },
+      label_es: "tío abuelo",
+      label_en: "great-uncle",
+    });
+    expect(typeof structured.kinship === "object" && structured.kinship.kind).toBe("blood");
     expect(kinshipSchema.safeParse({ kinship: "blood", label_es: "tío abuelo" }).success).toBe(false);
   });
 
@@ -188,7 +194,7 @@ describe("addendum D: kinship and compadrazgo", () => {
           label_es: "padrino de bautizo",
           label_en: "baptism godfather",
         },
-        { person_id: PETRA, display_name: "Petra Ramírez Luna", relation: "comadre", sacrament: null, label_es: "comadre", label_en: "comadre" },
+        { person_id: PETRA, display_name: "Petra Ramírez Luna", relation: "compadre", sacrament: "boda", label_es: "comadre de boda", label_en: "co-mother (wedding)" },
       ],
     });
     expect(parsed.items).toHaveLength(2);

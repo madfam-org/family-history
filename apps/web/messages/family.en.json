@@ -208,6 +208,7 @@
         "other": "Other"
       },
       "phrase": "Which role?",
+      "phraseOptional": "Detail (optional)",
       "phraseHint": "For example: “padrino de anillos” (ring sponsor), “madrina de lazo” (lasso sponsor).",
       "phraseRequired": "Describe the role.",
       "padrino": "Godfather",

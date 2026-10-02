@@ -83,11 +83,27 @@ export function clampWidth(width: number, content: { width: number }): number {
   return Math.min(max, Math.max(MIN_VIEW_WIDTH, width));
 }
 
-/** The first view: centred on the focus, about one content unit per CSS pixel, never wider than the tree. */
-export function initialCamera(focus: Point, content: { width: number; height: number }, viewportWidth: number): Camera {
-  const fit = content.width;
-  const width = clampWidth(Math.min(fit, Math.max(MIN_VIEW_WIDTH * 1.6, viewportWidth)), content);
-  return { cx: focus.x + CARD_WIDTH / 2, cy: focus.y + CARD_HEIGHT / 2, width };
+function clampAxis(centre: number, span: number, total: number): number {
+  if (span >= total) return total / 2;
+  return Math.min(total - span / 2, Math.max(span / 2, centre));
+}
+
+/**
+ * The first view: about one content unit per CSS pixel (never wider than the tree), as close to
+ * centred on the focus as the tree's edges allow, so no half of the frame starts empty.
+ */
+export function initialCamera(
+  focus: Point,
+  content: { width: number; height: number },
+  viewportWidth: number,
+  aspect = 1,
+): Camera {
+  const width = clampWidth(Math.min(content.width, Math.max(MIN_VIEW_WIDTH * 1.6, viewportWidth)), content);
+  return {
+    cx: clampAxis(focus.x + CARD_WIDTH / 2, width, content.width),
+    cy: clampAxis(focus.y + CARD_HEIGHT / 2, width * aspect, content.height),
+    width,
+  };
 }
 
 export function viewBox(camera: Camera, aspect: number): string {

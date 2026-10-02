@@ -273,12 +273,18 @@ describe("drawing geometry", () => {
     expect(new Set(dashes).size).toBe(3);
   });
 
-  it("starts centred on the focus and never wider than the tree", () => {
-    const content = contentSize(layout);
-    const camera = initialCamera({ x: 100, y: 50 }, content, 360);
-    expect(camera.cx).toBe(100 + CARD_WIDTH / 2);
-    expect(camera.width).toBeLessThanOrEqual(Math.max(content.width, MIN_VIEW_WIDTH * 1.6));
-    expect(viewBox(camera, 1).split(" ")).toHaveLength(4);
+  it("starts on the focus, never wider than the tree, without empty margins", () => {
+    const content = { width: 2000, height: 1200 };
+    const middle = initialCamera({ x: 900, y: 500 }, content, 500, 1.5);
+    expect(middle).toEqual({ cx: 900 + CARD_WIDTH / 2, cy: 500 + CARD_HEIGHT / 2, width: 500 });
+    const corner = initialCamera({ x: 0, y: 0 }, content, 500, 1.5);
+    expect(corner.cx).toBe(250);
+    expect(corner.cy).toBe(375);
+    const small = initialCamera({ x: 0, y: 0 }, { width: 300, height: 100 }, 360, 1.5);
+    expect(small.width).toBeLessThanOrEqual(Math.max(300, MIN_VIEW_WIDTH * 1.6));
+    expect(small.cy).toBe(50);
+    expect(viewBox(middle, 1).split(" ")).toHaveLength(4);
+    expect(contentSize(layout).width).toBeGreaterThan(0);
   });
 
   it("pans by screen pixels scaled to the view and zooms around an anchor", () => {

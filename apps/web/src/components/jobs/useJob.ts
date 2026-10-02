@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import type { ErrorCode } from "@/lib/api/errors";
 import { isTerminal, type Job } from "@/lib/api/schemas-family";
-import { nextDelay, pollJob, type PollResult } from "@/lib/jobs/polling";
+import { MAX_DELAY_MS, nextDelay, pollJob, type PollResult } from "@/lib/jobs/polling";
 
 export interface JobView {
   job: Job | null;
@@ -15,8 +15,9 @@ export interface JobView {
 }
 
 /**
- * Polls a job until it succeeds or fails, backing off gently. Pauses while the tab is hidden
- * (the next poll runs when it becomes visible again).
+ * Polls a job until it succeeds or fails, backing off gently. While the page is hidden it keeps
+ * polling at the slowest pace instead of stopping, so a phone that reports «hidden» (another
+ * app in front, some in-app browsers) still shows the result when the family comes back.
  */
 export function useJob(jobId: string | null, poll: (id: string) => Promise<PollResult> = pollJob): JobView {
   const [view, setView] = useState<JobView>({ job: null, error: null, stopped: false });
@@ -29,10 +30,6 @@ export function useJob(jobId: string | null, poll: (id: string) => Promise<PollR
 
     async function tick() {
       if (cancelled) return;
-      if (typeof document !== "undefined" && document.visibilityState === "hidden") {
-        document.addEventListener("visibilitychange", tick, { once: true });
-        return;
-      }
       const result = await poll(jobId as string);
       if (cancelled) return;
       if (result.ok) {
@@ -42,7 +39,8 @@ export function useJob(jobId: string | null, poll: (id: string) => Promise<PollR
         setView((current) => ({ ...current, error: result.code, stopped: !result.retry }));
         if (!result.retry) return;
       }
-      timer = setTimeout(tick, nextDelay(attempt));
+      const hidden = typeof document !== "undefined" && document.visibilityState === "hidden";
+      timer = setTimeout(tick, hidden ? MAX_DELAY_MS : nextDelay(attempt));
       attempt += 1;
     }
 
@@ -50,7 +48,6 @@ export function useJob(jobId: string | null, poll: (id: string) => Promise<PollR
     return () => {
       cancelled = true;
       if (timer) clearTimeout(timer);
-      document.removeEventListener("visibilitychange", tick);
     };
   }, [jobId, poll]);
 

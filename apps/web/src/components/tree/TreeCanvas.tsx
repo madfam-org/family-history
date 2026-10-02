@@ -65,7 +65,7 @@ export function TreeCanvas({
       setSize({ width, height });
       if (!placed.current && width > 0) {
         placed.current = true;
-        setCamera(initialCamera(focusPoint, content, width));
+        setCamera(initialCamera(focusPoint, content, width, height / Math.max(1, width)));
       }
     });
     observer.observe(element);
@@ -130,7 +130,7 @@ export function TreeCanvas({
     if (move) setCamera((current) => pan(current, move[0], move[1], size.width));
     else if (event.key === "+" || event.key === "=") setCamera((current) => zoom(current, 1.25, content, aspect));
     else if (event.key === "-" || event.key === "_") setCamera((current) => zoom(current, 1 / 1.25, content, aspect));
-    else if (event.key === "0") setCamera(initialCamera(focusPoint, content, size.width));
+    else if (event.key === "0") setCamera(initialCamera(focusPoint, content, size.width, aspect));
     else return;
     event.preventDefault();
   }
@@ -144,7 +144,7 @@ export function TreeCanvas({
         <button type="button" className="fh-button fh-button-secondary" onClick={() => setCamera((c) => zoom(c, 1 / 1.25, content, aspect))}>
           <span aria-hidden="true">−</span> {t("zoomOut")}
         </button>
-        <button type="button" className="fh-button fh-button-secondary" onClick={() => setCamera(initialCamera(focusPoint, content, size.width))}>
+        <button type="button" className="fh-button fh-button-secondary" onClick={() => setCamera(initialCamera(focusPoint, content, size.width, aspect))}>
           {t("reset")}
         </button>
       </div>

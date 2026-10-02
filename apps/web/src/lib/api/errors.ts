@@ -67,6 +67,7 @@ const ALIASES: Readonly<Record<string, ErrorCode>> = {
   request_entity_too_large: "file_too_large",
   unsupported_media_type: "unsupported_file",
   unsupported_format: "unsupported_file",
+  unknown_event: "not_found",
   gone: "download_expired",
   job_expired: "download_expired",
   export_expired: "download_expired",

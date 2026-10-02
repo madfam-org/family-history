@@ -5,8 +5,25 @@
  */
 import { z } from "zod";
 
+/**
+ * The relation's structure (`domain.kinship.Kinship`). The addendum names `kinship` without
+ * fixing its shape; the API lane returns this object. The UI only shows the labels, so a bare
+ * kind string is accepted too.
+ */
+export const kinshipStructureSchema = z
+  .object({
+    kind: z.string(),
+    up: z.number().int().optional(),
+    down: z.number().int().optional(),
+    half: z.boolean().nullable().optional(),
+    adoptive: z.boolean().optional(),
+    partner_status: z.string().nullable().optional(),
+    via: z.string().nullable().optional(),
+  })
+  .loose();
+
 export const kinshipSchema = z.object({
-  kinship: z.string(),
+  kinship: z.union([z.string(), kinshipStructureSchema]),
   label_es: z.string(),
   label_en: z.string(),
 });

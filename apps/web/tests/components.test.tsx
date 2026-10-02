@@ -22,11 +22,13 @@ import { PersonPicker } from "@/components/family/PersonPicker";
 import { ExportFormats } from "@/components/jobs/ExportPanel";
 import { ImportReport } from "@/components/jobs/ImportReport";
 import { JobStatusLine } from "@/components/jobs/JobStatusLine";
+import { useJob } from "@/components/jobs/useJob";
 import { TreeCanvas } from "@/components/tree/TreeCanvas";
 import { clientMessages } from "@/i18n/messages";
 import { buildGraph } from "@/lib/tree/graph";
 import { layoutAncestors } from "@/lib/tree/layout";
 import type { Person } from "@/lib/api/schemas";
+import type { PollResult } from "@/lib/jobs/polling";
 
 const SPACE = "6f1c1d3e-8f0a-4b8e-9d2e-1a2b3c4d5e6f";
 const JESUS = "1b9c6d3f-8e52-4b9f-8b1c-1d2e3f4a5b6c";
@@ -216,6 +218,41 @@ describe("jobs", () => {
       expect(screen.getByRole("heading", { name })).toBeTruthy();
     }
     expect(screen.getAllByRole("button", { name: /Preparar descarga/ })).toHaveLength(4);
+  });
+});
+
+describe("useJob", () => {
+  function Probe({ poll }: { poll: (id: string) => Promise<PollResult> }) {
+    const view = useJob("job-1", poll);
+    return wrap(<JobStatusLine view={view} />);
+  }
+  const job = (status: "queued" | "succeeded") => ({
+    ok: true as const,
+    job: { id: "job-1", kind: "export", status, created_at: "2026-10-01T12:00:00Z" },
+  });
+
+  it("polls until the job finishes, then stops", async () => {
+    const poll = vi.fn<(id: string) => Promise<PollResult>>().mockResolvedValueOnce(job("queued")).mockResolvedValue(job("succeeded"));
+    render(<Probe poll={poll} />);
+    await waitFor(() => expect(screen.getByRole("status").textContent).toContain("En espera"));
+    await waitFor(() => expect(screen.getByRole("status").textContent).toContain("Listo"), { timeout: 3000 });
+    const calls = poll.mock.calls.length;
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+    expect(poll.mock.calls.length).toBe(calls);
+  });
+
+  it("keeps polling while the page is hidden", async () => {
+    const hidden = vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+    const poll = vi.fn<(id: string) => Promise<PollResult>>().mockResolvedValue(job("queued"));
+    render(<Probe poll={poll} />);
+    await waitFor(() => expect(poll).toHaveBeenCalledTimes(1));
+    hidden.mockRestore();
+  });
+
+  it("stops on a final error and shows it", async () => {
+    const poll = vi.fn(async (): Promise<PollResult> => ({ ok: false, code: "not_found", retry: false }));
+    render(<Probe poll={poll} />);
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toBe("No encontramos lo que buscas."));
   });
 });
 

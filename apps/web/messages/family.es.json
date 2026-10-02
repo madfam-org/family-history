@@ -208,6 +208,7 @@
         "other": "Otro"
       },
       "phrase": "¿Cuál papel?",
+      "phraseOptional": "Detalle (opcional)",
       "phraseHint": "Por ejemplo: «padrino de anillos», «madrina de lazo».",
       "phraseRequired": "Describe el papel.",
       "padrino": "Padrino",

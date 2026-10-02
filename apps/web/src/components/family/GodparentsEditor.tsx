@@ -102,7 +102,7 @@ export function GodparentsEditor({
           {associationNeedsPhrase(role) || role === "godparent" ? (
             <div className="flex flex-col gap-1">
               <label htmlFor={phraseId} className="font-semibold">
-                {t("phrase")}
+                {associationNeedsPhrase(role) ? t("phrase") : t("phraseOptional")}
               </label>
               <input
                 id={phraseId}
