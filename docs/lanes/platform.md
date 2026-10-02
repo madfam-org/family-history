@@ -52,6 +52,87 @@ These are things other lanes must provide.
 - **Synthetic lexicon.** `family_history.domain.synth.synthetic_lexicon()` may return strings or any
   nesting of mappings and iterables of strings. The name check skips with a notice until it exists.
 
+## Secret map (first deploy)
+
+There are two sources of secrets.
+
+- **Store-held secrets.** These live at Vault path `secret/family-history`. They arrive only through
+  `enclii secrets intake`, and the ExternalSecrets read them. The intake lowercases keys, so every
+  property is lowercase. Each intake target must be registered in Enclii's intake registry, and the Vault
+  writer must be allowed to write to `secret/family-history`.
+- **Database URLs.** These follow the creator-census precedent. `enclii onboard --secret-name
+  family-history-secrets --secrets-file <env>` writes them straight into a Kubernetes Secret; they are
+  never in the store.
+
+| Vault path | Intake target | ExternalSecret | K8s Secret | Property | Env var | Written by | Mounted by |
+|---|---|---|---|---|---|---|---|
+| `secret/family-history` | `family-history/api-access` | `family-history-api` | `family-history-api` | `fh_early_access_allowlist` | `FH_EARLY_ACCESS_ALLOWLIST` | operator intake (comma-separated Janua subjects or emails; not empty) | API Deployment |
+| `secret/family-history` | `family-history/web-oidc` | `family-history-web` | `family-history-web` | `auth_janua_client_id` | `AUTH_JANUA_CLIENT_ID` | Enclii OIDC provisioner, `intake_key_map: {auth_janua_client_id: client_id}` | web Deployment (optional ref) |
+| `secret/family-history` | `family-history/web-oidc` | `family-history-web` | `family-history-web` | `auth_janua_client_secret` | `AUTH_JANUA_CLIENT_SECRET` | Enclii OIDC provisioner, `intake_key_map: {auth_janua_client_secret: client_secret}` | web Deployment (optional ref) |
+| `secret/family-history` | `family-history/web-session` | `family-history-web` | `family-history-web` | `fh_session_secret` | `FH_SESSION_SECRET` | `enclii secrets intake submit family-history/web-session --generate fh_session_secret` (32 bytes or more) | web Deployment (optional ref) |
+| none (not in Vault) | none (onboarding) | none | `family-history-secrets` | none (key `DATABASE_URL`) | `DATABASE_URL` | `enclii onboard --secret-name family-history-secrets`: pooled URL through PgBouncer | API Deployment |
+| none (not in Vault) | none (onboarding) | none | `family-history-secrets` | none (key `DIRECT_DATABASE_URL`) | `DIRECT_DATABASE_URL` | the same onboarding secrets file: direct URL to Postgres, same password | migrate Job (PreSync) only |
+
+**Notes for the enclii lane:**
+
+- **OIDC registry entry `family-history-web`** (`config/ecosystem-oidc-provision.yaml`):
+  - `intake_target: family-history/web-oidc`;
+  - both keys mapped in lowercase. Nauta's entry maps `client_id` the same way, and the client id stays
+    out of this public repository;
+  - `client_key: family-history-web`, `audience: family-history-api`, `is_confidential: true`;
+  - redirect `https://fh-app.madfam.io/auth/callback`, with `http://localhost:3000/auth/callback` as the
+    precedent's local twin;
+  - sign-in scopes `openid email profile offline_access`, and grants `authorization_code`, `refresh_token`;
+  - no `session_intake_target`: re-minting the session secret on every provision run would sign everyone
+    out.
+
+  The external-secrets operator is all-or-nothing per ExternalSecret. A property whose name or case does
+  not match syncs no key at all.
+- **Database URLs.** The precedent's `DEPLOYMENT.md` "Going live" has the operator pass `--secret-name
+  creator-census-secrets --secrets-file <env>` holding both URLs:
+  - pooled: PgBouncer in the data namespace, port 6432;
+  - direct: Postgres, port 5432;
+  - both built from the same generated `--db-password`, never printed.
+
+  Its runbook calls the same Secret "managed-Postgres addon" output. The Secret actually comes from the
+  onboarding `--secret-name` and `--secrets-file` flags, not from `--db-name`, which creates the database
+  and role only. The direct URL is not derived by the platform: the operator writes it into the same
+  secrets file. family-history mirrors this exactly: same key names, pooled key on the API and direct key
+  on the migrate Job only.
+- **Not in the first deploy:** `FH_S3_*` (media is in the next wave; the API treats it as optional),
+  `REDIS_URL` (no worker yet) and `FH_SENTRY_DSN`.
+
+## Operator steps (first deploy)
+
+1. Land the Enclii PR that pins `build-publish.yml`'s actions by SHA, then bump the pin in
+   `build-deploy.yml`. Without it, GitHub refuses the run before any job starts.
+2. `enclii onboard --repo madfam-org/family-history` with `--secret-name family-history-secrets --secrets-file
+   <env>`. The env file carries `DATABASE_URL` (pooled through PgBouncer) and `DIRECT_DATABASE_URL`
+   (direct), built from the generated `--db-password`, which is never printed. Then reconcile drift:
+   `enclii services-sync --dir . --project family-history --dry-run`, then with `--reconcile-existing`.
+3. Add the PgBouncer userlist line for the new role, following the platform procedure. Without it the
+   pooled URL fails with "no such user" and `/ready` stays 503, while the migrate hook still succeeds.
+4. Vault-writer policy for `secret/family-history`, and intake registry entries for
+   `family-history/api-access`, `family-history/web-oidc` and `family-history/web-session` (enclii lane
+   PRs).
+5. Intake:
+   - `enclii secrets intake submit family-history/api-access --reason "<ticket>"` (`fh_early_access_allowlist`);
+   - `enclii secrets intake submit family-history/web-session --generate fh_session_secret --reason "<ticket>"`;
+   - as a Janua admin: `enclii secrets provision oidc --platform family-history-web --registry
+     config/ecosystem-oidc-provision.yaml --reason "<ticket>" --dry-run`, then the same without `--dry-run`.
+     Pin the printed client id in the registry, never in this repository.
+6. Repository secret `ENCLII_CALLBACK_TOKEN`, and cluster pull access (`ghcr-credentials`) for
+   `ghcr.io/madfam-org/family-history-api` and `ghcr.io/madfam-org/family-history-web`.
+7. Dispatch Build & Deploy (`services=family-history-api,family-history-web`). Then:
+   - `enclii ops apps status family-history --project family-history --json`;
+   - `enclii ops pods diagnose --project family-history`.
+8. Domains:
+   - `enclii projects environments family-history`;
+   - `enclii ops domains reconcile family-history-web --apply --reason "<ticket>"`, and the same for
+     `family-history-api`;
+   - tunnel routes per the platform procedure, targets the two Services on port 80 (never 3000 or 8000).
+9. Verify per `docs/RUNBOOK.md#public-hosts`, then open a PR switching Build & Deploy to push-on-main.
+
 ## Repository policy that shapes this lane
 
 The repository requires every action to be pinned to a full commit SHA, and the policy also applies inside
@@ -71,5 +152,5 @@ Run locally before each push:
 
 - `kustomize build` and `kubeconform -strict`;
 - `actionlint` with shellcheck, and shellcheck on every script;
-- every script against the repository, plus 43 unit tests and three self-tests;
+- every script against the repository, plus 45 unit tests and three self-tests;
 - the licence gate and pip-audit against a real install of `api/`.

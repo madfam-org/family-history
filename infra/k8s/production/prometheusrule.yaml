@@ -81,7 +81,7 @@ spec:
             summary: ExternalSecret {{ $labels.name }} has not synced for 15 minutes
             description: >-
               A mapped key is missing from the secret store, or the store is unreachable. Running pods keep
-              their values; new pods and the migrate hook may not start.
+              their values; new pods of that workload may not start.
             runbook_url: https://github.com/madfam-org/family-history/blob/main/docs/RUNBOOK.md#familyhistoryexternalsecretnotsynced
     - name: family-history.capacity
       rules:

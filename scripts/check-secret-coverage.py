@@ -3,10 +3,12 @@
 
 Reads the resources listed in ``infra/k8s/production/kustomization.yaml`` (no kustomize needed) and fails when:
 
-1. A workload's ``secretKeyRef`` names a Secret or key that no ExternalSecret in the repository provides
-   (a key read but never provisioned is an outage that only shows up at deploy time).
+1. A workload's ``secretKeyRef`` names a Secret or key that no ExternalSecret in the repository provides,
+   and that is not one of the platform-written keys in ``PLATFORM_SECRETS`` (a key read but never
+   provisioned is an outage that only shows up at deploy time).
 2. An ``envFrom.secretRef`` or a ``secret`` volume names a Secret that no ExternalSecret produces.
-3. An ExternalSecret key is consumed by no workload (custody: a secret is mounted only where it is used).
+3. An ExternalSecret or platform key is consumed by no workload (custody: a secret is mounted only where it
+   is used).
 4. A sensitive variable (a database URL, a credential, the session secret, the allowlist) is set as a
    plain ``value:`` instead of a secret reference.
 5. A workload sets an environment variable that is not in the env contract of docs/ARCHITECTURE.md for its
@@ -31,6 +33,10 @@ POD_KINDS = {"Deployment", "StatefulSet", "DaemonSet", "Job", "CronJob"}
 # Process of a workload, by its app.kubernetes.io/component label.
 COMPONENT_PROCESS = {"api": "api", "migrate": "api", "worker": "api", "web": "web"}
 RUNTIME_VARS = {"NODE_ENV", "NEXT_TELEMETRY_DISABLED", "HOSTNAME", "PORT", "PYTHONDONTWRITEBYTECODE", "PYTHONUNBUFFERED"}
+# Secrets the platform writes outside this repository, with exactly the keys it writes. The project Secret
+# from `enclii onboard --secret-name family-history-secrets --secrets-file <env>` (the creator-census
+# precedent): the pooled and the direct database URL.
+PLATFORM_SECRETS = {"family-history-secrets": {"DATABASE_URL", "DIRECT_DATABASE_URL"}}
 SENSITIVE = {
     "DATABASE_URL", "DIRECT_DATABASE_URL", "REDIS_URL", "FH_S3_ACCESS_KEY_ID", "FH_S3_SECRET_ACCESS_KEY",
     "FH_EARLY_ACCESS_ALLOWLIST", "FH_SENTRY_DSN", "AUTH_JANUA_CLIENT_ID", "AUTH_JANUA_CLIENT_SECRET",
@@ -77,7 +83,7 @@ def _pod(doc: Doc) -> tuple[Doc, Doc] | None:
 
 def check(docs: list[Doc], contract: dict[str, set[str]]) -> list[str]:
     errs: list[str] = []
-    provided: dict[str, set[str]] = {}
+    provided: dict[str, set[str]] = {name: set(keys) for name, keys in PLATFORM_SECRETS.items()}
     for d in docs:
         if d.get("kind") == "ExternalSecret":
             target = ((d.get("spec") or {}).get("target") or {}).get("name") or d["metadata"]["name"]
@@ -121,16 +127,16 @@ def check(docs: list[Doc], contract: dict[str, set[str]]) -> list[str]:
                 if ref:
                     target, key = field(ref, "name"), field(ref, "key")
                     if target not in provided:
-                        errs.append(f"{cw}: {var} reads Secret {target}, which no ExternalSecret produces")
+                        errs.append(f"{cw}: {var} reads Secret {target}, which no ExternalSecret or platform write produces")
                     elif key not in provided[target]:
-                        errs.append(f"{cw}: {var} reads key {key} that ExternalSecret target {target} does not map")
+                        errs.append(f"{cw}: {var} reads key {key} that Secret {target} does not provide")
                     else:
                         used[target].add(key)
                 elif var in SENSITIVE:
                     errs.append(f"{cw}: {var} is sensitive and must come from a secretKeyRef, never a plain value")
     for name, keys in provided.items():
         for key in sorted(keys - used.get(name, set())):
-            errs.append(f"ExternalSecret target {name}: key {key} is consumed by no workload")
+            errs.append(f"Secret {name}: key {key} is consumed by no workload")
     return errs
 
 
@@ -150,7 +156,8 @@ def main(argv: list[str] | None = None) -> int:
     if errs:
         return 1
     n = sum(1 for d in docs if d.get("kind") == "ExternalSecret")
-    print(f"secret-coverage: every secret reference is provisioned by the {n} ExternalSecrets, and every key is used")
+    print(f"secret-coverage: every secret reference is provisioned by the {n} ExternalSecrets or the platform "
+          f"Secrets ({', '.join(sorted(PLATFORM_SECRETS))}), and every key is used")
     return 0
 
 

@@ -12,9 +12,9 @@
 #   - the API and the migrate Job: the data namespace, Postgres (5432) and PgBouncer (6432);
 #   - the web: the API pod on 8000 (backend-for-frontend);
 #   - the API and the web: TCP 443 to public addresses only (Janua's JWKS and token endpoint at their public
-#     origin, and the S3-compatible media bucket). A NetworkPolicy cannot name hosts, so 443 is "any public
-#     address"; the private ranges, the carrier-grade NAT range and link-local (cloud metadata) are excluded,
-#     so these rules never reach another in-cluster service.
+#     origin; the S3-compatible media bucket once media lands). A NetworkPolicy cannot name hosts, so 443 is
+#     "any public address"; the private ranges, the carrier-grade NAT range and link-local (cloud metadata)
+#     are excluded, so these rules never reach another in-cluster service.
 #
 # One selector per peer entry. On this estate's policy controller an entry combining a namespaceSelector
 # AND a podSelector has rendered as deny-everything, so every peer below names a single selector; the tunnel

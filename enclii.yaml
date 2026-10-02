@@ -168,10 +168,11 @@ spec:
   # Runtime configuration lives in the kustomize base (infra/k8s/production/deployment-api.yaml):
   #   env:     FH_ENV=production, FH_JANUA_ISSUER, FH_JANUA_AUDIENCE=family-history-api, FH_JANUA_JWKS_URL,
   #            FH_CORS_ORIGINS
-  #   secrets: Secret family-history-api (DATABASE_URL, DIRECT_DATABASE_URL for the migrate hook only,
-  #            FH_S3_*, FH_EARLY_ACCESS_ALLOWLIST), from the intake.
-  # The managed Postgres addon creates the database and its role at onboarding; the pooled and direct URLs
-  # built from them are taken in through the intake.
+  #   secrets: Secret family-history-secrets (DATABASE_URL pooled through PgBouncer; DIRECT_DATABASE_URL
+  #            unpooled, for the migrate hook only), written by `enclii onboard --secret-name
+  #            family-history-secrets` as in creator-census; Secret family-history-api
+  #            (FH_EARLY_ACCESS_ALLOWLIST), from the intake. No FH_S3_* until media lands.
+  # The managed Postgres addon creates the database and its role at onboarding.
   addons:
     - type: postgres
       name: family-history-db
@@ -181,7 +182,7 @@ spec:
     latencyP99Ms: 2000
 
   # Tunnel ingress on the app port (8000) ONLY; /metrics is on 9090, for the scraper only. Egress: DNS, the
-  # pooler and Postgres, and 443 (Janua's JWKS and the media bucket).
+  # pooler and Postgres, and 443 (Janua's JWKS; later the media bucket).
   network:
     services:
       - name: family-history-api

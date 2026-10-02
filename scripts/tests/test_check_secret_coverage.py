@@ -43,13 +43,28 @@ class SecretCoverageTest(unittest.TestCase):
         env = _container(_deploy(self.docs, "family-history-api"))["env"]
         ref = next(e for e in env if e["name"] == "DATABASE_URL")
         ref["valueFrom"]["secretKeyRef"]["key"] = "DATABASE_URL_TYPO"
-        self.bites("does not map")
+        self.bites("does not provide")
 
     def test_unknown_secret(self):
         env = _container(_deploy(self.docs, "family-history-web"))["env"]
         ref = next(e for e in env if e["name"] == "FH_SESSION_SECRET")
         ref["valueFrom"]["secretKeyRef"]["name"] = "somewhere-else"
-        self.bites("no ExternalSecret produces")
+        self.bites("which no ExternalSecret")
+
+    def test_platform_secret_cannot_grow_keys(self):
+        env = _container(_deploy(self.docs, "family-history-api"))["env"]
+        env.append({"name": "REDIS_URL", "valueFrom": {"secretKeyRef": {"name": "family-history-secrets", "key": "REDIS_URL"}}})
+        self.bites("does not provide")
+
+    def test_database_urls_come_from_the_platform_secret(self):
+        refs = {
+            (e["name"], e["valueFrom"]["secretKeyRef"]["name"])
+            for d in self.docs if d.get("kind") in {"Deployment", "Job"}
+            for e in _container(d).get("env", []) if "valueFrom" in e
+        }
+        self.assertIn(("DATABASE_URL", "family-history-secrets"), refs)
+        self.assertIn(("DIRECT_DATABASE_URL", "family-history-secrets"), refs)
+        self.assertFalse([r for r in refs if r[0].startswith("FH_S3_")], "no bucket secrets in the first deploy")
 
     def test_unused_key(self):
         job = _deploy(self.docs, "family-history-migrate")

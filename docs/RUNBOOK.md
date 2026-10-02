@@ -67,10 +67,14 @@ for 10 minutes. The matching host is down.
 
 **Actions.**
 1. `enclii ops pods diagnose --project family-history`.
-2. API not ready but alive: `/ready` names the failing part. `db` means Postgres or the pooler is
-   unreachable or refused the role; `migrations` means the schema is behind the image (see
-   [FamilyHistoryMigrationFailed](#familyhistorymigrationfailed)).
-3. Pods stuck creating with a config error: a referenced Secret key is missing
+2. API not ready but alive: `/ready` names the failing part.
+   - `db`: Postgres or the pooler is unreachable or refused the role. Right after onboarding, the usual
+     cause is a role the platform's connection pooler does not know yet ([DEPLOYMENT.md](./DEPLOYMENT.md#first-deploy),
+     step 2). The direct URL still works then, so the migrate hook succeeds while `/ready` stays 503.
+   - `migrations`: the schema is behind the image (see
+     [FamilyHistoryMigrationFailed](#familyhistorymigrationfailed)).
+3. Pods stuck creating with a config error: a referenced Secret key is missing. That is either
+   `family-history-secrets` (written at onboarding) or an ExternalSecret that has not synced
    ([FamilyHistoryExternalSecretNotSynced](#familyhistoryexternalsecretnotsynced)).
 4. Image pull errors: the digest in `infra/k8s/production/kustomization.yaml` must be one the Build &
    Deploy workflow pinned. The all-zero placeholder never resolves; dispatch the workflow.
@@ -101,15 +105,16 @@ of the app is blocked, so new images do not roll; the running pods keep serving.
    message.
 2. `enclii ops pods logs family-history-migrate --project family-history`: the migration's own error (each
    attempt prints its exit code; the last line says when it gave up).
-3. Connection errors on every attempt: the direct database URL in the secret store is wrong or the role
-   lost access. Fix it through the intake ([DEPLOYMENT.md](./DEPLOYMENT.md#secrets)).
+3. Connection errors on every attempt: `DIRECT_DATABASE_URL` in the onboarding project Secret
+   `family-history-secrets` is wrong or the role lost access. That Secret belongs to Enclii's onboarding,
+   never to a hand edit ([DEPLOYMENT.md](./DEPLOYMENT.md#secrets)); repair it through Enclii.
 4. A migration error: fix the migration in a pull request. Never edit the schema by hand. The next sync
    re-runs the hook (the old Job is replaced before the new one is created).
 
 ### FamilyHistoryExternalSecretNotSynced
 
 **Symptom.** `family-history-api` or `family-history-web` has not synced for 15 minutes. Running pods keep
-their values; new pods and the migrate hook may not start.
+their values; new pods of that workload may not start. The migrate hook does not depend on either.
 
 **Actions.**
 1. `enclii ops secrets external <name> --project family-history`: the failing key.

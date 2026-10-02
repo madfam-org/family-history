@@ -1,7 +1,7 @@
 # Schema migrations (`python -m family_history.cli migrate`: Alembic upgrade head), run as an ArgoCD PreSync
 # hook so the schema is current before new pods roll. The API never creates tables, and its /ready answers
-# 503 until this has run. It connects DIRECT (DIRECT_DATABASE_URL, unpooled): transaction-pooled connections
-# are never trusted with DDL.
+# 503 until this has run. It connects DIRECT (DIRECT_DATABASE_URL, unpooled, from the onboarding project
+# Secret family-history-secrets): transaction-pooled connections are never trusted with DDL.
 #
 # Retry-safe. A fresh pod can be denied by the network policy for a few seconds while the policy controller
 # programs its address, and the database can be briefly unreachable during a pooler or primary restart. The
@@ -80,10 +80,12 @@ spec:
               value: "1"
             - name: PYTHONUNBUFFERED
               value: "1"
+            # The unpooled URL (straight to Postgres) from the project Secret that onboarding writes, as in
+            # creator-census. It exists before the first sync, so this hook never waits on an ExternalSecret.
             - name: DIRECT_DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: family-history-api
+                  name: family-history-secrets
                   key: DIRECT_DATABASE_URL
           volumeMounts:
             - name: tmp
