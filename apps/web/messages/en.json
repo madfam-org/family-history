@@ -273,6 +273,7 @@
       "living": {
         "living": "Living",
         "deceased": "Deceased",
+        "presumed_deceased": "Presumed deceased",
         "unknown": "Unconfirmed"
       },
       "visibility": {
@@ -334,6 +335,13 @@
     "api_unreachable": "We could not reach the server. Please try later.",
     "api_not_configured": "This server has no API connection configured.",
     "invalid_response": "The server sent an unexpected response. Please try later.",
+    "ambiguous_date": "We won't guess that date. Write it another way.",
+    "invalid_date": "We could not read that date. Try writing it another way.",
+    "no_relation": "We found no recorded relationship between these people.",
+    "relationship_exists": "That relationship is already recorded.",
+    "file_too_large": "The file is too large. The limit is 25 MiB.",
+    "unsupported_file": "We do not recognise that kind of file. Use a .ged or .gdz file.",
+    "download_expired": "The download link has expired. Prepare another download.",
     "unknown": "An unexpected error occurred."
   },
   "notFound": {

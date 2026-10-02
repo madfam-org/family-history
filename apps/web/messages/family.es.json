@@ -1,0 +1,382 @@
+{
+  "family": {
+    "nav": {
+      "tree": "Árbol familiar",
+      "kinship": "¿Cómo estamos emparentados?",
+      "import": "Importar GEDCOM",
+      "export": "Llévate todo",
+      "editPerson": "Editar persona",
+      "backToPerson": "Volver a la persona",
+      "toolsTitle": "Herramientas del espacio"
+    },
+    "privacy": {
+      "privateBadge": "Persona viva — solo la ve tu familia",
+      "privateHelp": "Nada sobre una persona viva se publica. Solo la ven quienes forman parte de este espacio familiar.",
+      "privateShort": "Privada",
+      "sensitive": "Dato sensible",
+      "sensitiveHelp": "Es un dato sensible ({kind}). Si la persona vive, se queda con quien lo registró hasta que ella dé su consentimiento.",
+      "sensitivity": {
+        "religion": "religión",
+        "health": "salud",
+        "genetic": "genético",
+        "ethnicity": "origen étnico",
+        "sexual": "vida sexual",
+        "political": "opinión política"
+      }
+    },
+    "dates": {
+      "examplesTitle": "Puedes escribirla como la sepas, por ejemplo:",
+      "examples": {
+        "exact": "15 de marzo de 1923",
+        "about": "hacia 1890",
+        "before": "antes de 1900",
+        "between": "entre 1890 y 1895",
+        "monthYear": "marzo de 1923"
+      },
+      "hints": {
+        "yearSpan": "«{from}-{to}» puede leerse de dos maneras. Escribe «entre {from} y {to}» si no sabes el año exacto, o «de {from} a {to}» si fue un periodo.",
+        "ambiguous": "No queremos adivinar esta fecha. Escribe el mes con letra, por ejemplo «3 de abril de 1923».",
+        "twoDigitYear": "Escribe el año completo: «19{year}» o «18{year}», no solo «{year}».",
+        "monthOver12": "Leemos las fechas como día/mes/año, y no hay mes {month}. Escribe el mes con letra, por ejemplo «{day} de marzo de 1923».",
+        "weekday": "El día de la semana no coincide con la fecha. Quítalo o revisa la fecha.",
+        "invalid": "No pudimos leer esta fecha. Prueba con una de las formas de los ejemplos."
+      },
+      "unknown": "Fecha desconocida",
+      "asWritten": "Escrita como: «{text}»"
+    },
+    "editor": {
+      "pageTitle": "Editar persona",
+      "title": "Editar a {name}",
+      "namesTitle": "Nombre",
+      "namesLead": "Como aparece en el acta de nacimiento o de bautizo. Los demás nombres registrados se conservan.",
+      "given": "Nombre(s)",
+      "paternal": "Apellido paterno",
+      "maternal": "Apellido materno",
+      "particlePaternal": "Partícula del apellido paterno",
+      "particleMaternal": "Partícula del apellido materno",
+      "particleHint": "Solo si la hay: «de», «de la», «del».",
+      "nombreUsado": "Nombre que usaba",
+      "nombreUsadoHint": "Si le decían por otro de sus nombres, por ejemplo «Lupe» para «María Guadalupe».",
+      "nicknames": "Apodos",
+      "nicknamesHint": "Sepáralos con comas: «Chucho, el Güero».",
+      "surnameOrder": "Orden de los apellidos",
+      "surnameOrders": {
+        "paterno_materno": "Paterno y materno",
+        "materno_paterno": "Materno y paterno",
+        "single": "Un solo apellido"
+      },
+      "preview": "Así se verá: {name}",
+      "sex": "Sexo",
+      "save": "Guardar nombre",
+      "saving": "Guardando…",
+      "saved": "Cambios guardados.",
+      "errors": {
+        "nameRequired": "Escribe al menos un nombre o un apellido.",
+        "tooLong": "Algún campo es demasiado largo (máximo 120 caracteres; las partículas, 20).",
+        "tooManyNicknames": "Puedes registrar hasta 10 apodos."
+      }
+    },
+    "events": {
+      "title": "Eventos",
+      "addTitle": "Agregar evento",
+      "type": "Tipo de evento",
+      "date": "Fecha",
+      "description": "Notas",
+      "descriptionHint": "Opcional. Por ejemplo, la parroquia o el lugar.",
+      "spouse": "Con quién",
+      "spouseNone": "Sin indicar",
+      "save": "Agregar evento",
+      "saving": "Agregando…",
+      "saved": "Evento agregado.",
+      "correctDate": "Corregir fecha",
+      "correctDateSubmit": "Guardar fecha",
+      "dateSaved": "Fecha guardada.",
+      "dateRequired": "Escribe una fecha.",
+      "birthNotSaved": "La persona se guardó, pero la fecha de nacimiento no: {hint} Puedes agregarla aquí abajo como evento de nacimiento.",
+      "types": {
+        "birth": "Nacimiento",
+        "baptism": "Bautizo",
+        "christening": "Bautizo",
+        "confirmation": "Confirmación",
+        "first_communion": "Primera comunión",
+        "quinceanera": "XV años",
+        "marriage": "Matrimonio",
+        "civil_marriage": "Matrimonio civil",
+        "religious_marriage": "Matrimonio religioso",
+        "divorce": "Divorcio",
+        "death": "Defunción",
+        "burial": "Sepultura",
+        "cremation": "Cremación",
+        "emigration": "Emigración",
+        "immigration": "Inmigración",
+        "naturalization": "Naturalización",
+        "residence": "Residencia",
+        "occupation": "Oficio",
+        "education": "Estudios",
+        "bracero_contract": "Contrato bracero",
+        "border_crossing": "Cruce fronterizo",
+        "other": "Otro evento"
+      }
+    },
+    "relationships": {
+      "title": "Familiares",
+      "empty": "Todavía no hay familiares registrados.",
+      "addTitle": "Agregar familiar",
+      "kind": "¿Qué es de esta persona?",
+      "kinds": {
+        "father": "Padre",
+        "mother": "Madre",
+        "child": "Hija o hijo",
+        "partner": "Pareja"
+      },
+      "pedigree": "Tipo de filiación",
+      "pedigrees": {
+        "birth": "De nacimiento",
+        "adopted": "Por adopción",
+        "foster": "De crianza",
+        "step": "Por matrimonio (padrastro, madrastra, hijastros)"
+      },
+      "pedigreeShort": {
+        "birth": "de nacimiento",
+        "adopted": "adopción",
+        "foster": "crianza",
+        "step": "por matrimonio"
+      },
+      "status": "Situación de la pareja",
+      "statuses": {
+        "married": "Casados",
+        "union_libre": "Unión libre",
+        "partner": "Pareja",
+        "separated": "Separados",
+        "divorced": "Divorciados"
+      },
+      "statusHint": "Los matrimonios civil y religioso se registran como eventos, con su fecha.",
+      "who": "¿Quién es?",
+      "pickExisting": "Alguien que ya está en el árbol",
+      "createNew": "Una persona nueva",
+      "newPersonLead": "Escribe lo que sepas; podrás completar el resto después.",
+      "submit": "Agregar familiar",
+      "submitting": "Agregando…",
+      "added": "Familiar agregado.",
+      "pickRequired": "Elige a una persona de la lista.",
+      "samePerson": "Una persona no puede ser su propio familiar.",
+      "createdWithoutLink": "La persona nueva se guardó, pero la relación no: {error}",
+      "openCreated": "Ver a la persona nueva",
+      "remove": "Quitar",
+      "removeLabel": "Quitar la relación con {name}",
+      "confirmRemove": "¿Quitar la relación con {name}? La persona sigue en el árbol; solo se quita este vínculo.",
+      "confirmYes": "Sí, quitar",
+      "cancel": "Cancelar",
+      "removing": "Quitando…",
+      "removed": "Relación quitada.",
+      "labels": {
+        "parent": {
+          "M": "Padre",
+          "F": "Madre",
+          "X": "Madre o padre",
+          "U": "Madre o padre"
+        },
+        "child": {
+          "M": "Hijo",
+          "F": "Hija",
+          "X": "Hija o hijo",
+          "U": "Hija o hijo"
+        },
+        "partner": "Pareja"
+      },
+      "unknownPerson": "Persona sin cargar"
+    },
+    "picker": {
+      "label": "Buscar por nombre",
+      "hint": "Escribe al menos dos letras. También encuentra apodos: «Chucho» encuentra a Jesús.",
+      "searching": "Buscando…",
+      "noResults": "No encontramos a nadie con ese nombre.",
+      "results": "{count, plural, one {# resultado} other {# resultados}}",
+      "chosen": "Elegiste a {name}.",
+      "change": "Cambiar",
+      "failed": "La búsqueda falló: {error}"
+    },
+    "godparents": {
+      "title": "Padrinos",
+      "none": "Sin padrinos registrados.",
+      "addTitle": "Agregar padrino o madrina",
+      "role": "Papel",
+      "roles": {
+        "godparent": "Padrino o madrina",
+        "witness": "Testigo",
+        "officiant": "Oficiante",
+        "other": "Otro"
+      },
+      "phrase": "¿Cuál papel?",
+      "phraseHint": "Por ejemplo: «padrino de anillos», «madrina de lazo».",
+      "phraseRequired": "Describe el papel.",
+      "padrino": "Padrino",
+      "madrina": "Madrina",
+      "padrinoNeutral": "Padrino o madrina",
+      "submit": "Agregar",
+      "submitting": "Agregando…",
+      "added": "Agregado.",
+      "removeLabel": "Quitar a {name} de este evento",
+      "confirmRemove": "¿Quitar a {name} de este evento?",
+      "removed": "Quitado."
+    },
+    "compadrazgo": {
+      "title": "Compadrazgo",
+      "lead": "Padrinos, ahijados y compadres, deducidos de los padrinos de cada sacramento.",
+      "empty": "Todavía no hay padrinos registrados en los eventos de esta persona ni de su familia.",
+      "groups": {
+        "godparents": "Sus padrinos y madrinas",
+        "godchildren": "Sus ahijados",
+        "compadres": "Sus compadres y comadres",
+        "other": "Otros"
+      },
+      "sacrament": "de {sacrament}",
+      "sacraments": {
+        "bautizo": "bautizo",
+        "baptism": "bautizo",
+        "christening": "bautizo",
+        "confirmacion": "confirmación",
+        "confirmation": "confirmación",
+        "primera_comunion": "primera comunión",
+        "first_communion": "primera comunión",
+        "boda": "boda",
+        "religious_marriage": "boda",
+        "xv_anos": "XV años",
+        "quinceanera": "XV años",
+        "presentacion": "presentación"
+      },
+      "unavailable": "No pudimos cargar el compadrazgo: {error}"
+    },
+    "kinship": {
+      "pageTitle": "¿Cómo estamos emparentados?",
+      "title": "¿Cómo estamos emparentados?",
+      "lead": "Elige a dos personas del árbol y te decimos qué es una de la otra: «tío abuelo», «concuño», «primo segundo».",
+      "ego": "Primera persona",
+      "alter": "Segunda persona",
+      "submit": "Ver parentesco",
+      "result": "{alter} es {label} de {ego}.",
+      "noRelation": "No encontramos un parentesco registrado entre estas dos personas. Puede faltar algún vínculo en el árbol.",
+      "samePerson": "Elige a dos personas distintas.",
+      "pickBoth": "Elige a las dos personas.",
+      "swap": "Verlo al revés"
+    },
+    "tree": {
+      "pageTitle": "Árbol familiar",
+      "title": "Árbol de {name}",
+      "ancestors": "Antepasados",
+      "descendants": "Descendientes",
+      "viewLabel": "Qué mostrar",
+      "drawingLabel": "Árbol de {name}: {count, plural, one {# persona} other {# personas}}. La misma información está en la lista de abajo.",
+      "listTitle": "El árbol como lista",
+      "listLead": "La misma información que el dibujo, para leer con lector de pantalla o con el teclado.",
+      "zoomIn": "Acercar",
+      "zoomOut": "Alejar",
+      "reset": "Centrar",
+      "panHint": "Arrastra para moverte y pellizca para acercar. Con el teclado: flechas para moverte, + y − para acercar.",
+      "repeated": "aparece en otra rama",
+      "hiddenChildren": "{count, plural, one {y # persona más} other {y # personas más}}",
+      "truncated": "El árbol es grande: mostramos hasta {max} personas alrededor de quien está al centro.",
+      "failed": "{count, plural, one {No pudimos cargar a # familiar.} other {No pudimos cargar a # familiares.}}",
+      "legendTitle": "Cómo leer las líneas",
+      "legendBirth": "De nacimiento",
+      "legendAdopted": "Adopción",
+      "legendFoster": "Crianza",
+      "legendStep": "Por matrimonio",
+      "legendUnion": "Pareja",
+      "emptyAncestors": "Todavía no hay padres registrados para esta persona.",
+      "emptyDescendants": "Todavía no hay hijos ni parejas registrados para esta persona.",
+      "born": "n. {date}",
+      "died": "m. {date}",
+      "focusOn": "Ver el árbol de {name}",
+      "loading": "Cargando el dibujo del árbol…",
+      "partnerOf": "pareja"
+    },
+    "jobs": {
+      "status": {
+        "queued": "En espera",
+        "running": "En proceso",
+        "succeeded": "Listo",
+        "failed": "No se pudo completar"
+      },
+      "checking": "Revisando el avance…",
+      "pollFailed": "No pudimos revisar el avance: {error} Volveremos a intentarlo.",
+      "startedAt": "Iniciado: {date}"
+    },
+    "import": {
+      "pageTitle": "Importar GEDCOM",
+      "title": "Importar un árbol (GEDCOM)",
+      "lead": "Trae tu árbol desde otro programa. Las personas, familias y fuentes se agregan a este espacio; lo que ya está aquí no se borra.",
+      "file": "Archivo GEDCOM",
+      "fileHint": "Archivos .ged (GEDCOM 7 o 5.5.1) o .gdz (GEDZIP, con fotos) de hasta 25 MiB.",
+      "submit": "Importar",
+      "uploading": "Subiendo…",
+      "noFile": "Elige un archivo.",
+      "wrongType": "El archivo debe terminar en .ged o .gdz.",
+      "tooLarge": "El archivo pesa {size}; el límite es 25 MiB.",
+      "notAllowed": "Solo quien es responsable o editor del espacio puede importar.",
+      "started": "Recibimos tu archivo. Lo estamos leyendo; puedes quedarte en esta página.",
+      "reportTitle": "Resultado de la importación",
+      "source": "Origen: {product}",
+      "version": "Versión de GEDCOM: {version}",
+      "countsTitle": "Lo que encontramos en el archivo",
+      "createdTitle": "Lo que se agregó a tu árbol",
+      "recordTypes": {
+        "INDI": "Personas",
+        "FAM": "Familias",
+        "SOUR": "Fuentes",
+        "REPO": "Archivos y repositorios",
+        "OBJE": "Fotos y documentos",
+        "NOTE": "Notas",
+        "SNOTE": "Notas",
+        "SUBM": "Remitentes",
+        "other": "Otros registros ({tag})"
+      },
+      "diagnosticsTitle": "{count, plural, =0 {Sin avisos} one {# aviso} other {# avisos}}",
+      "diagnosticsLead": "Lo que tuvimos que ajustar o no pudimos leer. Nada se pierde: lo que no entendemos se guarda tal cual.",
+      "severity": {
+        "error": "Error",
+        "warning": "Aviso",
+        "info": "Nota"
+      },
+      "line": "línea {line}",
+      "technical": "Detalle técnico (en inglés)",
+      "extensionsTitle": "Etiquetas propias de otros programas",
+      "extensionsLead": "Datos que solo entiende el programa de origen. Los conservamos para que vuelvan a salir al exportar.",
+      "noReport": "La importación terminó, pero el servidor no envió el detalle.",
+      "another": "Importar otro archivo",
+      "openSpace": "Ver las personas del espacio"
+    },
+    "export": {
+      "pageTitle": "Llévate todo",
+      "title": "Llévate todo",
+      "lead": "Tu árbol es tuyo. Descárgalo completo cuando quieras, en formatos abiertos que entienden otros programas.",
+      "free": "Gratis para todas las familias, siempre. No depende de ningún plan.",
+      "formatsTitle": "Elige un formato",
+      "formats": {
+        "gedzip": {
+          "name": "GEDZIP (GEDCOM 7 con fotos)",
+          "body": "Todo en un solo archivo .gdz: el árbol y sus fotos y documentos. El más completo para pasarte a otro programa moderno."
+        },
+        "gedcom7": {
+          "name": "GEDCOM 7",
+          "body": "Solo el árbol, sin fotos, en el formato estándar actual. Para programas que ya leen GEDCOM 7."
+        },
+        "gedcom551": {
+          "name": "GEDCOM 5.5.1",
+          "body": "El formato anterior, que casi todos los programas leen. Algunos datos se adaptan; el reporte dice cuáles."
+        },
+        "native_json": {
+          "name": "Copia completa (JSON)",
+          "body": "Todo exactamente como está aquí, sin perder nada. Para guardarla como respaldo o volver a importarla."
+        }
+      },
+      "start": "Preparar descarga",
+      "starting": "Preparando…",
+      "preparing": "Estamos preparando tu archivo. Puedes quedarte en esta página.",
+      "download": "Descargar",
+      "expires": "El enlace funciona hasta el {date}. Después, prepara otra descarga.",
+      "expired": "Este enlace ya venció. Prepara otra descarga.",
+      "another": "Preparar otro formato"
+    }
+  }
+}

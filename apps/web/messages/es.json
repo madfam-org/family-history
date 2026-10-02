@@ -273,6 +273,7 @@
       "living": {
         "living": "Viva",
         "deceased": "Fallecida",
+        "presumed_deceased": "Probablemente fallecida",
         "unknown": "Sin confirmar"
       },
       "visibility": {
@@ -334,6 +335,13 @@
     "api_unreachable": "No pudimos conectar con el servidor. Intenta más tarde.",
     "api_not_configured": "Este servidor no tiene configurada la conexión con la API.",
     "invalid_response": "El servidor respondió algo inesperado. Intenta más tarde.",
+    "ambiguous_date": "No queremos adivinar esa fecha. Escríbela de otra forma.",
+    "invalid_date": "No pudimos leer esa fecha. Prueba con otra forma de escribirla.",
+    "no_relation": "No encontramos un parentesco registrado entre estas personas.",
+    "relationship_exists": "Esa relación ya está registrada.",
+    "file_too_large": "El archivo es demasiado grande. El límite es 25 MiB.",
+    "unsupported_file": "No reconocemos ese tipo de archivo. Usa un .ged o un .gdz.",
+    "download_expired": "El enlace de descarga ya venció. Prepara otra descarga.",
     "unknown": "Ocurrió un error inesperado."
   },
   "notFound": {
