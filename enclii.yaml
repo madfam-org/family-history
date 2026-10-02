@@ -1,11 +1,12 @@
 # Enclii manifest: family-history.
 #
-# One project, two services, two images (docs/ARCHITECTURE.md, Contracts):
+# One project, three services, two images (docs/ARCHITECTURE.md, Contracts):
 #   family-history-web  the web (apps/web, Next.js): the public landing at fh.madfam.io and the signed-in app at
 #                       fh-app.madfam.io, from the SAME pod (two tunnel hostnames, one Service);
 #   family-history-api  the API (api/, FastAPI), public at fh-api.madfam.io (every /v1 route but the waitlist
-#                       needs a Janua token).
-# The worker (Celery) is not deployed yet; it joins in a later wave with its own document here.
+#                       needs a Janua token);
+#   family-history-worker  the job worker (imports and exports): the API image with another command, no
+#                       domain, no status entry, Postgres only (docs/adr/0002-postgres-job-queue.md).
 # Hostnames are flat labels only (fh-api.madfam.io, never api.fh.madfam.io). "fh" is the working hostname while
 # the brand is pending.
 #
@@ -196,3 +197,57 @@ spec:
       reason: identity; RS256 JWTs with audience family-history-api, organizations bound 1:1 to family spaces
     - platform: enclii
       reason: deploy, managed Postgres addon, secrets intake
+---
+apiVersion: enclii.dev/v1
+kind: Service
+metadata:
+  name: family-history-worker
+  project: family-history
+  description: family-history job worker, GEDCOM and native imports and exports from a Postgres queue (no inbound traffic)
+spec:
+  # No domains: nothing routes to the worker. Its only port is metrics (9090), for the scraper.
+  status:
+    enabled: false
+
+  # The worker runs the API image (ghcr.io/madfam-org/family-history-api, pinned once in the kustomize
+  # images: block) with `python -m family_history.worker`. Build & Deploy never builds a separate worker
+  # image; this build block names the same Dockerfile so the service is self-describing.
+  build:
+    type: dockerfile
+    dockerfile: api/Dockerfile
+    context: api
+    source:
+      git:
+        repository: https://github.com/madfam-org/family-history
+        branch: main
+        autoDeploy: false
+
+  runtime:
+    replicas: 1
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "192Mi"
+      limits:
+        cpu: "500m"
+        memory: "768Mi"
+
+  # Runtime configuration lives in the kustomize base (infra/k8s/production/deployment-worker.yaml):
+  #   env:     FH_ENV=production
+  #   secrets: Secret family-history-secrets (DATABASE_URL, pooled through PgBouncer), the same key the API
+  #            reads. No REDIS_URL, no FH_S3_*, no Janua: the queue, the uploads and the results live in
+  #            Postgres. Liveness is an exec probe on the heartbeat file.
+
+  # No ingress: the scraper reaches 9090 through the repository's own policy
+  # (allow-monitoring-ingress-worker), as it does for the API. Egress: DNS and the pooler only.
+  network:
+    services:
+      - name: family-history-worker
+        label: app.kubernetes.io/name
+        port: 9090
+        ingress: []
+        egress: [dns, pgbouncer]
+
+  dependencies:
+    - platform: enclii
+      reason: deploy and the managed Postgres addon it shares with family-history-api

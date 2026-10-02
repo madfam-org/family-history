@@ -1,0 +1,105 @@
+# The job worker (`python -m family_history.worker`): GEDCOM and native imports, exports. It runs the API
+# image with another command and reads its queue from Postgres (docs/adr/0002-postgres-job-queue.md), so it
+# needs DATABASE_URL and nothing else: no Redis, no bucket, no Janua, no inbound traffic but the scraper.
+#
+# - Claims jobs with FOR UPDATE SKIP LOCKED, so more replicas would share the queue safely; one is enough
+#   while imports are capped at 25 MiB.
+# - Liveness and readiness are exec probes on the heartbeat file it touches every loop
+#   (`python -m family_history.worker healthcheck`: fresh within 120 s). A job running past its 15-minute
+#   lease stops the heartbeat, the pod restarts and the job is reclaimed (failed after three attempts).
+# - SIGTERM finishes the job in hand; terminationGracePeriodSeconds bounds that.
+# - Metrics on 9090 (/metrics: fh_jobs_total, fh_job_duration_seconds), scraped through
+#   service-worker-metrics.yaml by ServiceMonitor family-history; NetworkPolicy allow-monitoring-ingress-worker.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: family-history-worker
+  labels:
+    app.kubernetes.io/name: family-history-worker
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: family-history
+  annotations:
+    # A Secret change (database URL rotation) does not restart pods on its own.
+    reloader.stakater.com/auto: "true"
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: family-history-worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: family-history-worker
+        app.kubernetes.io/component: worker
+        app.kubernetes.io/part-of: family-history
+        # Enclii convention labels (the platform selects the service's pods by these).
+        app: family-history-worker
+        enclii.dev/service: family-history-worker
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 120
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+        - name: ghcr-credentials
+      containers:
+        - name: worker
+          # DECOY: the real pin is the images: block in kustomization.yaml (the API image).
+          image: ghcr.io/madfam-org/family-history-api:latest
+          command: ["python", "-m", "family_history.worker"]
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          ports:
+            - name: metrics
+              containerPort: 9090
+          env:
+            - name: FH_ENV
+              value: production
+            - name: PYTHONDONTWRITEBYTECODE
+              value: "1"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            # The pooled URL (through PgBouncer) from the project Secret that onboarding writes, the same key
+            # the API reads. Key reference, not envFrom: a missing key stops the pod visibly.
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: family-history-secrets
+                  key: DATABASE_URL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          # A 25 MiB upload is parsed in memory; the limit leaves room for that and the export it builds.
+          resources:
+            requests: { cpu: 50m, memory: 192Mi }
+            limits: { cpu: 500m, memory: 768Mi }
+          livenessProbe:
+            exec:
+              command: ["python", "-m", "family_history.worker", "healthcheck"]
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command: ["python", "-m", "family_history.worker", "healthcheck"]
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi
