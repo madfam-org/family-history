@@ -23,7 +23,7 @@ def setup(client: TestClient, auth: AuthHeaders, engine: Engine) -> dict[str, An
     add_member(engine, uuid.UUID(space), "user-carla", "contributor")
     person = client.post(
         f"/v1/spaces/{space}/people",
-        json={"names": [{"given": "Ana", "apellido_paterno": "Sintética"}]},
+        json={"names": [{"given": "Ana", "apellido_paterno": "Romero"}]},
         headers=auth(ANA),
     ).json()
     source = client.post(

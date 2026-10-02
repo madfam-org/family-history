@@ -25,7 +25,7 @@ def _space(client: TestClient, auth: AuthHeaders, sub: str = ANA, name: str = "F
 def _person(
     client: TestClient, auth: AuthHeaders, space: str, sub: str = ANA, **body: Any
 ) -> dict[str, Any]:
-    payload = {"names": [{"given": "Ana", "apellido_paterno": "Sintética"}], **body}
+    payload = {"names": [{"given": "Ana", "apellido_paterno": "Romero"}], **body}
     response = client.post(f"/v1/spaces/{space}/people", json=payload, headers=auth(sub))
     assert response.status_code == 201, response.text
     return dict(response.json())

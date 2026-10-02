@@ -14,7 +14,7 @@ from postgres.conftest import AuthHeaders, add_member, scoped_execute
 
 pytestmark = pytest.mark.postgres
 
-PERSON = {"names": [{"given": "Ana", "apellido_paterno": "Sintética"}]}
+PERSON = {"names": [{"given": "Ana", "apellido_paterno": "Romero"}]}
 
 
 def _space_with_person(client: TestClient, auth: AuthHeaders, sub: str) -> tuple[str, str]:
