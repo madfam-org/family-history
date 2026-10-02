@@ -35,3 +35,7 @@ pnpm-debug.log*
 
 # Local agent state (never commit)
 .claude/
+
+# Agent hint files that `next dev` writes into the app; generated, never commit
+apps/web/AGENTS.md
+apps/web/CLAUDE.md
