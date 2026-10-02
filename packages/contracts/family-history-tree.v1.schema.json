@@ -1,0 +1,936 @@
+{
+  "$defs": {
+    "AssertionDoc": {
+      "additionalProperties": false,
+      "properties": {
+        "citations": {
+          "items": {
+            "pattern": "^C[1-9][0-9]*$",
+            "type": "string"
+          },
+          "title": "Citations",
+          "type": "array"
+        },
+        "field": {
+          "pattern": "^[a-z][a-z0-9_.]{0,99}$",
+          "title": "Field",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^A[1-9][0-9]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "sensitivity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Sensitivity"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/AssertionStatus"
+        },
+        "subject": {
+          "$ref": "#/$defs/SubjectDoc"
+        },
+        "value": {
+          "$ref": "#/$defs/JsonValue"
+        }
+      },
+      "required": [
+        "id",
+        "subject",
+        "field",
+        "value",
+        "status",
+        "sensitivity",
+        "citations"
+      ],
+      "title": "AssertionDoc",
+      "type": "object"
+    },
+    "AssertionStatus": {
+      "enum": [
+        "suggested",
+        "accepted",
+        "disputed",
+        "retracted"
+      ],
+      "title": "AssertionStatus",
+      "type": "string"
+    },
+    "AssociationDoc": {
+      "additionalProperties": false,
+      "properties": {
+        "person": {
+          "pattern": "^P[1-9][0-9]*$",
+          "title": "Person",
+          "type": "string"
+        },
+        "phrase": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Phrase"
+        },
+        "role": {
+          "$ref": "#/$defs/AssociationRole"
+        }
+      },
+      "required": [
+        "person",
+        "role",
+        "phrase"
+      ],
+      "title": "AssociationDoc",
+      "type": "object"
+    },
+    "AssociationRole": {
+      "description": "A person's role at someone else's event. Maps to `domain.events.AssociationRole`\n(GEDCOM `ROLE`: GODP, WITN, OFFICIATOR, OTHER with a phrase).",
+      "enum": [
+        "godparent",
+        "witness",
+        "officiant",
+        "other"
+      ],
+      "title": "AssociationRole",
+      "type": "string"
+    },
+    "CitationDoc": {
+      "additionalProperties": false,
+      "properties": {
+        "extracted_text": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Extracted Text"
+        },
+        "foja": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Foja"
+        },
+        "id": {
+          "pattern": "^C[1-9][0-9]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "page": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Page"
+        },
+        "partida": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Partida"
+        },
+        "quality": {
+          "anyOf": [
+            {
+              "maximum": 3,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Quality"
+        },
+        "source": {
+          "pattern": "^S[1-9][0-9]*$",
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "page",
+        "foja",
+        "partida",
+        "quality",
+        "extracted_text"
+      ],
+      "title": "CitationDoc",
+      "type": "object"
+    },
+    "EventDoc": {
+      "additionalProperties": false,
+      "properties": {
+        "associations": {
+          "items": {
+            "$ref": "#/$defs/AssociationDoc"
+          },
+          "title": "Associations",
+          "type": "array"
+        },
+        "date_original": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Date Original"
+        },
+        "date_value": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Canonical GEDCOM 7 DateValue.",
+          "title": "Date Value"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Description"
+        },
+        "id": {
+          "pattern": "^E[1-9][0-9]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "participants": {
+          "items": {
+            "$ref": "#/$defs/ParticipantDoc"
+          },
+          "title": "Participants",
+          "type": "array"
+        },
+        "place": {
+          "anyOf": [
+            {
+              "pattern": "^L[1-9][0-9]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Place"
+        },
+        "sensitivity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Sensitivity"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "$ref": "#/$defs/EventType"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "date_value",
+        "date_original",
+        "place",
+        "description",
+        "sensitivity",
+        "participants",
+        "associations"
+      ],
+      "title": "EventDoc",
+      "type": "object"
+    },
+    "EventType": {
+      "description": "Events a person or a couple can have.",
+      "enum": [
+        "birth",
+        "baptism",
+        "christening",
+        "confirmation",
+        "first_communion",
+        "marriage",
+        "civil_marriage",
+        "religious_marriage",
+        "divorce",
+        "death",
+        "burial",
+        "cremation",
+        "emigration",
+        "immigration",
+        "naturalization",
+        "residence",
+        "occupation",
+        "education",
+        "quinceanera",
+        "bracero_contract",
+        "border_crossing",
+        "other"
+      ],
+      "title": "EventType",
+      "type": "string"
+    },
+    "JsonValue": {},
+    "NameDoc": {
+      "additionalProperties": false,
+      "properties": {
+        "apellido_materno": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Apellido Materno"
+        },
+        "apellido_paterno": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Apellido Paterno"
+        },
+        "extra_surnames": {
+          "items": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Extra Surnames",
+          "type": "array"
+        },
+        "given": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Given"
+        },
+        "is_primary": {
+          "title": "Is Primary",
+          "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 20000,
+          "minLength": 1,
+          "title": "Lang",
+          "type": "string"
+        },
+        "name_type": {
+          "$ref": "#/$defs/NameType"
+        },
+        "nicknames": {
+          "items": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Nicknames",
+          "type": "array"
+        },
+        "nombre_de_pila": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Nombre De Pila"
+        },
+        "nombre_usado": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Nombre Usado"
+        },
+        "particles": {
+          "additionalProperties": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "propertyNames": {
+            "enum": [
+              "paterno",
+              "materno"
+            ]
+          },
+          "title": "Particles",
+          "type": "object"
+        },
+        "surname_order": {
+          "$ref": "#/$defs/SurnameOrder"
+        }
+      },
+      "required": [
+        "given",
+        "apellido_paterno",
+        "apellido_materno",
+        "extra_surnames",
+        "particles",
+        "nombre_de_pila",
+        "nombre_usado",
+        "nicknames",
+        "name_type",
+        "lang",
+        "surname_order",
+        "is_primary"
+      ],
+      "title": "NameDoc",
+      "type": "object"
+    },
+    "NameType": {
+      "enum": [
+        "birth",
+        "baptismal",
+        "married",
+        "religious",
+        "aka",
+        "immigrant",
+        "other"
+      ],
+      "title": "NameType",
+      "type": "string"
+    },
+    "ParentChildDoc": {
+      "additionalProperties": false,
+      "properties": {
+        "child": {
+          "pattern": "^P[1-9][0-9]*$",
+          "title": "Child",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^R[1-9][0-9]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "parent": {
+          "pattern": "^P[1-9][0-9]*$",
+          "title": "Parent",
+          "type": "string"
+        },
+        "pedigree": {
+          "$ref": "#/$defs/Pedigree"
+        }
+      },
+      "required": [
+        "id",
+        "parent",
+        "child",
+        "pedigree"
+      ],
+      "title": "ParentChildDoc",
+      "type": "object"
+    },
+    "ParticipantDoc": {
+      "additionalProperties": false,
+      "properties": {
+        "person": {
+          "pattern": "^P[1-9][0-9]*$",
+          "title": "Person",
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/$defs/ParticipantRole"
+        }
+      },
+      "required": [
+        "person",
+        "role"
+      ],
+      "title": "ParticipantDoc",
+      "type": "object"
+    },
+    "ParticipantRole": {
+      "enum": [
+        "principal",
+        "spouse",
+        "parent",
+        "godparent",
+        "witness",
+        "officiant",
+        "informant",
+        "other"
+      ],
+      "title": "ParticipantRole",
+      "type": "string"
+    },
+    "PartnerStatus": {
+      "description": "The state of a couple's union.",
+      "enum": [
+        "married",
+        "union_libre",
+        "partner",
+        "separated",
+        "divorced"
+      ],
+      "title": "PartnerStatus",
+      "type": "string"
+    },
+    "Pedigree": {
+      "description": "How a child is linked to a parent (GEDCOM `PEDI`, minus the LDS-only `SEALING`).",
+      "enum": [
+        "birth",
+        "adopted",
+        "foster",
+        "step"
+      ],
+      "title": "Pedigree",
+      "type": "string"
+    },
+    "PersonDoc": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^P[1-9][0-9]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "names": {
+          "items": {
+            "$ref": "#/$defs/NameDoc"
+          },
+          "minItems": 1,
+          "title": "Names",
+          "type": "array"
+        },
+        "sex": {
+          "$ref": "#/$defs/Sex"
+        },
+        "visibility": {
+          "$ref": "#/$defs/Visibility"
+        }
+      },
+      "required": [
+        "id",
+        "sex",
+        "visibility",
+        "names"
+      ],
+      "title": "PersonDoc",
+      "type": "object"
+    },
+    "PlaceDoc": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^L[1-9][0-9]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "inegi_code": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Inegi Code"
+        },
+        "kind": {
+          "$ref": "#/$defs/PlaceKind"
+        },
+        "name": {
+          "maxLength": 20000,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "pattern": "^L[1-9][0-9]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Parent"
+        },
+        "valid_from": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid From"
+        },
+        "valid_to": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid To"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "parent",
+        "valid_from",
+        "valid_to",
+        "inegi_code"
+      ],
+      "title": "PlaceDoc",
+      "type": "object"
+    },
+    "PlaceKind": {
+      "enum": [
+        "pais",
+        "estado",
+        "municipio",
+        "localidad",
+        "parroquia",
+        "hacienda",
+        "rancho",
+        "other"
+      ],
+      "title": "PlaceKind",
+      "type": "string"
+    },
+    "Sensitivity": {
+      "enum": [
+        "religion",
+        "health",
+        "genetic",
+        "ethnicity",
+        "sexual",
+        "political"
+      ],
+      "title": "Sensitivity",
+      "type": "string"
+    },
+    "Sex": {
+      "enum": [
+        "M",
+        "F",
+        "X",
+        "U"
+      ],
+      "title": "Sex",
+      "type": "string"
+    },
+    "SourceDoc": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^S[1-9][0-9]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "locator": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Locator",
+          "type": "object"
+        },
+        "repository": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Repository"
+        },
+        "title": {
+          "maxLength": 20000,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/SourceType"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "title",
+        "repository",
+        "locator"
+      ],
+      "title": "SourceDoc",
+      "type": "object"
+    },
+    "SourceType": {
+      "enum": [
+        "parish_book",
+        "civil_registry_act",
+        "oral_interview",
+        "census",
+        "notarial_record",
+        "family_document",
+        "publication",
+        "website",
+        "other"
+      ],
+      "title": "SourceType",
+      "type": "string"
+    },
+    "SubjectDoc": {
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "pattern": "^[PEFRL][1-9][0-9]*$",
+          "title": "Ref",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/SubjectType"
+        }
+      },
+      "required": [
+        "type",
+        "ref"
+      ],
+      "title": "SubjectDoc",
+      "type": "object"
+    },
+    "SubjectType": {
+      "enum": [
+        "person",
+        "event",
+        "relationship",
+        "place"
+      ],
+      "title": "SubjectType",
+      "type": "string"
+    },
+    "SurnameOrder": {
+      "enum": [
+        "paterno_materno",
+        "materno_paterno",
+        "single"
+      ],
+      "title": "SurnameOrder",
+      "type": "string"
+    },
+    "UnionDoc": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^F[1-9][0-9]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "partners": {
+          "items": {
+            "pattern": "^P[1-9][0-9]*$",
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "title": "Partners",
+          "type": "array"
+        },
+        "status": {
+          "$ref": "#/$defs/PartnerStatus"
+        }
+      },
+      "required": [
+        "id",
+        "partners",
+        "status"
+      ],
+      "title": "UnionDoc",
+      "type": "object"
+    },
+    "Visibility": {
+      "enum": [
+        "space",
+        "private",
+        "public_memorial"
+      ],
+      "title": "Visibility",
+      "type": "string"
+    }
+  },
+  "$id": "https://github.com/madfam-org/family-history/blob/main/packages/contracts/family-history-tree.v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A family tree exported from family-history (AGPL-3.0-only).",
+  "properties": {
+    "assertions": {
+      "items": {
+        "$ref": "#/$defs/AssertionDoc"
+      },
+      "title": "Assertions",
+      "type": "array"
+    },
+    "citations": {
+      "items": {
+        "$ref": "#/$defs/CitationDoc"
+      },
+      "title": "Citations",
+      "type": "array"
+    },
+    "events": {
+      "items": {
+        "$ref": "#/$defs/EventDoc"
+      },
+      "title": "Events",
+      "type": "array"
+    },
+    "format": {
+      "const": "family-history-tree/v1",
+      "title": "Format",
+      "type": "string"
+    },
+    "parent_child": {
+      "items": {
+        "$ref": "#/$defs/ParentChildDoc"
+      },
+      "title": "Parent Child",
+      "type": "array"
+    },
+    "people": {
+      "items": {
+        "$ref": "#/$defs/PersonDoc"
+      },
+      "title": "People",
+      "type": "array"
+    },
+    "places": {
+      "items": {
+        "$ref": "#/$defs/PlaceDoc"
+      },
+      "title": "Places",
+      "type": "array"
+    },
+    "sources": {
+      "items": {
+        "$ref": "#/$defs/SourceDoc"
+      },
+      "title": "Sources",
+      "type": "array"
+    },
+    "unions": {
+      "items": {
+        "$ref": "#/$defs/UnionDoc"
+      },
+      "title": "Unions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "format",
+    "people",
+    "places",
+    "sources",
+    "citations",
+    "events",
+    "unions",
+    "parent_child",
+    "assertions"
+  ],
+  "title": "family-history-tree/v1",
+  "type": "object"
+}

@@ -55,7 +55,7 @@ def test_rls_is_enabled_and_forced_everywhere(engine: Engine) -> None:
                 "AND relname <> 'alembic_version'"
             )
         ).all()
-    assert len(rows) == 14
+    assert len(rows) == 15
     assert all(row.relrowsecurity and row.relforcerowsecurity for row in rows)
 
 
@@ -102,7 +102,7 @@ def test_user_scope_alone_sees_only_member_spaces(
 def _insert_person(engine: Engine, space: uuid.UUID, **scope: Any) -> None:
     scoped_execute(
         engine,
-        "INSERT INTO person (id, family_space_id, sex, living_status, visibility, search_text, "
+        "INSERT INTO person (id, family_space_id, sex, living_status, visibility, search_tokens, "
         "sort_name, created_by, created_at, updated_at) VALUES (:id, :space, 'U', 'living', "
         "'space', '', '', 'user-ana', now(), now())",
         {"id": uuid.uuid4(), "space": space},

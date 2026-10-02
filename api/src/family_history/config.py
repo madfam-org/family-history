@@ -58,7 +58,6 @@ class Settings(BaseSettings):
 
     database_url: SecretStr | None = Field(default=None, alias="DATABASE_URL")
     direct_database_url: SecretStr | None = Field(default=None, alias="DIRECT_DATABASE_URL")
-    redis_url: SecretStr | None = Field(default=None, alias="REDIS_URL")
 
     janua_issuer: str = Field(default=DEFAULT_JANUA_ISSUER, alias="FH_JANUA_ISSUER")
     janua_audience: str = Field(default=DEFAULT_JANUA_AUDIENCE, alias="FH_JANUA_AUDIENCE")

@@ -33,6 +33,7 @@ from fh_testing import StubJWKClient, TokenFactory, make_settings
 
 APP_ROLE = "fh_rls_app"
 TABLES = (
+    "job",
     "event_participant",
     "association",
     "name_form",

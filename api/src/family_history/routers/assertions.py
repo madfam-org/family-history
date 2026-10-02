@@ -26,6 +26,7 @@ from family_history.services.access import (
     enter_space,
     user_scoped,
 )
+from family_history.services.living import recompute_for_subject
 from family_history.services.privacy import default_field_sensitivity
 
 router = APIRouter(prefix="/v1", tags=["assertions"], responses=ERROR_RESPONSES)
@@ -105,6 +106,8 @@ def create_assertion(body: AssertionCreate, ctx: SpaceCtx) -> AssertionOut:
             "citation_ids": citation_ids,
         },
     )
+    # A cited death, burial or cremation is evidence: the principals' living status may change.
+    recompute_for_subject(ctx, assertion.subject_type, assertion.subject_id)
     ctx.db.commit()
     return evidence_service.to_out(assertion)
 
@@ -131,6 +134,7 @@ def change_status(
     row = evidence_service.append_version(
         ctx, previous, status=body.status, citation_ids=citation_ids
     )
+    recompute_for_subject(ctx, row.subject_type, row.subject_id)
     db.commit()
     return evidence_service.to_out(row)
 
@@ -155,5 +159,6 @@ def link_citations(
     row = evidence_service.append_version(
         ctx, previous, status=AssertionStatus(previous.status), citation_ids=citation_ids
     )
+    recompute_for_subject(ctx, row.subject_type, row.subject_id)
     db.commit()
     return evidence_service.to_out(row)

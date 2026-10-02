@@ -1,34 +1,29 @@
-"""Event reads with privacy filtering, participant validation and living-status upkeep."""
+"""Event reads with privacy filtering and participant validation."""
 
 from __future__ import annotations
 
 import uuid
 from collections import defaultdict
 from collections.abc import Iterable, Sequence
-from datetime import UTC, datetime
 
 from sqlalchemy import select
 
 from family_history.errors import unprocessable
-from family_history.models import Event, EventParticipant, Person, Place
+from family_history.models import Association, Event, EventParticipant, Person, Place
 from family_history.models.enums import (
+    AssociationRole,
     EventType,
     ParticipantRole,
-    RevisionAction,
     Sensitivity,
-    Visibility,
+    Sex,
 )
+from family_history.routers.schemas.common import DateDisplay
 from family_history.routers.schemas.events import Event as EventOut
-from family_history.routers.schemas.events import Participant, ParticipantIn
-from family_history.services import audit
+from family_history.routers.schemas.events import EventAssociation, Participant, ParticipantIn
+from family_history.services import dates
+from family_history.services import names as name_rules
 from family_history.services.access import SpaceContext
-from family_history.services.privacy import (
-    LifeEvent,
-    compute_living_status,
-    sensitive_visible,
-    treated_as_living,
-    visible_people,
-)
+from family_history.services.privacy import sensitive_visible, treated_as_living, visible_people
 
 
 def require_people(ctx: SpaceContext, ids: Iterable[uuid.UUID]) -> dict[uuid.UUID, Person]:
@@ -83,40 +78,6 @@ def replace_participants(
     return touched
 
 
-def recompute_living(ctx: SpaceContext, ids: Iterable[uuid.UUID]) -> None:
-    """Re-derive `living_status` for these people from their principal events."""
-    wanted = list(dict.fromkeys(ids))
-    if not wanted:
-        return
-    ctx.db.flush()
-    people = ctx.db.scalars(
-        select(Person).where(Person.family_space_id == ctx.space_id, Person.id.in_(wanted))
-    ).all()
-    rows = ctx.db.execute(
-        select(EventParticipant.person_id, Event.type, Event.date_latest)
-        .join(Event, Event.id == EventParticipant.event_id)
-        .where(
-            EventParticipant.person_id.in_(wanted),
-            EventParticipant.role == ParticipantRole.PRINCIPAL.value,
-        )
-    ).all()
-    events: dict[uuid.UUID, list[LifeEvent]] = defaultdict(list)
-    for person_id, event_type, date_latest in rows:
-        events[person_id].append(LifeEvent(type=event_type, date_latest=date_latest))
-    today = datetime.now(UTC).date()
-    for person in people:
-        status = compute_living_status(events.get(person.id, []), today).value
-        before = {"living_status": person.living_status, "visibility": person.visibility}
-        person.living_status = status
-        # Nothing about a living person is ever public.
-        if treated_as_living(status) and person.visibility == Visibility.PUBLIC_MEMORIAL.value:
-            person.visibility = Visibility.SPACE.value
-        after = {"living_status": person.living_status, "visibility": person.visibility}
-        diff = audit.changes(before, after)
-        if diff:
-            audit.record(ctx, "person", person.id, RevisionAction.UPDATE, diff)
-
-
 def _living_by_person(ctx: SpaceContext, ids: Iterable[uuid.UUID]) -> dict[uuid.UUID, bool]:
     wanted = list(dict.fromkeys(ids))
     if not wanted:
@@ -152,8 +113,26 @@ def events_out(ctx: SpaceContext, events: Sequence[Event]) -> list[EventOut]:
     by_event: dict[uuid.UUID, list[EventParticipant]] = defaultdict(list)
     for row in participants:
         by_event[row.event_id].append(row)
+    associations = ctx.db.scalars(
+        select(Association)
+        .where(Association.event_id.in_(event_ids))
+        .order_by(Association.role, Association.person_id, Association.id)
+    ).all()
+    by_event_assoc: dict[uuid.UUID, list[Association]] = defaultdict(list)
+    for assoc in associations:
+        by_event_assoc[assoc.event_id].append(assoc)
     all_people = [row.person_id for row in participants]
-    visible = visible_person_ids(ctx, all_people)
+    visible = visible_person_ids(ctx, [*all_people, *(a.person_id for a in associations)])
+    associated: dict[uuid.UUID, Person] = {}
+    if associations:
+        associated = {
+            person.id: person
+            for person in ctx.db.scalars(
+                select(Person).where(
+                    Person.id.in_([a.person_id for a in associations if a.person_id in visible])
+                )
+            ).all()
+        }
     living = _living_by_person(ctx, all_people)
     place_ids = [event.place_id for event in events if event.place_id is not None]
     places: dict[uuid.UUID, str] = {}
@@ -181,6 +160,8 @@ def events_out(ctx: SpaceContext, events: Sequence[Event]) -> list[EventOut]:
                 space_id=event.family_space_id,
                 type=EventType(event.type),
                 date_value=event.date_value,
+                date_original=event.date_original,
+                date_display=date_display(event.date_value),
                 date_earliest=event.date_earliest,
                 date_latest=event.date_latest,
                 place_id=event.place_id,
@@ -192,6 +173,20 @@ def events_out(ctx: SpaceContext, events: Sequence[Event]) -> list[EventOut]:
                     for row in rows
                     if row.person_id in visible
                 ],
+                associations=[
+                    EventAssociation(
+                        id=assoc.id,
+                        person_id=assoc.person_id,
+                        display_name=name_rules.display_name(
+                            name_rules.primary_name(associated[assoc.person_id].names)
+                        ),
+                        sex=Sex(associated[assoc.person_id].sex),
+                        role=AssociationRole(assoc.role),
+                        phrase=assoc.phrase,
+                    )
+                    for assoc in by_event_assoc.get(event.id, [])
+                    if assoc.person_id in associated
+                ],
                 created_by=event.created_by,
                 created_at=event.created_at,
                 updated_at=event.updated_at,
@@ -200,10 +195,23 @@ def events_out(ctx: SpaceContext, events: Sequence[Event]) -> list[EventOut]:
     return out
 
 
+def date_display(date_value: str | None) -> DateDisplay | None:
+    shown = dates.display(date_value)
+    return DateDisplay(es=shown.es, en=shown.en) if shown else None
+
+
+def apply_date(event: Event, parsed: dates.EventDate) -> None:
+    event.date_value = parsed.value
+    event.date_original = parsed.original
+    event.date_earliest = parsed.earliest
+    event.date_latest = parsed.latest
+
+
 def event_snapshot(event: Event) -> dict[str, object]:
     return {
         "type": event.type,
         "date_value": event.date_value,
+        "date_original": event.date_original,
         "place_id": event.place_id,
         "description": event.description,
         "sensitivity": event.sensitivity,

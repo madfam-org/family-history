@@ -9,6 +9,7 @@ from typing import Annotated
 from pydantic import Field, StringConstraints, model_validator
 
 from family_history.models.enums import (
+    AssociationRole,
     EventType,
     ParticipantRole,
     PartnerStatus,
@@ -16,18 +17,33 @@ from family_history.models.enums import (
     PlaceKind,
     RelationshipType,
     Sensitivity,
+    Sex,
 )
 from family_history.routers.schemas.common import (
     ApiModel,
+    DateDisplay,
     InputModel,
     LongText,
     MediumText,
     UtcDateTime,
 )
 
-# GEDCOM 7 DateValue text: uppercase tokens such as `ABT 1890`, `BET 1850 AND 1860`,
-# `12 MAR 1901` or `JULIAN 1700`. The domain library parses it; the API keeps it verbatim.
-DateValue = Annotated[str, StringConstraints(pattern=r"^[A-Z0-9_]+( [A-Z0-9_]+)*$", max_length=100)]
+# GEDCOM 7 DateValue text such as `ABT 1890`, `BET 1850 AND 1860`, `12 MAR 1901` or
+# `JULIAN 1700`. The domain library parses and canonicalizes it (`422 invalid_date` otherwise).
+DateValue = Annotated[str, StringConstraints(min_length=1, max_length=100)]
+# What the family typed: «15 de marzo de 1923», «hacia 1891», «entre 1890 y 1895», «15/03/1923».
+DateOriginal = Annotated[str, StringConstraints(min_length=1, max_length=200)]
+
+_DATE_HELP = (
+    "Send `date_value` (GEDCOM 7 DateValue) or `date_original` (free text, read as es-MX), "
+    "never both. Errors: `422 invalid_date`, `422 ambiguous_date`."
+)
+
+
+def _one_date(model: InputModel) -> None:
+    fields = model.model_fields_set
+    if "date_value" in fields and "date_original" in fields:
+        raise ValueError("send date_value or date_original, not both")
 InegiCode = Annotated[str, StringConstraints(pattern=r"^[0-9]{2,12}$")]
 
 
@@ -43,7 +59,8 @@ class Participant(ApiModel):
 
 class EventCreate(InputModel):
     type: EventType
-    date_value: DateValue | None = None
+    date_value: DateValue | None = Field(default=None, description=_DATE_HELP)
+    date_original: DateOriginal | None = Field(default=None, description=_DATE_HELP)
     place_id: uuid.UUID | None = None
     description: LongText | None = None
     sensitivity: Sensitivity | None = Field(
@@ -52,28 +69,54 @@ class EventCreate(InputModel):
     )
     participants: list[ParticipantIn] = Field(min_length=1, max_length=50)
 
+    @model_validator(mode="after")
+    def _single_date(self) -> EventCreate:
+        _one_date(self)
+        return self
+
 
 class EventPatch(InputModel):
     type: EventType | None = None
-    date_value: DateValue | None = None
+    date_value: DateValue | None = Field(default=None, description=_DATE_HELP)
+    date_original: DateOriginal | None = Field(default=None, description=_DATE_HELP)
     place_id: uuid.UUID | None = None
     description: LongText | None = None
     sensitivity: Sensitivity | None = None
     participants: list[ParticipantIn] | None = Field(default=None, min_length=1, max_length=50)
+
+    @model_validator(mode="after")
+    def _single_date(self) -> EventPatch:
+        _one_date(self)
+        return self
+
+
+class EventAssociation(ApiModel):
+    """Someone else's part in the event (padrino, witness, officiant). `display_name` and `sex`
+    let the UI say «padrino» or «madrina» without fetching the person."""
+
+    id: uuid.UUID
+    person_id: uuid.UUID
+    display_name: str
+    sex: Sex
+    role: AssociationRole
+    phrase: str | None
 
 
 class Event(ApiModel):
     id: uuid.UUID
     space_id: uuid.UUID
     type: EventType
-    date_value: str | None
-    date_earliest: date | None
-    date_latest: date | None
+    date_value: str | None = Field(description="Canonical GEDCOM 7 DateValue.")
+    date_original: str | None = Field(description="The date as typed, when it was typed.")
+    date_display: DateDisplay | None
+    date_earliest: date | None = Field(description="Inclusive lower bound (ISO date).")
+    date_latest: date | None = Field(description="Inclusive upper bound (ISO date).")
     place_id: uuid.UUID | None
     place: str | None
     description: str | None
     sensitivity: Sensitivity | None
     participants: list[Participant]
+    associations: list[EventAssociation]
     created_by: str
     created_at: UtcDateTime
     updated_at: UtcDateTime

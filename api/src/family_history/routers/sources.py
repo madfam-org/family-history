@@ -63,7 +63,7 @@ def list_sources(
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = DEFAULT_LIMIT,
 ) -> list[SourceOut]:
     query = select(Source).where(Source.family_space_id == ctx.space_id)
-    for token in name_rules.search_tokens(q or ""):
+    for token in name_rules.query_tokens(q or ""):
         query = query.where(Source.title.ilike(name_rules.like_pattern(token), escape="\\"))
     rows = ctx.db.scalars(query.order_by(Source.title, Source.id).limit(limit)).all()
     return [_out(row) for row in rows]
