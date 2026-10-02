@@ -22,3 +22,8 @@ export async function loadMessages(locale: Locale): Promise<Messages> {
     }
   }
 }
+
+/** The subset of messages sent to client components in the signed-in app. */
+export function clientMessages(messages: Messages) {
+  return { family: messages.family, errors: messages.errors };
+}

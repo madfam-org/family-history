@@ -3,8 +3,7 @@
  * apellido materno, apodo, sexo (M/F/X/U) and the birth date as free text.
  *
  * The person is created first; the birth date travels as a separate birth event with the text
- * exactly as written. Parsing free text into a GEDCOM 7 DateValue is wired server-side later
- * (docs/lanes/web.md, contract requests).
+ * exactly as written (`date_original`), and the API parses it (wave-2 addendum A).
  */
 import type { PersonCreateBody, Sex } from "@/lib/api/schemas";
 

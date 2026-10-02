@@ -6,6 +6,7 @@ import { isLocale } from "@/i18n/locales";
 import { createEvent, createPerson } from "@/lib/api/endpoints";
 import { errorMessageKey, isApiError } from "@/lib/api/errors";
 import { requireApi } from "@/lib/auth/server";
+import { isDateErrorCode } from "@/lib/dates/hints";
 import { readPersonForm, toPersonCreateBody } from "@/lib/forms/person";
 import type { PersonFormState } from "@/lib/forms/types";
 
@@ -28,21 +29,23 @@ export async function createPersonAction(_previous: PersonFormState, form: FormD
     throw error;
   }
 
-  // The person exists from here on. A birth date the API does not accept yet is reported on the
-  // person's page instead of being dropped silently (the text itself never goes into the URL).
-  let birthSaved = true;
+  // The person exists from here on. The birth date travels as typed (`date_original`, addendum A).
+  // If the API refuses it, the editor opens with a hint instead of the date being dropped
+  // silently. Only the error kind goes into the URL, never the text.
+  let refusal: string | null = null;
   if (parsed.birthDate) {
     try {
       await createEvent(api, spaceId, {
         type: "birth",
-        date_value: parsed.birthDate,
+        date_original: parsed.birthDate,
         participants: [{ person_id: personId, role: "principal" }],
       });
     } catch (error) {
       if (!isApiError(error)) throw error;
-      birthSaved = false;
+      const code = errorMessageKey(error.code);
+      refusal = isDateErrorCode(code) ? code : "other";
     }
   }
-  const notice = birthSaved ? "" : "?aviso=fecha-no-guardada";
-  redirect(`/${locale}/personas/${encodeURIComponent(personId)}${notice}`);
+  const person = `/${locale}/personas/${encodeURIComponent(personId)}`;
+  redirect(refusal ? `${person}/editar?${new URLSearchParams({ fecha: refusal }).toString()}` : person);
 }

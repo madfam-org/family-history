@@ -1,17 +1,26 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import type { ReactNode } from "react";
 
 import { ApiErrorNotice } from "@/components/app/ApiErrorNotice";
+import { AddRelativeForm } from "@/components/family/AddRelativeForm";
+import { CompadrazgoPanel } from "@/components/family/CompadrazgoPanel";
+import {
+  CitationsSection,
+  EventsSection,
+  NamesSection,
+  RelativesSection,
+  type KnownPerson,
+} from "@/components/family/PersonSections";
+import { PrivatePersonBadge } from "@/components/family/PrivacyBadges";
 import { isLocale } from "@/i18n/locales";
-import { getPerson } from "@/lib/api/endpoints";
+import { getCompadrazgo, getPerson } from "@/lib/api/endpoints";
 import { load } from "@/lib/api/load";
+import { isPrivatePerson } from "@/lib/api/schemas";
 import { requireApi } from "@/lib/auth/server";
-import { eventTypeKey, formatName, relationshipLabelKey } from "@/lib/people/labels";
+import { fetchPeople, relatedIds } from "@/lib/tree/load";
 
 type Params = Promise<{ locale: string; personId: string }>;
-type Search = Promise<Record<string, string | string[] | undefined>>;
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { locale } = await params;
@@ -20,29 +29,17 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   return { title: t("pageTitle") };
 }
 
-function Section({ id, title, empty, children }: { id: string; title: string; empty: string; children: ReactNode[] }) {
-  return (
-    <section aria-labelledby={id} className="fh-card">
-      <h2 id={id} className="text-xl font-bold">
-        {title}
-      </h2>
-      {children.length > 0 ? (
-        <ul className="mt-3 flex flex-col gap-3">{children}</ul>
-      ) : (
-        <p className="mt-3 text-muted">{empty}</p>
-      )}
-    </section>
-  );
-}
-
-/** A person: names, events, relationships and cited sources, with honest empty states. */
-export default async function PersonPage({ params, searchParams }: { params: Params; searchParams: Search }) {
+/**
+ * A person: names, events (with padrinos on sacraments), relatives with the relationship editor,
+ * compadrazgo and cited sources. Privacy is shown, not implied.
+ */
+export default async function PersonPage({ params }: { params: Params }) {
   const { locale, personId } = await params;
-  const birthNotSaved = (await searchParams).aviso === "fecha-no-guardada";
   if (!isLocale(locale)) notFound();
   setRequestLocale(locale);
   const { api } = await requireApi();
   const t = await getTranslations({ locale, namespace: "app.person" });
+  const family = await getTranslations({ locale, namespace: "family" });
   const form = await getTranslations({ locale, namespace: "app.personForm" });
   const here = `/${locale}/personas/${encodeURIComponent(personId)}`;
 
@@ -51,100 +48,76 @@ export default async function PersonPage({ params, searchParams }: { params: Par
   if (!result.ok) return <ApiErrorNotice locale={locale} code={result.code} returnTo={here} />;
   const person = result.data;
 
+  // Names (and sex, for padrino/madrina) of everyone this page mentions.
+  const associated = person.events.flatMap((event) => event.associations.map((association) => association.person_id));
+  const ids = [...new Set([...relatedIds(person), ...associated])].filter((id) => id !== person.id);
+  const [related, compadrazgo] = await Promise.all([
+    fetchPeople(api, ids),
+    load(() => getCompadrazgo(api, person.id)),
+  ]);
+  const known = new Map<string, KnownPerson>(related.people.map((other) => [other.id, { name: other.display_name, sex: other.sex }]));
+
   return (
     <div className="flex flex-col gap-6">
-      <div>
+      <div className="flex flex-col gap-3">
         {person.space_id ? (
           <a href={`/${locale}/familias/${encodeURIComponent(person.space_id)}`} className="text-sm">
             ← {t("breadcrumb")}
           </a>
         ) : null}
-        <h1 className="mt-2 text-3xl font-bold">{person.display_name}</h1>
-        <p className="mt-2 flex flex-wrap gap-2 text-sm">
-          <span className="rounded-full bg-amate px-3 py-1 font-semibold text-bark">
-            {t(`living.${person.living_status}`)}
-          </span>
-          <span className="rounded-full bg-amate px-3 py-1 font-semibold text-bark">
-            {t(`visibility.${person.visibility}`)}
-          </span>
+        <h1 className="text-3xl font-bold">{person.display_name}</h1>
+        <p className="flex flex-wrap gap-2 text-sm">
+          <span className="rounded-full bg-amate px-3 py-1 font-semibold text-bark">{t(`living.${person.living_status}`)}</span>
+          <span className="rounded-full bg-amate px-3 py-1 font-semibold text-bark">{t(`visibility.${person.visibility}`)}</span>
           <span className="rounded-full bg-amate px-3 py-1 font-semibold text-bark">
             {t("sex", { sex: form(`sexOptions.${person.sex}`) })}
           </span>
         </p>
+        {isPrivatePerson(person) ? <PrivatePersonBadge locale={locale} /> : null}
+        <nav aria-label={family("nav.toolsTitle")} className="flex flex-wrap gap-2">
+          <a href={`${here}/editar`} className="fh-button">
+            {family("nav.editPerson")}
+          </a>
+          <a href={`${here}/arbol`} className="fh-button fh-button-secondary">
+            {family("nav.tree")}
+          </a>
+          {person.space_id ? (
+            <a
+              href={`/${locale}/familias/${encodeURIComponent(person.space_id)}/parentesco?${new URLSearchParams({ de: person.id }).toString()}`}
+              className="fh-button fh-button-secondary"
+            >
+              {family("nav.kinship")}
+            </a>
+          ) : null}
+        </nav>
       </div>
 
-      {birthNotSaved ? (
-        <p role="status" className="rounded-xl border-2 border-line-strong p-4">
-          {t("birthNotSaved")}
+      {related.failed > 0 ? (
+        <p role="alert" className="rounded-xl border-2 border-danger p-4 font-semibold text-danger">
+          {family("tree.failed", { count: related.failed })}
         </p>
       ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Section id="nombres" title={t("namesTitle")} empty={t("noNames")}>
-          {person.names.map((name, index) => {
-            const nicknames = name.nicknames.filter(Boolean);
-            return (
-              <li key={name.id ?? index}>
-                <p className="font-serif text-lg font-bold">{formatName(name) || person.display_name}</p>
-                {nicknames.length > 0 ? (
-                  <p className="text-sm text-muted">{t("nickname", { nickname: nicknames.join(", ") })}</p>
-                ) : null}
-              </li>
-            );
-          })}
-        </Section>
-
-        <Section id="eventos" title={t("eventsTitle")} empty={t("noEvents")}>
-          {person.events.map((event, index) => {
-            const key = eventTypeKey(event.type);
-            const date = event.date_value;
-            return (
-              <li key={event.id ?? index}>
-                <p className="font-semibold">{key === "other" ? event.type : t(`eventTypes.${key}`)}</p>
-                <p className="text-sm text-muted">
-                  <span className="fh-date">{date ?? t("unknownDate")}</span>
-                  {event.place ? ` · ${event.place}` : null}
-                </p>
-              </li>
-            );
-          })}
-        </Section>
-
-        <Section id="relaciones" title={t("relationshipsTitle")} empty={t("noRelationships")}>
-          {person.relationships.map((relationship) => {
-            const key = relationshipLabelKey(relationship, person.id);
-            const otherId =
-              relationship.from_person_id === person.id ? relationship.to_person_id : relationship.from_person_id;
-            return (
-              <li key={relationship.id}>
-                <p className="font-semibold">
-                  {t(`relationshipTypes.${key}`)}
-                  {relationship.qualifier ? <span className="font-normal text-muted"> · {relationship.qualifier}</span> : null}
-                </p>
-                <a href={`/${locale}/personas/${encodeURIComponent(otherId)}`} className="text-sm">
-                  {t("relatedPerson")}
-                </a>
-              </li>
-            );
-          })}
-        </Section>
-
-        <Section id="fuentes" title={t("citationsTitle")} empty={t("noCitations")}>
-          {person.citations.map((citation) => (
-            <li key={citation.id}>
-              <p className="fh-date text-sm">
-                {[
-                  citation.page,
-                  citation.foja ? t("citationFoja", { value: citation.foja }) : null,
-                  citation.partida ? t("citationPartida", { value: citation.partida }) : null,
-                ]
-                  .filter(Boolean)
-                  .join(" · ") || citation.id}
-              </p>
-            </li>
-          ))}
-        </Section>
+        <NamesSection locale={locale} person={person} />
+        <EventsSection locale={locale} person={person} known={known} />
+        <RelativesSection locale={locale} person={person} known={known} />
+        <CompadrazgoPanel
+          locale={locale}
+          result={compadrazgo.ok ? { ok: true, items: compadrazgo.data.items } : { ok: false, code: compadrazgo.code }}
+        />
+        <CitationsSection locale={locale} person={person} />
       </div>
+
+      {person.space_id ? (
+        <div className="max-w-2xl">
+          <AddRelativeForm
+            personId={person.id}
+            spaceId={person.space_id}
+            nameLabels={{ given: form("given"), paternal: form("paternal"), maternal: form("maternal") }}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

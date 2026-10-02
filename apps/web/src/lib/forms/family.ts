@@ -118,10 +118,17 @@ export function associationNeedsPhrase(role: AssociationRole): boolean {
 export const PHRASE_MAX = 120;
 export const DESCRIPTION_MAX = 2000;
 
-/** A UUID-shaped id from a form field, or null. Ids never come from free text. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** A UUID-shaped id, or null. Ids never come from free text. */
+export function asId(value: unknown): string | null {
+  const text = typeof value === "string" ? value.trim() : "";
+  return UUID.test(text) ? text.toLowerCase() : null;
+}
+
+/** A UUID-shaped id from a form field, or null. */
 export function formId(form: FormData, field: string): string | null {
-  const value = String(form.get(field) ?? "").trim();
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value) ? value.toLowerCase() : null;
+  return asId(form.get(field));
 }
 
 /** Godparent labels depend on the godparent's sex: padrino, madrina, or both forms. */
