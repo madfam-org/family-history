@@ -81,10 +81,12 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: /tmp
-          # A 25 MiB upload is parsed in memory; the limit leaves room for that and the export it builds.
+          # Small at rest; the limit is sized to the 25 MiB upload cap. Measured locally, parsing GEDCOM takes
+          # about 35 MiB of memory per MiB of file and persisting the rows about as much again, so a full-size
+          # import peaks near 1.5 GiB (docs/lanes/integration-api.md).
           resources:
-            requests: { cpu: 50m, memory: 192Mi }
-            limits: { cpu: 500m, memory: 768Mi }
+            requests: { cpu: 50m, memory: 256Mi }
+            limits: { cpu: "1", memory: 2Gi }
           livenessProbe:
             exec:
               command: ["python", "-m", "family_history.worker", "healthcheck"]

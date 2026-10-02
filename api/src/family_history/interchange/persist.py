@@ -12,7 +12,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass
 
-from family_history.interchange.tree import TName, Tree
+from family_history.interchange.tree import TName, TPlace, Tree
 from family_history.models import (
     Assertion,
     Association,
@@ -92,6 +92,29 @@ def _event_date(date_value: str | None, date_original: str | None) -> EventDate:
     return from_value(parsed, date_original)
 
 
+def _place_levels(tree: Tree) -> list[list[TPlace]]:
+    """Places grouped by depth (roots first), each group in tree order."""
+    parents = {p.ref: p.parent for p in tree.places}
+    depth: dict[str, int] = {}
+
+    def depth_of(ref: str) -> int:
+        if ref not in depth:
+            chain: list[str] = []
+            current: str | None = ref
+            while current is not None and current not in depth and len(chain) < 64:
+                chain.append(current)
+                current = parents.get(current)
+            base = depth.get(current, -1) if current is not None else -1
+            for offset, item in enumerate(reversed(chain), start=1):
+                depth[item] = base + offset
+        return depth[ref]
+
+    levels: dict[int, list[TPlace]] = {}
+    for place in tree.places:
+        levels.setdefault(depth_of(place.ref), []).append(place)
+    return [levels[d] for d in sorted(levels)]
+
+
 def persist_tree(ctx: SpaceContext, tree: Tree, *, source: str) -> Persisted:
     """Insert every entity of `tree` into `ctx.space_id`. The caller commits."""
     db, space = ctx.db, ctx.space_id
@@ -103,21 +126,24 @@ def persist_tree(ctx: SpaceContext, tree: Tree, *, source: str) -> Persisted:
         return ids[ref]
 
     for place in tree.places:
-        db.add(
-            Place(
-                id=new(place.ref),
-                family_space_id=space,
-                name=place.name,
-                kind=place.kind,
-                parent_id=ids[place.parent] if place.parent else None,
-                valid_from=place.valid_from,
-                valid_to=place.valid_to,
-                inegi_code=place.inegi_code,
-                search_text=name_rules.normalize(place.name),
-                created_by=ctx.sub,
+        new(place.ref)  # ids keep the tree's order, whatever the insert batches
+    for level in _place_levels(tree):
+        for place in level:
+            db.add(
+                Place(
+                    id=ids[place.ref],
+                    family_space_id=space,
+                    name=place.name,
+                    kind=place.kind,
+                    parent_id=ids[place.parent] if place.parent else None,
+                    valid_from=place.valid_from,
+                    valid_to=place.valid_to,
+                    inegi_code=place.inegi_code,
+                    search_text=name_rules.normalize(place.name),
+                    created_by=ctx.sub,
+                )
             )
-        )
-        db.flush()  # a child place's composite key needs its parent row
+        db.flush()  # a child place's composite key needs its parent's row first
     for src in tree.sources:
         db.add(
             Source(
@@ -181,11 +207,13 @@ def persist_tree(ctx: SpaceContext, tree: Tree, *, source: str) -> Persisted:
             created_by=ctx.sub,
         )
         db.add(event)
-        db.flush()
+    db.flush()
+    for item in tree.events:
+        event_id = ids[item.ref]
         for person_ref, role in dict.fromkeys((p.person, p.role) for p in item.participants):
             db.add(
                 EventParticipant(
-                    family_space_id=space, event_id=event.id, person_id=ids[person_ref], role=role
+                    family_space_id=space, event_id=event_id, person_id=ids[person_ref], role=role
                 )
             )
         seen: set[tuple[str, str]] = set()
@@ -197,7 +225,7 @@ def persist_tree(ctx: SpaceContext, tree: Tree, *, source: str) -> Persisted:
                 Association(
                     id=next_id(),
                     family_space_id=space,
-                    event_id=event.id,
+                    event_id=event_id,
                     person_id=ids[assoc.person],
                     role=assoc.role,
                     phrase=assoc.phrase if assoc.phrase or assoc.role != "other" else "Otro papel",

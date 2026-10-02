@@ -227,10 +227,11 @@ spec:
     resources:
       requests:
         cpu: "50m"
-        memory: "192Mi"
+        memory: "256Mi"
+      # Sized to the 25 MiB import cap (deployment-worker.yaml explains the measurement).
       limits:
-        cpu: "500m"
-        memory: "768Mi"
+        cpu: "1"
+        memory: "2Gi"
 
   # Runtime configuration lives in the kustomize base (infra/k8s/production/deployment-worker.yaml):
   #   env:     FH_ENV=production

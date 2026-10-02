@@ -137,6 +137,15 @@ class _Family:
     xref: str = ""
 
 
+@dataclass
+class _Index:
+    """Per-person lookups, so building every INDI stays linear in the tree's size."""
+
+    events: defaultdict[str, list[TEvent]] = field(default_factory=lambda: defaultdict(list))
+    as_child: defaultdict[str, list[_Family]] = field(default_factory=lambda: defaultdict(list))
+    as_partner: defaultdict[str, list[_Family]] = field(default_factory=lambda: defaultdict(list))
+
+
 class _Exporter:
     def __init__(self, tree: Tree) -> None:
         self.tree = tree
@@ -339,23 +348,15 @@ class _Exporter:
 
     # -- records ---------------------------------------------------------------------------
 
-    def individual(self, person: TPerson, families: dict[frozenset[str], _Family]) -> Structure:
+    def individual(self, person: TPerson, index: _Index) -> Structure:
         node = Structure(tag="INDI", xref=self.indi[person.ref])
         node.children.extend(self._own(person))
-        own_events: list[tuple[TEvent, Structure]] = []
-        for event in self.tree.events:
-            if EventType(event.type).is_family_event:
-                continue
-            if any(
-                p.person == person.ref and p.role == ParticipantRole.PRINCIPAL.value
-                for p in event.participants
-            ):
-                own_events.append((event, self.event_structure(event, in_family=False)))
+        own_events = [
+            (event, self.event_structure(event, in_family=False))
+            for event in index.events.get(person.ref, [])
+        ]
         node.children.extend(self._sorted_events(own_events))
-        as_child = sorted(
-            (f for f in families.values() if person.ref in f.children),
-            key=lambda f: int(f.xref.strip("@")[1:]),
-        )
+        as_child = index.as_child.get(person.ref, [])
         for family in as_child:
             famc = node.add("FAMC", pointer=family.xref)
             pedigree = PEDIGREE_TO_GEDCOM.get(family.children[person.ref])
@@ -363,11 +364,7 @@ class _Exporter:
                 pedi = famc.add("PEDI", pedigree[0])
                 if pedigree[1]:
                     pedi.add("PHRASE", pedigree[1])
-        as_partner = sorted(
-            (f for f in families.values() if person.ref in f.partners),
-            key=lambda f: int(f.xref.strip("@")[1:]),
-        )
-        for family in as_partner:
+        for family in index.as_partner.get(person.ref, []):
             node.add("FAMS", pointer=family.xref)
         node.children.extend(self._citations(SubjectType.PERSON.value, person.ref))
         return node
@@ -386,8 +383,21 @@ class _Exporter:
         head.add("SOUR", PRODUCT).add("NAME", "family-history")
         roots = [head]
         people = sorted(self.tree.people, key=lambda p: self._number(p.ref))
-        roots.extend(self.individual(p, families) for p in people)
         ranked = sorted(families.values(), key=lambda f: int(f.xref.strip("@")[1:]))
+        index = _Index()
+        for event in self.tree.events:
+            if EventType(event.type).is_family_event:
+                continue
+            for ref in dict.fromkeys(
+                p.person for p in event.participants if p.role == ParticipantRole.PRINCIPAL.value
+            ):
+                index.events[ref].append(event)
+        for family in ranked:
+            for child in family.children:
+                index.as_child[child].append(family)
+            for partner in family.partners:
+                index.as_partner[partner].append(family)
+        roots.extend(self.individual(p, index) for p in people)
         roots.extend(self.family_record(f) for f in ranked)
         for source in sorted(self.tree.sources, key=lambda s: int(self.sour[s.ref][2:-1])):
             record = Structure(tag="SOUR", xref=self.sour[source.ref])

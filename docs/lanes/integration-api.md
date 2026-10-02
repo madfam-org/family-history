@@ -209,8 +209,9 @@ religion); places are rebuilt from `PLAC` paths (país, estado, municipio, local
 ## Worker and deployment
 
 - `infra/k8s/production/deployment-worker.yaml`: API image, `python -m family_history.worker`,
-  uid 1001, read-only root, `/tmp` emptyDir, ALL capabilities dropped, requests 50m / 192Mi,
-  limits 500m / 768Mi, exec liveness and readiness (`healthcheck`, heartbeat ≤ 120 s),
+  uid 1001, read-only root, `/tmp` emptyDir, ALL capabilities dropped, requests 50m / 256Mi,
+  limits 1 CPU / 2Gi (sized to the 25 MiB cap, see below), exec liveness and readiness
+  (`healthcheck`, heartbeat ≤ 120 s),
   `terminationGracePeriodSeconds: 120`, `DATABASE_URL` from `family-history-secrets`.
 - `service-worker-metrics.yaml` (9090, picked up by ServiceMonitor `family-history`),
   `allow-monitoring-ingress-worker`, `allow-worker-pgbouncer-egress` (data namespace, 6432
@@ -249,7 +250,12 @@ New tests:
 - A separate database role for the worker (ADR 0002 known limit).
 - A Prometheus alert on worker failures or a stale queue (needs a RUNBOOK anchor, which the
   platform lane owns).
-- Peak memory of a 25 MiB import is unmeasured; the 768Mi limit is an estimate.
+- Streaming the import (today the whole file is parsed in memory). Measured locally on
+  synthetic files of 1 and 3 MiB, cost is linear: per MiB of GEDCOM about 1.2 s to parse,
+  4.5 s to persist and 2.5 s to export, and about 35 MiB of memory to parse plus a similar
+  amount for the database session. A full 25 MiB import therefore takes about 2.5 minutes
+  (well inside the 15-minute lease) and peaks near 1.5 GiB, hence the 2Gi limit. Not yet
+  measured at 25 MiB itself.
 - Backfill of `search_tokens` for rows written before migration 0003 (none exist: the service
   was never deployed; any row gets tokens on its next names write).
 - `GET /v1/people/{id}/tree?up=&down=` (INT-WEB's later-wave request).
