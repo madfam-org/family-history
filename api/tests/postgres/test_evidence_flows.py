@@ -235,3 +235,24 @@ def test_sensitive_assertions_about_living_people_stay_with_author(
         f"/v1/assertions/{created['id']}/status", json={"status": "disputed"}, headers=auth(ANA)
     )
     assert hidden.json()["error"]["code"] == "assertion_not_found"
+
+
+def test_health_fields_default_to_health_sensitivity(
+    client: TestClient, auth: AuthHeaders, setup: dict[str, Any]
+) -> None:
+    created = _assert(
+        client,
+        auth,
+        setup["space"],
+        "user-carla",
+        subject_type="person",
+        subject_id=setup["person"],
+        field="cause_of_death",
+        value="sintética",
+    ).json()
+    assert created["sensitivity"] == "health"
+    params = {"subject_type": "person", "subject_id": setup["person"]}
+    other_view = client.get(
+        f"/v1/spaces/{setup['space']}/assertions", params=params, headers=auth(ANA)
+    ).json()
+    assert other_view == []
