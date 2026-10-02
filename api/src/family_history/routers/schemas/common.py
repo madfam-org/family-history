@@ -1,0 +1,30 @@
+"""Base models and shared shapes."""
+
+from __future__ import annotations
+
+from typing import Annotated
+
+from pydantic import BaseModel, ConfigDict, StringConstraints
+
+
+class ApiModel(BaseModel):
+    """Response shape. Built from ORM objects or dicts."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class InputModel(BaseModel):
+    """Request body: unknown fields are rejected and strings are trimmed."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+
+ShortText = Annotated[str, StringConstraints(min_length=1, max_length=200)]
+MediumText = Annotated[str, StringConstraints(min_length=1, max_length=500)]
+LongText = Annotated[str, StringConstraints(max_length=20000)]
+LangTag = Annotated[str, StringConstraints(pattern=r"^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$")]
+
+
+class EventBrief(ApiModel):
+    date_value: str | None
+    place: str | None
