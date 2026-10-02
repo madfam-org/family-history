@@ -4,7 +4,7 @@
 Reads the resources listed in ``infra/k8s/production/kustomization.yaml`` (no kustomize needed) and fails when:
 
 1. A workload's ``secretKeyRef`` names a Secret or key that no ExternalSecret in the repository provides,
-   and that is not one of the platform-written keys in ``PLATFORM_SECRETS`` (a key read but never
+   and that is not one of the platform-written keys in ``ONBOARDING_PROVIDED`` (a key read but never
    provisioned is an outage that only shows up at deploy time).
 2. An ``envFrom.secretRef`` or a ``secret`` volume names a Secret that no ExternalSecret produces.
 3. An ExternalSecret or platform key is consumed by no workload (custody: a secret is mounted only where it
@@ -36,7 +36,7 @@ RUNTIME_VARS = {"NODE_ENV", "NEXT_TELEMETRY_DISABLED", "HOSTNAME", "PORT", "PYTH
 # Secrets the platform writes outside this repository, with exactly the keys it writes. The project Secret
 # from `enclii onboard --secret-name family-history-secrets --secrets-file <env>` (the creator-census
 # precedent): the pooled and the direct database URL.
-PLATFORM_SECRETS = {"family-history-secrets": {"DATABASE_URL", "DIRECT_DATABASE_URL"}}
+ONBOARDING_PROVIDED = {"family-history-secrets": {"DATABASE_URL", "DIRECT_DATABASE_URL"}}
 SENSITIVE = {
     "DATABASE_URL", "DIRECT_DATABASE_URL", "REDIS_URL", "FH_S3_ACCESS_KEY_ID", "FH_S3_SECRET_ACCESS_KEY",
     "FH_EARLY_ACCESS_ALLOWLIST", "FH_SENTRY_DSN", "AUTH_JANUA_CLIENT_ID", "AUTH_JANUA_CLIENT_SECRET",
@@ -83,7 +83,7 @@ def _pod(doc: Doc) -> tuple[Doc, Doc] | None:
 
 def check(docs: list[Doc], contract: dict[str, set[str]]) -> list[str]:
     errs: list[str] = []
-    provided: dict[str, set[str]] = {name: set(keys) for name, keys in PLATFORM_SECRETS.items()}
+    provided: dict[str, set[str]] = {name: set(keys) for name, keys in ONBOARDING_PROVIDED.items()}
     for d in docs:
         if d.get("kind") == "ExternalSecret":
             target = ((d.get("spec") or {}).get("target") or {}).get("name") or d["metadata"]["name"]
@@ -156,8 +156,8 @@ def main(argv: list[str] | None = None) -> int:
     if errs:
         return 1
     n = sum(1 for d in docs if d.get("kind") == "ExternalSecret")
-    print(f"secret-coverage: every secret reference is provisioned by the {n} ExternalSecrets or the platform "
-          f"Secrets ({', '.join(sorted(PLATFORM_SECRETS))}), and every key is used")
+    print(f"secret-coverage: every secret reference is provisioned by the {n} ExternalSecrets or the onboarding "
+          "project Secret, and every key is used")
     return 0
 
 
