@@ -1,0 +1,340 @@
+{
+  "meta": {
+    "landingTitle": "{brand}: your family tree, with evidence and in your language",
+    "landingDescription": "An open-source, Spanish-first family-history platform for Mexican and binational families: a tree built from evidence, stories, interviews and privacy by default. Early access by invitation.",
+    "avisoTitle": "Privacy notice",
+    "appTitle": "Your family space",
+    "notFoundTitle": "Page not found"
+  },
+  "common": {
+    "skipToContent": "Skip to content",
+    "switchLanguage": "Español",
+    "switchLanguageLabel": "View this page in Spanish",
+    "earlyAccess": "Early access",
+    "comingSoon": "Coming soon",
+    "openSource": "Open source (AGPL-3.0)",
+    "sourceCode": "Source code",
+    "backHome": "Back to home",
+    "mainNav": "Main navigation",
+    "footerNav": "Footer links"
+  },
+  "landing": {
+    "nav": {
+      "how": "How it works",
+      "mexican": "For Mexican families",
+      "privacy": "Privacy",
+      "faq": "Questions"
+    },
+    "hero": {
+      "eyebrow": "Early access",
+      "title": "Your family's history, with evidence, stories and voices.",
+      "lead": "Build your tree from civil records and parish books, and keep what no archive holds in the same place: the stories, the photos and the voices of your elders. Spanish first, and under your control.",
+      "ctaPrimary": "See how it works",
+      "ctaSecondary": "Our privacy promises",
+      "status": "We are building the platform with a small group of families. It is not open to the public yet."
+    },
+    "how": {
+      "title": "How it works",
+      "lead": "Four ideas guide everything we build.",
+      "items": {
+        "tree": {
+          "title": "A tree with evidence",
+          "body": "Every fact carries its source: the civil record, the baptism entry or the interview it came from. When two sources disagree, both stay and you choose the one you prefer."
+        },
+        "stories": {
+          "title": "Stories and interviews",
+          "body": "Anecdotes, recipes, photos and your grandparents' voices live next to the tree, not in a separate drawer."
+        },
+        "privacy": {
+          "title": "Private by default",
+          "body": "Living people are visible only inside their family space. You decide who joins and with what permissions."
+        },
+        "export": {
+          "title": "Take everything with you",
+          "body": "Your tree is yours. Full export in open formats will always be free, with no conditions."
+        }
+      }
+    },
+    "mexican": {
+      "title": "Made for Mexican families",
+      "lead": "Genealogy software usually assumes other customs. This one starts here.",
+      "items": {
+        "surnames": {
+          "title": "Two surnames",
+          "body": "Paternal and maternal surnames, given names and names in use, nicknames. Nobody's surname is forced to change at marriage."
+        },
+        "compadrazgo": {
+          "title": "Compadrazgo",
+          "body": "Godparents for baptism, confirmation and marriage are recorded on each sacrament; compadres are derived from them."
+        },
+        "records": {
+          "title": "Civil records and parish books",
+          "body": "Citations with book, folio and entry, Registro Civil records and oral testimony, each with its own source type."
+        },
+        "muertos": {
+          "title": "Día de Muertos",
+          "body": "A place to remember those who are gone, with their photos and stories, in the spirit of an ofrenda."
+        }
+      }
+    },
+    "promises": {
+      "title": "Our privacy promises",
+      "lead": "This is not fine print: it is how the product is designed.",
+      "items": {
+        "living": {
+          "title": "The living stay private by default",
+          "body": "Nothing about a living person is ever published. Only their family space sees them."
+        },
+        "dna": {
+          "title": "No DNA",
+          "body": "We do not ask for, store or analyse genetic data. We do not ask for the CURP either."
+        },
+        "noSale": {
+          "title": "We do not sell data",
+          "body": "We do not sell your information or use it to train artificial-intelligence models."
+        },
+        "export": {
+          "title": "Free export",
+          "body": "You will be able to download your whole tree as GEDCOM 7, GEDCOM 5.5.1 and JSON, free, whenever you want."
+        }
+      }
+    },
+    "faq": {
+      "title": "Frequently asked questions",
+      "items": {
+        "whatIs": {
+          "question": "What is {brand}?",
+          "answer": "It is an open-source, Spanish-first family-history platform for building your family tree from evidence and keeping its stories, photos and interviews in the same place."
+        },
+        "access": {
+          "question": "How can I start using it?",
+          "answer": "We are in invitation-only early access with a small group of families. It is not open to the public yet."
+        },
+        "living": {
+          "question": "Who can see my living relatives' data?",
+          "answer": "Only the members of your family space. Anyone not recorded as deceased and born within the last 110 years, or with no known birth date, is treated as living and is never published."
+        },
+        "dna": {
+          "question": "Do you use DNA or genetic tests?",
+          "answer": "No. We do not ask for, store or analyse genetic data, and we do not ask for the CURP either."
+        },
+        "data": {
+          "question": "Do you sell my data or use it to train artificial intelligence?",
+          "answer": "No. We do not sell data and we do not train models on family content."
+        },
+        "export": {
+          "question": "Will I be able to take my tree to another program?",
+          "answer": "Yes. Full export as GEDCOM 7, GEDCOM 5.5.1 and JSON will always be free, for every family."
+        },
+        "language": {
+          "question": "Is it available in English?",
+          "answer": "Yes. Mexican Spanish is the primary language and English comes second, with binational families in mind."
+        },
+        "openSource": {
+          "question": "Is it open source?",
+          "answer": "Yes. The code is published under the AGPL-3.0 licence and anyone can review it."
+        },
+        "maker": {
+          "question": "Who makes it?",
+          "answer": "Innovaciones MADFAM S.A.S. de C.V., a company based in Cuernavaca, Morelos."
+        }
+      }
+    },
+    "waitlist": {
+      "soonTitle": "Coming soon: invitation-only early access",
+      "soonBody": "We are not taking sign-ups yet. We will open the waitlist once our privacy notice has been reviewed.",
+      "title": "Request early access",
+      "lead": "Leave your email and we will write when there is room for your family.",
+      "emailLabel": "Email",
+      "emailHint": "We will only use it to write to you about early access.",
+      "consentBefore": "I have read the ",
+      "consentLink": "privacy notice",
+      "consentAfter": " and agree to be contacted about early access.",
+      "submit": "Request access",
+      "submitting": "Sending…",
+      "successTitle": "Done!",
+      "successBody": "We received your request. We will write when there is room.",
+      "errors": {
+        "invalidEmail": "Enter a valid email address.",
+        "consentRequired": "To continue, tick the consent box.",
+        "rateLimited": "We are receiving many requests. Try again in a few minutes.",
+        "unavailable": "We could not record your request right now. Please try later.",
+        "closed": "The waitlist is not open."
+      }
+    },
+    "footer": {
+      "aviso": "Privacy notice",
+      "license": "AGPL-3.0 licence",
+      "source": "Source code"
+    }
+  },
+  "aviso": {
+    "title": "Privacy notice",
+    "inReviewTitle": "Privacy notice under review",
+    "inReviewBody": "Our privacy notice is under legal review. Until it is published, this site does not collect personal data.",
+    "version": "Version {version}"
+  },
+  "app": {
+    "nav": {
+      "families": "My families",
+      "settings": "Settings"
+    },
+    "signIn": {
+      "title": "Sign in to your family space",
+      "body": "Use your MADFAM account to sign in. If this is your first time, you can create one in the next step.",
+      "button": "Sign in",
+      "errors": {
+        "not_configured": "Sign-in is not configured on this server.",
+        "denied": "Sign-in was not completed. You can try again.",
+        "expired": "The sign-in attempt expired. Please try again.",
+        "invalid": "We could not verify your sign-in. Please try again.",
+        "unavailable": "The account service is not responding. Try again in a few minutes."
+      }
+    },
+    "earlyAccess": {
+      "title": "Your account does not have early access yet",
+      "body": "We are opening the platform gradually. If you received an invitation, sign in with the account it was sent to.",
+      "switchAccount": "Sign in with another account"
+    },
+    "spaces": {
+      "title": "My families",
+      "lead": "Each family space holds a tree and its stories. Only its members can see it.",
+      "empty": "You have no family spaces yet. Create the first one.",
+      "createTitle": "Create a family space",
+      "nameLabel": "Space name",
+      "nameHint": "For example: “Ramírez Ocampo family”.",
+      "create": "Create space",
+      "creating": "Creating…",
+      "created": "Space created.",
+      "peopleCount": "{count, plural, =0 {No people} one {# person} other {# people}}",
+      "roles": {
+        "steward": "Steward",
+        "editor": "Editor",
+        "contributor": "Contributor",
+        "viewer": "Viewer"
+      },
+      "errors": {
+        "nameRequired": "Enter a name for the space.",
+        "nameTooLong": "The name can be up to 120 characters."
+      }
+    },
+    "space": {
+      "breadcrumb": "My families",
+      "peopleTitle": "People",
+      "searchLabel": "Search by name",
+      "searchButton": "Search",
+      "clearSearch": "Clear search",
+      "empty": "This space has no people yet. Add the first one.",
+      "noResults": "No people match “{query}”.",
+      "more": "Show more people",
+      "born": "Born: <mono>{date}</mono>",
+      "died": "Died: <mono>{date}</mono>",
+      "treeTitle": "Family tree",
+      "treeBody": "The tree view arrives in the next stage. Meanwhile, people and their relationships are kept here."
+    },
+    "personForm": {
+      "title": "Add a person",
+      "lead": "Write what you know; you can complete the rest later.",
+      "given": "Given name(s)",
+      "paternal": "Paternal surname",
+      "maternal": "Maternal surname",
+      "nickname": "Nickname",
+      "nicknameHint": "What the family called them.",
+      "sex": "Sex",
+      "sexOptions": {
+        "M": "Male",
+        "F": "Female",
+        "X": "Other",
+        "U": "Unknown"
+      },
+      "birthDate": "Birth date",
+      "birthDateHint": "As you know it: “12 May 1931”, “about 1890” or “before 1900”.",
+      "submit": "Add person",
+      "submitting": "Adding…",
+      "created": "Person added.",
+      "errors": {
+        "nameRequired": "Enter at least a given name or a surname.",
+        "tooLong": "A field is too long (120 characters at most; 80 for the date)."
+      }
+    },
+    "person": {
+      "breadcrumb": "Back to the space",
+      "namesTitle": "Names",
+      "eventsTitle": "Events",
+      "relationshipsTitle": "Relationships",
+      "citationsTitle": "Cited sources",
+      "noNames": "No names recorded.",
+      "noEvents": "No events yet. Births, baptisms, marriages and deaths will appear here.",
+      "noRelationships": "No relationships recorded yet.",
+      "noCitations": "No cited sources yet.",
+      "nickname": "Nickname: {nickname}",
+      "unknownDate": "Unknown date",
+      "living": {
+        "living": "Living",
+        "deceased": "Deceased",
+        "unknown": "Unconfirmed"
+      },
+      "visibility": {
+        "space": "Visible in the family space",
+        "private": "Private",
+        "public_memorial": "Public memorial"
+      },
+      "sex": "Sex: {sex}",
+      "relatedPerson": "View related person",
+      "eventTypes": {
+        "birth": "Birth",
+        "baptism": "Baptism",
+        "confirmation": "Confirmation",
+        "first_communion": "First communion",
+        "marriage": "Marriage",
+        "civil_marriage": "Civil marriage",
+        "religious_marriage": "Religious marriage",
+        "death": "Death",
+        "burial": "Burial",
+        "residence": "Residence",
+        "other": "Other event"
+      },
+      "relationshipTypes": {
+        "parent": "Parent",
+        "child": "Child",
+        "union": "Union",
+        "spouse": "Partner",
+        "sibling": "Sibling",
+        "other": "Other relationship"
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "accountTitle": "Your account",
+      "name": "Name",
+      "email": "Email",
+      "notProvided": "Not provided",
+      "switchTitle": "Switch account",
+      "switchBody": "Choose another of your MADFAM accounts without typing the password again.",
+      "switchAccount": "Switch account",
+      "otherPersonBody": "So that someone else can sign in on this device with their own account.",
+      "otherPerson": "Sign in as someone else",
+      "signOutTitle": "Sign out",
+      "signOutBody": "Ends your session on this device.",
+      "signOut": "Sign out"
+    }
+  },
+  "errors": {
+    "early_access_required": "Your account does not have early access yet.",
+    "unauthorized": "Your session ended. Please sign in again.",
+    "forbidden": "You do not have permission to see or change this.",
+    "not_found": "We could not find what you are looking for.",
+    "validation_error": "Check the details: something is not valid.",
+    "conflict": "That change conflicts with another. Reload the page and try again.",
+    "rate_limited": "Too many requests. Please wait a moment.",
+    "server_error": "The server had a problem. Please try later.",
+    "api_unreachable": "We could not reach the server. Please try later.",
+    "api_not_configured": "This server has no API connection configured.",
+    "invalid_response": "The server sent an unexpected response. Please try later.",
+    "unknown": "An unexpected error occurred."
+  },
+  "notFound": {
+    "title": "We could not find this page",
+    "body": "The link may be mistyped, or the page may no longer exist."
+  }
+}

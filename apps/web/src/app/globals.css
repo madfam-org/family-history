@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+/*
+ * Brand tokens (src/lib/brand.ts). Semantic colours switch with prefers-color-scheme.
+ * Contrast (WCAG AA): fg/bg 18.2:1; muted/bg 6.0:1 (light) and 8.1:1 (dark); accent/bg 7.6:1
+ * (light) and 7.2:1 (dark); on-accent/accent 7.9:1 (light) and 7.2:1 (dark); bark/amate
+ * 5.7:1 (light) and 9.3:1 (dark). Cempasúchil is a seasonal fill only, never text.
+ */
+:root {
+  --fh-bg: #fafafa;
+  --fh-fg: #0a0e27;
+  --fh-muted: #5b6075;
+  --fh-surface: #ffffff;
+  --fh-amate: #eee3d3;
+  --fh-bark: #6e5236;
+  --fh-accent: #9a1f40;
+  --fh-on-accent: #ffffff;
+  --fh-border: #dcdde5;
+  --fh-border-strong: #5b6075;
+  --fh-danger: #b42318;
+  --fh-success: #1f6f43;
+  --fh-cempasuchil: #e8890c;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fh-bg: #0a0e27;
+    --fh-fg: #fafafa;
+    --fh-muted: #a3a8bd;
+    --fh-surface: #13182f;
+    --fh-amate: #2a2418;
+    --fh-bark: #d9c7ae;
+    --fh-accent: #f07a98;
+    --fh-on-accent: #0a0e27;
+    --fh-border: #2a3050;
+    --fh-border-strong: #a3a8bd;
+    --fh-danger: #fda29b;
+    --fh-success: #7bd3a0;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--fh-bg);
+  --color-fg: var(--fh-fg);
+  --color-muted: var(--fh-muted);
+  --color-surface: var(--fh-surface);
+  --color-amate: var(--fh-amate);
+  --color-bark: var(--fh-bark);
+  --color-accent: var(--fh-accent);
+  --color-on-accent: var(--fh-on-accent);
+  --color-line: var(--fh-border);
+  --color-line-strong: var(--fh-border-strong);
+  --color-danger: var(--fh-danger);
+  --color-success: var(--fh-success);
+  --color-cempasuchil: var(--fh-cempasuchil);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-space-mono), ui-monospace, monospace;
+  --font-serif: var(--font-alegreya), Georgia, serif;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: var(--fh-bg);
+    color: var(--fh-fg);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+  a {
+    color: var(--fh-accent);
+    text-underline-offset: 0.2em;
+  }
+  :focus-visible {
+    outline: 3px solid var(--fh-accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .fh-container {
+    width: 100%;
+    max-width: 72rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+  .fh-button {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.5rem;
+    padding: 0.625rem 1.125rem;
+    font-weight: 600;
+    text-decoration: none;
+    background-color: var(--fh-accent);
+    color: var(--fh-on-accent);
+    transition: filter 150ms ease;
+  }
+  .fh-button:hover {
+    filter: brightness(1.08);
+  }
+  .fh-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+  .fh-button-secondary {
+    background-color: transparent;
+    color: var(--fh-fg);
+    box-shadow: inset 0 0 0 2px var(--fh-border-strong);
+  }
+  .fh-input {
+    width: 100%;
+    min-height: 2.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--fh-border-strong);
+    background-color: var(--fh-surface);
+    color: var(--fh-fg);
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+  }
+  .fh-card {
+    border-radius: 0.75rem;
+    border: 1px solid var(--fh-border);
+    background-color: var(--fh-surface);
+    padding: 1.25rem;
+  }
+  .fh-date {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    letter-spacing: -0.01em;
+  }
+}
