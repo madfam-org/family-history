@@ -82,7 +82,7 @@ def test_gedcom_mapping_round_trips(event_type: EventType, tag: str, type_text: 
 
 
 def test_civil_and_religious_marriage_are_distinct() -> None:
-    assert EventType.CIVIL_MARRIAGE is not EventType.RELIGIOUS_MARRIAGE
+    assert EventType.CIVIL_MARRIAGE.value != EventType.RELIGIOUS_MARRIAGE.value
     assert EventType.RELIGIOUS_MARRIAGE.is_sacramental
     assert not EventType.CIVIL_MARRIAGE.is_sacramental
     assert EventType.CIVIL_MARRIAGE.is_family_event

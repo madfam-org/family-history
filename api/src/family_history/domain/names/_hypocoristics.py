@@ -12,7 +12,7 @@ from types import MappingProxyType
 
 from ._normalize import strip_accents
 
-__all__ = ["HYPOCORISTICS", "given_name_variants"]
+__all__ = ["HYPOCORISTICS", "given_name_variants", "nickname_display"]
 
 _RAW: dict[str, tuple[str, ...]] = {
     "jesus": ("chucho", "chuy", "chuchito"),
@@ -60,6 +60,14 @@ _BY_SHORT: dict[str, set[str]] = {}
 for _formal, _shorts in _RAW.items():
     for _short in _shorts:
         _BY_SHORT.setdefault(_short, set()).add(_formal)
+
+
+_DISPLAY_EXCEPTIONS = {"tono": "Toño", "tona": "Toña"}
+
+
+def nickname_display(short: str) -> str:
+    """The written form of a short name from `HYPOCORISTICS`: «Chuy», «Toño»."""
+    return _DISPLAY_EXCEPTIONS.get(short, short.capitalize())
 
 
 def _key(name: str) -> str:
