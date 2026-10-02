@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useId, useState, useTransition } from "react";
+import { useEffect, useId, useState } from "react";
 
 import { searchPeopleAction, type PeopleSearchResult } from "@/app/actions/relatives";
 import type { ErrorCode } from "@/lib/api/errors";
@@ -46,21 +46,29 @@ export function PersonPicker({
   const [query, setQuery] = useState("");
   const [picked, setPicked] = useState<PickedPerson | null>(initial ?? null);
   const [result, setResult] = useState<PeopleSearchResult | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
 
   useEffect(() => {
     const q = query.trim();
     if (q.length < 2) return;
-    const timer = setTimeout(() => {
-      startTransition(async () => {
-        try {
-          setResult(await search(spaceId, q));
-        } catch {
-          setResult({ ok: false, code: "api_unreachable" });
-        }
-      });
+    let current = true;
+    const timer = setTimeout(async () => {
+      setPending(true);
+      let next: PeopleSearchResult;
+      try {
+        next = await search(spaceId, q);
+      } catch {
+        next = { ok: false, code: "api_unreachable" };
+      }
+      // A newer query supersedes this one; the result and the status change together.
+      if (!current) return;
+      setResult(next);
+      setPending(false);
     }, DEBOUNCE_MS);
-    return () => clearTimeout(timer);
+    return () => {
+      current = false;
+      clearTimeout(timer);
+    };
   }, [query, search, spaceId]);
 
   function choose(person: PickedPerson | null) {

@@ -93,7 +93,7 @@ describe("PersonPicker", () => {
     fireEvent.change(screen.getByRole("searchbox"), { target: { value: "Chucho" } });
     const option = await screen.findByRole("radio", { name: /Jesús Ortega Vega/ });
     expect(search).toHaveBeenCalledWith(SPACE, "Chucho");
-    expect(screen.getByText("1 resultado")).toBeTruthy();
+    expect(await screen.findByText("1 resultado")).toBeTruthy();
     fireEvent.click(option);
     expect(screen.getByRole("status").textContent).toContain("Elegiste a Jesús Ortega Vega");
     expect(container.querySelector<HTMLInputElement>('input[name="relativeId"]')?.value).toBe(JESUS);
