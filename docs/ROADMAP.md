@@ -49,6 +49,7 @@ Lift each hold deliberately, in its own PR, with the migration it needs.
 |---|---|
 | `sqlalchemy>=2.0,<2.1` (Dependabot ignores `>=2.1`) | SQLAlchemy 2.1 changes `Select`/`Row` typing and breaks strict mypy. Lift together with the typing migration |
 | `next` pinned exactly to `16.3.8` | Security floor for GHSA-vcvr-r3jv-pc5j. Bump deliberately with `eslint-config-next` |
+| Majors of `typescript` and `zod` (Dependabot ignores semver-major) | These majors move across MADFAM's repositories together, as one planned migration. Minor and patch updates still arrive |
 | CI runners pinned to `ubuntu-24.04` | `ubuntu-latest` moves to a new image on 2026-10-19. Move after testing on the new image |
 | Org quality gates run as scripts | The shared workflow still pins its actions by tag, which this repo's SHA-pinning rule refuses. Call it directly once it pins by SHA |
 

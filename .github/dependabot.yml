@@ -39,6 +39,13 @@ updates:
       npm-minor-patch:
         update-types: [minor, patch]
         exclude-patterns: [next, react, react-dom]
+    ignore:
+      # Majors of these move across MADFAM's repositories together, as one planned migration, not as
+      # Dependabot PRs. Minor and patch updates still arrive (see docs/ROADMAP.md, "Dependency holds").
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: zod
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
