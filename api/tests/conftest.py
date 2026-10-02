@@ -96,7 +96,7 @@ def settings_factory() -> Callable[..., Settings]:
 def _isolate_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     """Ambient FH_* variables must not leak into settings built by tests."""
     for name in list(os.environ):
-        if name.startswith("FH_") and name != "FH_TEST_DATABASE_URL":
+        if name.startswith("FH_") and not name.startswith("FH_TEST_"):
             monkeypatch.delenv(name, raising=False)
     for name in ("DATABASE_URL", "DIRECT_DATABASE_URL"):
         monkeypatch.delenv(name, raising=False)
