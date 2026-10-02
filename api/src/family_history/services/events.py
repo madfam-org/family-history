@@ -10,11 +10,18 @@ from sqlalchemy import select
 
 from family_history.errors import unprocessable
 from family_history.models import Association, Event, EventParticipant, Person, Place
-from family_history.models.enums import AssociationRole, EventType, ParticipantRole, Sensitivity
+from family_history.models.enums import (
+    AssociationRole,
+    EventType,
+    ParticipantRole,
+    Sensitivity,
+    Sex,
+)
 from family_history.routers.schemas.common import DateDisplay
 from family_history.routers.schemas.events import Event as EventOut
 from family_history.routers.schemas.events import EventAssociation, Participant, ParticipantIn
 from family_history.services import dates
+from family_history.services import names as name_rules
 from family_history.services.access import SpaceContext
 from family_history.services.privacy import sensitive_visible, treated_as_living, visible_people
 
@@ -116,6 +123,16 @@ def events_out(ctx: SpaceContext, events: Sequence[Event]) -> list[EventOut]:
         by_event_assoc[assoc.event_id].append(assoc)
     all_people = [row.person_id for row in participants]
     visible = visible_person_ids(ctx, [*all_people, *(a.person_id for a in associations)])
+    associated: dict[uuid.UUID, Person] = {}
+    if associations:
+        associated = {
+            person.id: person
+            for person in ctx.db.scalars(
+                select(Person).where(
+                    Person.id.in_([a.person_id for a in associations if a.person_id in visible])
+                )
+            ).all()
+        }
     living = _living_by_person(ctx, all_people)
     place_ids = [event.place_id for event in events if event.place_id is not None]
     places: dict[uuid.UUID, str] = {}
@@ -160,11 +177,15 @@ def events_out(ctx: SpaceContext, events: Sequence[Event]) -> list[EventOut]:
                     EventAssociation(
                         id=assoc.id,
                         person_id=assoc.person_id,
+                        display_name=name_rules.display_name(
+                            name_rules.primary_name(associated[assoc.person_id].names)
+                        ),
+                        sex=Sex(associated[assoc.person_id].sex),
                         role=AssociationRole(assoc.role),
                         phrase=assoc.phrase,
                     )
                     for assoc in by_event_assoc.get(event.id, [])
-                    if assoc.person_id in visible
+                    if assoc.person_id in associated
                 ],
                 created_by=event.created_by,
                 created_at=event.created_at,

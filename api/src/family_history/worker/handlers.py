@@ -12,7 +12,8 @@ from typing import Any
 from pydantic import ValidationError
 
 from family_history.interchange import gedcom_out, native
-from family_history.interchange.gedcom_in import GedcomImportError, tree_from_gedcom
+from family_history.interchange.gedcom_in import GedcomImportError, Report, tree_from_gedcom
+from family_history.interchange.gedcom_map import PRODUCT
 from family_history.interchange.persist import PersistError, persist_tree
 from family_history.interchange.snapshot import load_tree
 from family_history.models import Job
@@ -32,6 +33,10 @@ SUFFIXES = {
     ExportFormat.GEDCOM551: "-gedcom551.ged",
     ExportFormat.NATIVE_JSON: ".json",
 }
+
+
+#: The job `error_code` for a `.json` upload that is not a valid `family-history-tree/v1` export.
+NATIVE_INVALID = "native_export_invalid"
 
 
 class JobFailure(Exception):
@@ -68,8 +73,17 @@ def run_export(ctx: SpaceContext, job: Job) -> Outcome:
         exported = writer(tree)
         data, warnings = exported.data, exported.warnings
     stamp = today_mexico_city().isoformat()
+    diagnostics = [
+        {
+            "severity": "warning",
+            "code": w.get("code"),
+            "message": w.get("message"),
+            "line": w.get("line"),
+        }  # fmt: skip
+        for w in warnings[:500]
+    ]
     return Outcome(
-        report={"format": fmt.value, "counts": tree.counts(), "warnings": warnings[:500]},
+        report={"format": fmt.value, "record_counts": tree.counts(), "diagnostics": diagnostics},
         result=data,
         media_type=MEDIA_TYPES[fmt],
         filename=f"family-history-{stamp}{SUFFIXES[fmt]}",
@@ -87,26 +101,17 @@ def run_import(ctx: SpaceContext, job: Job) -> Outcome:
             tree = native.to_tree(native.parse(data))
         except ValidationError as exc:
             raise JobFailure(
-                "invalid_native_export", "The file is not a valid family-history-tree/v1 export."
+                NATIVE_INVALID, "The file is not a valid family-history-tree/v1 export."
             ) from exc
-        report: dict[str, Any] = {
-            "format": "native_json",
-            "source_version": native.FORMAT,
-            "warnings": [],
-            "warnings_truncated": 0,
-            "extension_tags": {},
-        }
-        source = "native_json"
+        report = Report(source_version=native.FORMAT, source_product=PRODUCT, container="json")
+        report.record_counts = tree.counts()
     else:
         try:
-            tree, gedcom_report = tree_from_gedcom(data)
+            tree, report = tree_from_gedcom(data)
         except GedcomImportError as exc:
             raise JobFailure(exc.code, str(exc)) from exc
-        report = gedcom_report.as_dict({})
-        source = gedcom_report.container
     try:
-        persisted = persist_tree(ctx, tree, source=source)
+        persisted = persist_tree(ctx, tree, source=report.container)
     except PersistError as exc:
-        raise JobFailure(exc.code, str(exc)) from exc
-    report["counts"] = persisted.counts
-    return Outcome(report=report)
+        raise JobFailure(NATIVE_INVALID, str(exc)) from exc
+    return Outcome(report=report.as_dict(persisted.counts))

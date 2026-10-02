@@ -222,7 +222,18 @@ class Worker:
                 ),
                 {
                     "code": code,
-                    "report": _json({"error": {"code": code, "message": message}}),
+                    "report": _json(
+                        {
+                            "diagnostics": [
+                                {
+                                    "severity": "error",
+                                    "code": code,
+                                    "message": message,
+                                    "line": None,
+                                }
+                            ]
+                        }
+                    ),
                     "now": now,
                     "expires": now + self.config.result_ttl,
                     "id": job_id,

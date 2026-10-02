@@ -18,6 +18,20 @@ from family_history.models.job import MAX_INPUT_BYTES
 from family_history.services.access import SpaceContext, enter_space, user_scoped
 
 IMPORT_SUFFIXES = {".ged": "ged", ".gdz": "gdz", ".json": "native_json"}
+# Media types a browser or client may send for those files; anything else is `415`.
+IMPORT_MEDIA_TYPES = frozenset(
+    {
+        "",
+        "application/octet-stream",
+        "text/plain",
+        "text/vnd.familysearch.gedcom",
+        "application/x-gedcom",
+        "application/zip",
+        "application/x-zip-compressed",
+        "application/vnd.familysearch.gedcom+zip",
+        "application/json",
+    }
+)
 _CHUNK = 1024 * 1024
 _SAFE_NAME = re.compile(r"[^A-Za-z0-9._-]+")
 
@@ -30,10 +44,9 @@ def _suffix(filename: str) -> str:
 async def read_upload(upload: UploadFile) -> tuple[bytes, str]:
     """The upload's bytes (at most 25 MiB) and its detected container."""
     container = IMPORT_SUFFIXES.get(_suffix(upload.filename or ""))
-    if container is None:
-        raise APIError(
-            415, "unsupported_file_type", "Upload a .ged, .gdz or family-history .json file."
-        )
+    media_type = (upload.content_type or "").split(";")[0].strip().lower()
+    if container is None or media_type not in IMPORT_MEDIA_TYPES:
+        raise APIError(415, "unsupported_file", "Upload a .ged, .gdz or family-history .json file.")
     chunks: list[bytes] = []
     size = 0
     while chunk := await upload.read(_CHUNK):

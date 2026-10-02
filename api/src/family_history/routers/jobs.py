@@ -32,7 +32,9 @@ async def create_import(
 ) -> JobAccepted:
     """Import a GEDCOM 7 or 5.5.1 file (`.ged`, version auto-detected), a GEDZIP (`.gdz`; media
     entries are skipped with a warning) or a native `family-history-tree/v1` export (`.json`),
-    up to 25 MiB. Stewards and editors only. Poll `GET /v1/jobs/{job_id}` for the report."""
+    up to 25 MiB (`413 file_too_large`; other files `415 unsupported_file`). Stewards and
+    editors only. Poll `GET /v1/jobs/{job_id}`: an unreadable file fails the job with
+    `gedcom_invalid` or `native_export_invalid`."""
     ctx.require(Role.EDITOR)
     data, container = await job_service.read_upload(file)
     params = job_service.import_params(file.filename, container)
@@ -77,8 +79,8 @@ def get_job(job_id: uuid.UUID, principal: EarlyAccessPrincipal, db: DbSession) -
 def download(
     job_id: uuid.UUID, principal: EarlyAccessPrincipal, db: DbSession
 ) -> StreamingResponse:
-    """The export file. `409 job_not_ready` until it succeeds, `410 job_expired` 24 hours after
-    it finished."""
+    """The export file. `409 job_not_ready` until it succeeds, `410 download_expired` 24 hours
+    after it finished."""
     job = job_service.own_job(db, principal, job_id)
     if job.kind != JobKind.EXPORT.value:
         raise conflict("no_download", "Only export jobs have a file to download.")
@@ -86,7 +88,7 @@ def download(
         raise conflict("job_not_ready", "The export has not finished.")
     expired = job.expires_at is not None and job.expires_at <= datetime.now(UTC)
     if expired or job.result is None:
-        raise APIError(410, "job_expired", "The export expired; request a new one.")
+        raise APIError(410, "download_expired", "The export expired; request a new one.")
     payload = bytes(job.result)
     filename = job.result_filename or "family-history-export"
 

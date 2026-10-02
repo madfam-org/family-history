@@ -100,7 +100,7 @@ def test_native_round_trip_is_byte_identical(
     first_space = _space(client, auth)
     _seed(first_space)
     job, first = _export(client, auth, worker, first_space, "native_json")
-    assert job["report"]["counts"]["people"] > 20
+    assert job["report"]["record_counts"]["people"] > 20
     exported = tmp_path / "tree.json"
     exported.write_bytes(first)
     assert cli_main(["validate-export", str(exported)]) == 0
@@ -108,7 +108,8 @@ def test_native_round_trip_is_byte_identical(
     second_space = _space(client, auth, "Copia")
     imported = _import(client, auth, worker, second_space, "tree.json", first)
     assert imported["status"] == "succeeded", imported
-    assert imported["report"]["counts"] == job["report"]["counts"]
+    assert imported["report"]["created_records"] == job["report"]["record_counts"]
+    assert imported["report"]["source_version"] == "family-history-tree/v1"
     _, second = _export(client, auth, worker, second_space, "native_json")
     assert second == first
 
@@ -134,13 +135,14 @@ def test_gedcom7_round_trip_is_byte_identical(
     _, archive = _export(client, auth, worker, first_space, "gedzip")
     assert archive.startswith(b"PK\x03\x04")
     from_zip = _import(client, auth, worker, _space(client, auth, "Zip"), "familia.gdz", archive)
-    assert from_zip["status"] == "succeeded" and from_zip["report"]["format"] == "gedzip"
+    assert from_zip["status"] == "succeeded" and from_zip["report"]["source_version"] == "7.0"
 
     legacy_job, legacy = _export(client, auth, worker, first_space, "gedcom551")
     assert b"2 VERS 5.5.1" in legacy
     reimported = _import(client, auth, worker, _space(client, auth, "Legado"), "l.ged", legacy)
     assert reimported["status"] == "succeeded", reimported
-    assert reimported["report"]["counts"]["people"] == legacy_job["report"]["counts"]["people"]
+    created = reimported["report"]["created_records"]["people"]
+    assert created == legacy_job["report"]["record_counts"]["people"]
 
 
 @pytest.mark.parametrize(
@@ -160,11 +162,20 @@ def test_vendor_files_import_with_a_report(
     job = _import(client, auth, worker, space, fixture, (FIXTURES / fixture).read_bytes())
     assert job["status"] == "succeeded", job
     report = job["report"]
-    assert report["counts"]["people"] > 0
-    assert report["source_version"]
-    assert all(set(w) == {"code", "message", "line"} for w in report["warnings"])
+    assert set(report) == {
+        "source_version",
+        "source_product",
+        "record_counts",
+        "created_records",
+        "diagnostics",
+        "extension_tags",
+    }
+    assert report["created_records"]["people"] > 0
+    assert report["record_counts"]["INDI"] == report["created_records"]["people"]
+    assert report["source_version"] and report["source_product"]
+    assert all(set(d) == {"severity", "code", "message", "line"} for d in report["diagnostics"])
     listed = client.get(f"/v1/spaces/{space}/people", headers=auth(ANA)).json()["items"]
-    assert len(listed) == report["counts"]["people"]
+    assert len(listed) == report["created_records"]["people"]
 
 
 def test_import_rules(
@@ -179,7 +190,7 @@ def test_import_rules(
     wrong = client.post(
         f"/v1/spaces/{space}/imports", files={"file": ("a.txt", b"hola")}, headers=auth(ANA)
     )
-    assert wrong.status_code == 415 and wrong.json()["error"]["code"] == "unsupported_file_type"
+    assert wrong.status_code == 415 and wrong.json()["error"]["code"] == "unsupported_file"
     empty = client.post(
         f"/v1/spaces/{space}/imports", files={"file": ("a.ged", b"")}, headers=auth(ANA)
     )
@@ -192,9 +203,16 @@ def test_import_rules(
     assert huge.status_code == 413 and huge.json()["error"]["code"] == "file_too_large"
     garbage = _import(client, auth, worker, space, "a.json", b'{"format": "otra cosa"}')
     assert garbage["status"] == "failed"
-    assert garbage["error_code"] == "invalid_native_export"
+    assert garbage["error_code"] == "native_export_invalid"
+    assert garbage["report"]["diagnostics"][0]["code"] == "native_export_invalid"
     not_gedcom = _import(client, auth, worker, space, "a.ged", b"esto no es GEDCOM")
-    assert not_gedcom["status"] == "failed" and not_gedcom["error_code"] == "not_gedcom"
+    assert not_gedcom["status"] == "failed" and not_gedcom["error_code"] == "gedcom_invalid"
+    image = client.post(
+        f"/v1/spaces/{space}/imports",
+        files={"file": ("a.ged", b"0 HEAD", "image/png")},
+        headers=auth(ANA),
+    )
+    assert image.status_code == 415 and image.json()["error"]["code"] == "unsupported_file"
 
 
 def test_jobs_are_private_and_expire(
@@ -226,7 +244,7 @@ def test_jobs_are_private_and_expire(
     assert client.get(f"/v1/jobs/{job_id}", headers=auth(ANA)).json()["status"] == "succeeded"
     _expire(engine, job_id)
     gone = client.get(f"/v1/jobs/{job_id}/download", headers=auth(ANA))
-    assert gone.status_code == 410 and gone.json()["error"]["code"] == "job_expired"
+    assert gone.status_code == 410 and gone.json()["error"]["code"] == "download_expired"
     assert worker.purge_expired() == 1
 
 
@@ -281,9 +299,7 @@ def test_worker_reclaims_stuck_jobs_and_skips_locked_ones(
     ).json()["job_id"]
     locker = database.sessions()
     try:
-        locker.execute(
-            text("SELECT set_config('app.job_runner', 'on', true)")
-        )
+        locker.execute(text("SELECT set_config('app.job_runner', 'on', true)"))
         locker.execute(
             text("SELECT id FROM job WHERE id = :id FOR UPDATE"),
             {"id": first},

@@ -97,7 +97,8 @@ def test_vendor_files_become_trees(fixture: str) -> None:
     tree, report = tree_from_gedcom((FIXTURES / fixture).read_bytes())
     assert tree.people and tree.events
     assert report.source_version
-    assert all(w["line"] is None or w["line"] > 0 for w in report.warnings)
+    assert all(d["line"] is None or d["line"] > 0 for d in report.diagnostics)
+    assert report.as_dict({})["record_counts"].get("INDI", 0) == len(tree.people)
     # Whatever came in exports as valid GEDCOM 7, and that export is a fixpoint.
     exported = export_gedcom7(tree)
     parse_gedcom7(exported.data, strict=True)
@@ -131,7 +132,7 @@ def test_gedzip_media_is_skipped_with_a_warning() -> None:
 
 @pytest.mark.parametrize(
     ("data", "code"),
-    [(b"PK\x03\x04broken", "invalid_gedzip"), (b"hola", "not_gedcom")],
+    [(b"PK\x03\x04broken", "gedcom_invalid"), (b"hola", "gedcom_invalid")],
 )
 def test_unreadable_uploads(data: bytes, code: str) -> None:
     with pytest.raises(GedcomImportError) as caught:

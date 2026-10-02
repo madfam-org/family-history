@@ -49,7 +49,7 @@ from family_history.interchange.tree import (
 from family_history.models.enums import ParticipantRole
 from family_history.services.privacy import default_sensitivity
 
-MAX_WARNINGS = 500
+MAX_DIAGNOSTICS = 500
 PLACE_KINDS = ("pais", "estado", "municipio", "localidad")
 _VERSION_RE = re.compile(r"(?m)^\s*1\s+GEDC\b[^\n]*\n(?:\s*[3-9][^\n]*\n)*\s*2\s+VERS\s+(\S+)")
 _HEAD_RE = re.compile(r"\s*0\s+HEAD\b")
@@ -57,6 +57,10 @@ _INDI_SKIP = frozenset(
     {"NAME", "SEX", "RESN", "FAMC", "FAMS", "SOUR", "NOTE", "SNOTE", "OBJE", "CHAN", "CREA",
      "UID", "EXID", "REFN", "ASSO", "ALIA", "ANCI", "DESI", "SUBM", "NO"}
 )  # fmt: skip
+
+
+#: The job `error_code` for any upload that is not a readable GEDCOM dataset or GEDZIP archive.
+INVALID = "gedcom_invalid"
 
 
 class GedcomImportError(ValueError):
@@ -69,25 +73,48 @@ class GedcomImportError(ValueError):
 
 @dataclass
 class Report:
+    """The job report: the GEDCOM engine's `ImportReport` shape."""
+
     source_version: str = ""
+    source_product: str | None = None
     container: str = "gedcom"
-    warnings: list[dict[str, Any]] = field(default_factory=list)
+    record_counts: dict[str, int] = field(default_factory=dict)
+    diagnostics: list[dict[str, Any]] = field(default_factory=list)
     truncated: int = 0
     extension_tags: dict[str, int] = field(default_factory=dict)
 
-    def warn(self, code: str, message: str, line: int | None = None) -> None:
-        if len(self.warnings) >= MAX_WARNINGS:
+    def add(self, severity: str, code: str, message: str, line: int | None = None) -> None:
+        if len(self.diagnostics) >= MAX_DIAGNOSTICS:
             self.truncated += 1
             return
-        self.warnings.append({"code": code, "message": message, "line": line})
+        self.diagnostics.append(
+            {"severity": severity, "code": code, "message": message, "line": line}
+        )
 
-    def as_dict(self, counts: dict[str, int]) -> dict[str, Any]:
+    def warn(self, code: str, message: str, line: int | None = None) -> None:
+        self.add("warning", code, message, line)
+
+    @property
+    def warnings(self) -> list[dict[str, Any]]:
+        return [d for d in self.diagnostics if d["severity"] != "info"]
+
+    def as_dict(self, created: dict[str, int]) -> dict[str, Any]:
+        diagnostics = list(self.diagnostics)
+        if self.truncated:
+            diagnostics.append(
+                {
+                    "severity": "info",
+                    "code": "diagnostics_truncated",
+                    "message": f"{self.truncated} more diagnostics were not listed",
+                    "line": None,
+                }
+            )
         return {
-            "format": self.container,
             "source_version": self.source_version,
-            "counts": counts,
-            "warnings": self.warnings,
-            "warnings_truncated": self.truncated,
+            "source_product": self.source_product,
+            "record_counts": dict(sorted(self.record_counts.items())),
+            "created_records": dict(sorted(created.items())),
+            "diagnostics": diagnostics,
             "extension_tags": dict(sorted(self.extension_tags.items())),
         }
 
@@ -103,7 +130,7 @@ def unpack(data: bytes, report: Report) -> bytes:
         for name, _ in entries:
             report.warn("gedzip_media_skipped", f"media file not imported yet: {name[:200]}")
     except (GedzipError, StopIteration) as exc:
-        raise GedcomImportError("invalid_gedzip", "The GEDZIP archive could not be read.") from exc
+        raise GedcomImportError(INVALID, "The GEDZIP archive could not be read.") from exc
     return gedcom
 
 
@@ -124,24 +151,28 @@ def detect_version(data: bytes) -> str:
 def read_roots(data: bytes, report: Report) -> list[Structure]:
     gedcom = unpack(data, report)
     if not _HEAD_RE.match(_prefix_text(gedcom)):
-        raise GedcomImportError("not_gedcom", "The file does not start with a GEDCOM header.")
+        raise GedcomImportError(INVALID, "The file does not start with a GEDCOM header.")
     version = detect_version(gedcom)
     if version.startswith("7"):
         parsed = parse_gedcom7(gedcom)
         report.source_version = version
-        diagnostics = parsed.warnings
+        diagnostics = parsed.diagnostics
         report.extension_tags = dict(parsed.extension_tags)
         roots = parsed.structures
+        report.record_counts = dict(Counter(r.tag for r in roots if r.tag not in ("HEAD", "TRLR")))
     else:
         imported = import_gedcom551(gedcom)
         report.source_version = imported.report.source_version or version or "5.5.1"
-        diagnostics = imported.report.warnings
+        diagnostics = imported.report.diagnostics
         report.extension_tags = dict(imported.report.extension_tags)
+        report.record_counts = dict(imported.report.record_counts)
         roots = imported.structures
     for diagnostic in diagnostics:
-        report.warn(diagnostic.code, diagnostic.message, diagnostic.line)
-    if not any(root.tag == "HEAD" for root in roots):
-        raise GedcomImportError("not_gedcom", "The file is not a GEDCOM dataset.")
+        report.add(diagnostic.severity.value, diagnostic.code, diagnostic.message, diagnostic.line)
+    head = next((root for root in roots if root.tag == "HEAD"), None)
+    if head is None:
+        raise GedcomImportError(INVALID, "The file is not a GEDCOM dataset.")
+    report.source_product = head.text("SOUR")
     return roots
 
 
@@ -373,7 +404,7 @@ class _Importer:
         try:
             value = parse_date_value(payload)
         except DateParseError:
-            self.report.warn("invalid_date", "a date was kept only as text", date.line)
+            self.report.warn("date_kept_as_text", "a date was kept only as text", date.line)
             return None, phrase or payload
         return format_date_value(value) or None, phrase
 

@@ -30,8 +30,11 @@ class Job(ApiModel):
     status: JobStatus
     report: dict[str, Any] = Field(
         description=(
-            "Imports: `format`, `source_version`, `counts`, `warnings` ({code, message, line}), "
-            "`warnings_truncated`, `extension_tags`. Exports: `format`, `counts`, `warnings`."
+            "Imports (the GEDCOM engine's ImportReport): `source_version`, `source_product`, "
+            "`record_counts` (records in the file), `created_records` (rows created), "
+            "`diagnostics` [{severity, code, message, line}], `extension_tags`. Exports: "
+            "`format`, `record_counts`, `diagnostics`. Failed jobs: `diagnostics` with one "
+            "error whose code equals `error_code`."
         )
     )
     error_code: str | None

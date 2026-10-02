@@ -17,6 +17,7 @@ from family_history.models.enums import (
     PlaceKind,
     RelationshipType,
     Sensitivity,
+    Sex,
 )
 from family_history.routers.schemas.common import (
     ApiModel,
@@ -90,10 +91,13 @@ class EventPatch(InputModel):
 
 
 class EventAssociation(ApiModel):
-    """Someone else's part in the event (padrino, witness, officiant)."""
+    """Someone else's part in the event (padrino, witness, officiant). `display_name` and `sex`
+    let the UI say «padrino» or «madrina» without fetching the person."""
 
     id: uuid.UUID
     person_id: uuid.UUID
+    display_name: str
+    sex: Sex
     role: AssociationRole
     phrase: str | None
 

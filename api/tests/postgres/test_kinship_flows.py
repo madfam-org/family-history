@@ -154,7 +154,14 @@ def test_associations_and_compadrazgo(
 
     detail = client.get(f"/v1/people/{f['nieta']}", headers=auth(ANA)).json()
     assert detail["events"][0]["associations"] == [
-        {"id": association["id"], "person_id": f["padrino"], "role": "godparent", "phrase": None}
+        {
+            "id": association["id"],
+            "person_id": f["padrino"],
+            "display_name": "Jesús Romero",
+            "sex": "M",
+            "role": "godparent",
+            "phrase": None,
+        }
     ]
 
     of_padrino = client.get(f"/v1/people/{f['padrino']}/compadrazgo", headers=auth(ANA)).json()
