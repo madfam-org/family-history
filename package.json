@@ -1,0 +1,10 @@
+{
+  "name": "family-history",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "web:dev": "pnpm --filter @family-history/web run dev",
+    "web:check": "pnpm --filter @family-history/web run lint && pnpm --filter @family-history/web run typecheck && pnpm --filter @family-history/web run test"
+  }
+}
