@@ -9,6 +9,7 @@ from __future__ import annotations
 import sys
 import tempfile
 import textwrap
+import types
 import unittest
 from pathlib import Path
 
@@ -84,8 +85,26 @@ class SyntheticFixturesTest(unittest.TestCase):
         self.assertEqual(self.findings(), [])
 
     def test_names_skipped_until_lexicon_exists(self):
+        # Hermetic: the temp tree has no synth module. A lexicon that is importable from elsewhere (an
+        # installed api package, or this stand-in planted in sys.modules) must not be used for it.
+        stand_in = types.ModuleType("family_history.domain.synth")
+        stand_in.synthetic_lexicon = lambda: ["Ana"]  # type: ignore[attr-defined]
+        sys.modules["family_history.domain.synth"] = stand_in
         self.write("api/tests/fixtures/tree.ged", "0 @I1@ INDI\n1 NAME Zacarías /Quintanilla/\n")
+        lexicon, note = sf.load_lexicon(self.root)
+        self.assertIsNone(lexicon)
+        self.assertIn("does not exist yet", note)
         self.assertEqual(self.run_guard(), 0)
+
+    def test_shadowing_copy_fails(self):
+        self.write("api/src/family_history/__init__.py", "")
+        self.write("api/src/family_history/domain/__init__.py", "")
+        self.write("api/src/family_history/domain/synth.py", "def synthetic_lexicon():\n    return ['Ana']\n")
+        stand_in = types.ModuleType("family_history.domain.synth")
+        stand_in.__file__ = "/elsewhere/family_history/domain/synth.py"
+        stand_in.synthetic_lexicon = lambda: ["Ana"]  # type: ignore[attr-defined]
+        sys.modules["family_history.domain.synth"] = stand_in
+        self.assertEqual(self.run_guard(), 1)
 
     def test_names_checked_against_lexicon(self):
         self.write("api/src/family_history/__init__.py", "")

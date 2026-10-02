@@ -123,17 +123,27 @@ def flatten(obj: object, out: set[str], depth: int = 0) -> None:
 
 
 def load_lexicon(root: Path) -> tuple[set[str] | None, str]:
-    """(lexicon, message). None with a notice when the lexicon does not exist yet; raises on a broken one."""
-    src = root / "api" / "src"
+    """(lexicon, message) for the SCANNED tree's own lexicon, ``<root>/api/src/family_history/domain/synth``.
+
+    None with a notice when that tree has no synth module yet. A ``family_history`` installed elsewhere never
+    stands in for it: the module that loads must come from ``<root>/api/src``, or the check fails. Raises on a
+    lexicon that exists but cannot be imported or is empty.
+    """
+    src = (root / "api" / "src").resolve()
+    synth = src / "family_history" / "domain" / "synth"
+    if not (synth.with_suffix(".py").is_file() or (synth / "__init__.py").is_file()):
+        return None, "api/src/family_history/domain/synth does not exist yet"
     if str(src) not in sys.path:
         sys.path.insert(0, str(src))
     try:
         module = importlib.import_module("family_history.domain.synth")
     except ModuleNotFoundError as exc:
-        if exc.name in {"family_history", "family_history.domain", "family_history.domain.synth"}:
-            return None, f"{exc.name} does not exist yet"
-        raise RuntimeError(f"cannot import family_history.domain.synth: missing dependency {exc.name!r} "
+        raise RuntimeError(f"cannot import family_history.domain.synth: missing module {exc.name!r} "
                            "(install the api package first)") from exc
+    origin = Path(getattr(module, "__file__", "") or "").resolve()
+    if src not in origin.parents:
+        raise RuntimeError(f"family_history.domain.synth loaded from {origin}, not from {src}; "
+                           "another installed copy shadows the tree being checked")
     fn = getattr(module, "synthetic_lexicon", None)
     if not callable(fn):
         return None, "family_history.domain.synth.synthetic_lexicon() does not exist yet"
