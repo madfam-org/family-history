@@ -1,4 +1,5 @@
-"""Settings: the auth-disabled guard, the fail-closed allowlist and derived values."""
+"""Settings: the auth-disabled and waitlist guards, the fail-closed allowlist and derived
+values."""
 
 from __future__ import annotations
 
@@ -69,3 +70,21 @@ def test_metrics_port_defaults() -> None:
 def test_secrets_are_not_rendered() -> None:
     settings = make_settings(DATABASE_URL="postgresql://u:local-dev-only@db/fh")
     assert "local-dev-only" not in repr(settings)
+
+
+def test_waitlist_is_closed_by_default() -> None:
+    settings = make_settings()
+    assert settings.waitlist_enabled is False
+    assert settings.aviso_version is None
+
+
+@pytest.mark.parametrize("aviso", [None, "", "   "])
+def test_opening_the_waitlist_needs_a_notice_version(aviso: str | None) -> None:
+    with pytest.raises(ValidationError, match="FH_AVISO_VERSION"):
+        make_settings(FH_WAITLIST_ENABLED="true", FH_AVISO_VERSION=aviso)
+
+
+def test_open_waitlist_keeps_the_notice_version() -> None:
+    settings = make_settings(FH_WAITLIST_ENABLED="true", FH_AVISO_VERSION=" 2026-10 ")
+    assert settings.waitlist_enabled is True
+    assert settings.aviso_version == "2026-10"

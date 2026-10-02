@@ -135,6 +135,27 @@ their values; new pods of that workload may not start. The migrate hook does not
 2. The cluster is tight. Raise a limit only in a pull request to the kustomize base, with the reason,
    and keep `enclii.yaml`'s `runtime.resources` in step.
 
+## Jobs
+
+### Worker and job queue
+
+No alert fires for the worker yet; this section is the anchor its alert will link.
+
+**Signals.** `fh_jobs_total{kind, outcome}` and `fh_job_duration_seconds{kind}` on the Service
+`family-history-worker-metrics` (9090). The exec probe (`python -m family_history.worker healthcheck`)
+fails when the worker's heartbeat is older than 120 seconds.
+
+**Actions.**
+1. `enclii ops pods diagnose --project family-history`. A worker restarting on its probe is stuck in
+   a job or starved. Check memory first: a 25 MiB import peaks near 1.5 GiB against a 2Gi limit.
+2. A job that runs past its 15-minute lease is reclaimed. On the third expired lease it fails with
+   `worker_timeout`. Repeated timeouts on one file point at the file: ask for a smaller export from
+   the program it came from.
+3. A failed import carries its `error_code` and diagnostics in the job report, which the web shows
+   in Spanish. `gedcom_invalid` and `native_export_invalid` describe the file, not the platform.
+4. Inputs and results are purged after they expire. A download after 24 hours answers
+   `410 download_expired` by design.
+
 ## Public hosts
 
 How to check each host by hand after a deploy:

@@ -55,6 +55,11 @@ describe("resolveRoute on the landing host", () => {
     expect(route("/auth/callback").type).toBe("not_found");
   });
 
+  it("does not serve the app's route handlers on the landing host", () => {
+    expect(route("/api/app/jobs/job-1").type).toBe("not_found");
+    expect(route("/api/app/spaces/x/imports").type).toBe("not_found");
+  });
+
   it("passes shared routes through on every host", () => {
     for (const path of ["/api/health", "/robots.txt", "/sitemap.xml", "/llms.txt", "/og.png"]) {
       expect(route(path).type).toBe("pass");
@@ -75,6 +80,12 @@ describe("resolveRoute on the app host", () => {
     expect(route("/auth/start").type).toBe("pass");
     expect(route("/auth/callback").type).toBe("pass");
     expect(route("/auth/signout").type).toBe("pass");
+  });
+
+  it("serves the app's route handlers (job polling, uploads, downloads)", () => {
+    expect(route("/api/app/jobs/job-1")).toMatchObject({ type: "pass", surface: "app" });
+    expect(route("/api/app/jobs/job-1/download").type).toBe("pass");
+    expect(route("/api/app/spaces/x/imports").type).toBe("pass");
   });
 
   it("redirects the bare host to /es", () => {

@@ -1,0 +1,19 @@
+# The worker's metrics listener (container port `metrics`, 9090). It has no other port and no tunnel route.
+# ServiceMonitor family-history selects this Service by `app.kubernetes.io/component: metrics` and takes the
+# Prometheus `job` from `app.kubernetes.io/name` (family-history-worker). NetworkPolicy
+# allow-monitoring-ingress-worker admits 9090 from the scraper's namespace only.
+apiVersion: v1
+kind: Service
+metadata:
+  name: family-history-worker-metrics
+  labels:
+    app.kubernetes.io/name: family-history-worker
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: family-history
+spec:
+  selector:
+    app.kubernetes.io/name: family-history-worker
+  ports:
+    - name: metrics
+      port: 9090
+      targetPort: metrics

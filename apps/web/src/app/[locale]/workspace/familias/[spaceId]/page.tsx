@@ -26,7 +26,7 @@ function single(value: string | string[] | undefined): string | undefined {
   return text ? text.slice(0, 120) : undefined;
 }
 
-/** A family space: people with search and paging, «Agregar persona», and the tree placeholder. */
+/** A family space: people with search and paging, «Agregar persona», and the space's tools. */
 export default async function SpacePage({ params, searchParams }: { params: Params; searchParams: Search }) {
   const { locale, spaceId } = await params;
   if (!isLocale(locale)) notFound();
@@ -37,7 +37,7 @@ export default async function SpacePage({ params, searchParams }: { params: Para
   const { api } = await requireApi();
   const t = await getTranslations({ locale, namespace: "app.space" });
   const form = await getTranslations({ locale, namespace: "app.personForm" });
-  const common = await getTranslations({ locale, namespace: "common" });
+  const family = await getTranslations({ locale, namespace: "family.nav" });
   const here = `/${locale}/familias/${encodeURIComponent(spaceId)}`;
 
   const [spaces, people] = await Promise.all([
@@ -122,14 +122,24 @@ export default async function SpacePage({ params, searchParams }: { params: Para
         />
       </div>
 
-      <section aria-labelledby="arbol" className="rounded-xl border-2 border-dashed border-line-strong p-6">
-        <p className="inline-flex rounded-full bg-amate px-3 py-1 text-sm font-semibold text-bark">
-          {common("comingSoon")}
-        </p>
-        <h2 id="arbol" className="mt-3 text-2xl font-bold">
-          {t("treeTitle")}
+      <section aria-labelledby="herramientas" className="fh-card">
+        <h2 id="herramientas" className="text-2xl font-bold">
+          {family("toolsTitle")}
         </h2>
         <p className="mt-2 text-muted">{t("treeBody")}</p>
+        <nav aria-labelledby="herramientas" className="mt-4 flex flex-wrap gap-2">
+          <a href={`${here}/parentesco`} className="fh-button fh-button-secondary">
+            {family("kinship")}
+          </a>
+          {space?.role === "steward" || space?.role === "editor" ? (
+            <a href={`${here}/importar`} className="fh-button fh-button-secondary">
+              {family("import")}
+            </a>
+          ) : null}
+          <a href={`${here}/exportar`} className="fh-button fh-button-secondary">
+            {family("export")}
+          </a>
+        </nav>
       </section>
     </div>
   );

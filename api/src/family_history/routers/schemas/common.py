@@ -34,6 +34,14 @@ LongText = Annotated[str, StringConstraints(max_length=20000)]
 LangTag = Annotated[str, StringConstraints(pattern=r"^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$")]
 
 
+class DateDisplay(ApiModel):
+    """A date in words: «hacia 1891» / "about 1891" (`domain.dates.humanize_es`/`_en`)."""
+
+    es: str
+    en: str
+
+
 class EventBrief(ApiModel):
     date_value: str | None
+    date_display: DateDisplay | None
     place: str | None

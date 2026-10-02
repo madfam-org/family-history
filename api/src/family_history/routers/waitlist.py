@@ -46,6 +46,14 @@ def get_hasher(request: Request) -> AddressHasher:
     return hasher
 
 
+def require_waitlist_open(settings: AppSettings) -> None:
+    """Closed unless `FH_WAITLIST_ENABLED`: nothing is stored before the reviewed privacy notice
+    ships. Runs before validation and rate limiting, so a closed waitlist reads no input."""
+    if not settings.waitlist_enabled:
+        WAITLIST_SIGNUPS.labels(outcome="closed").inc()
+        raise APIError(404, "waitlist_closed", "The waitlist is not open.")
+
+
 def enforce_rate_limit(
     request: Request,
     limiter: Annotated[SlidingWindowLimiter, Depends(get_limiter)],
@@ -68,17 +76,25 @@ def enforce_rate_limit(
     "/waitlist",
     response_model=WaitlistAccepted,
     status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[Depends(require_waitlist_open)],
 )
 def join_waitlist(
     body: WaitlistRequest,
     ip_hash: Annotated[str, Depends(enforce_rate_limit)],
     db: DbSession,
+    settings: AppSettings,
 ) -> WaitlistAccepted:
-    """Join the waitlist. Always `202` for a valid request, whether or not the email was
-    already on the list. Consent to the privacy notice (`aviso_version`) is required."""
+    """Join the waitlist. `404 waitlist_closed` until the waitlist is opened with a reviewed
+    privacy notice. Once open, always `202` for a valid request, whether or not the email was
+    already on the list. Consent to the current privacy notice (`aviso_version`) is required."""
     if not body.consent:
         WAITLIST_SIGNUPS.labels(outcome="no_consent").inc()
         raise unprocessable("consent_required", "Consent to the privacy notice is required.")
+    if body.aviso_version != settings.aviso_version:
+        WAITLIST_SIGNUPS.labels(outcome="aviso_mismatch").inc()
+        raise unprocessable(
+            "aviso_version_mismatch", "Consent must refer to the current privacy notice."
+        )
     now = utcnow()
     statement = (
         insert(WaitlistEntry)

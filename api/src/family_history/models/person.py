@@ -44,8 +44,11 @@ class Person(IdMixin, TimestampMixin, TenantMixin, AuthoredMixin, Base):
     sex: Mapped[str] = mapped_column(String(1), default=Sex.U.value)
     living_status: Mapped[str] = mapped_column(String(20), default=LivingStatus.UNKNOWN.value)
     visibility: Mapped[str] = mapped_column(String(20), default=Visibility.SPACE.value)
-    # Maintained by the application from every name form: lowercase, accents stripped.
-    search_text: Mapped[str] = mapped_column(Text, default="")
+    # Maintained by the application from every name form: ` tok1 tok2 ... ` (space-padded), each
+    # token folded by `domain.names.normalize_for_search`. The padding lets `LIKE '% tok %'` mean an
+    # exact token and `LIKE '% tok%'` a prefix (services/search.py).
+    search_tokens: Mapped[str] = mapped_column(Text, default="")
+    # The collation key of the primary name's SORTING display (lowercase, accents stripped).
     sort_name: Mapped[str] = mapped_column(Text, default="")
     deleted_at: Mapped[datetime | None] = mapped_column(default=None)
 

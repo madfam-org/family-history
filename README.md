@@ -21,8 +21,9 @@ It is designed first for Mexican and binational families:
 - the history of migration north;
 - Día de Muertos.
 
-**Status: incubating.** The first build wave (genealogy library, GEDCOM engine, API, web app
-shell, platform) is on `main`; nothing is deployed yet.
+**Status: incubating.** Two build waves are on `main`: the genealogy library, the GEDCOM engine,
+the API with import and export, the web app with the tree view and editors, and the platform.
+Nothing is deployed yet.
 [docs/HONEST_STATUS.md](./docs/HONEST_STATUS.md) is the single source of truth for what works.
 
 ## Principles
@@ -40,7 +41,7 @@ shell, platform) is on `main`; nothing is deployed yet.
 | `apps/web/` | Next.js app: the public landing and the signed-in app |
 | `packages/contracts/` | Generated OpenAPI, TypeScript types, export schemas |
 | `infra/`, `enclii.yaml` | Deployment manifests for the MADFAM platform (no secret values) |
-| `docs/` | [Architecture and contracts](./docs/ARCHITECTURE.md), [privacy rules](./docs/PRIVACY.md), [ADRs](./docs/adr/) |
+| `docs/` | [Architecture and contracts](./docs/ARCHITECTURE.md), [privacy rules](./docs/PRIVACY.md), [roadmap](./docs/ROADMAP.md), [ADRs](./docs/adr/) |
 
 Contributors and coding agents start with [AGENTS.md](./AGENTS.md). Ecosystem roles are in
 [ECOSYSTEM.md](./ECOSYSTEM.md).

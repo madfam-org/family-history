@@ -1,5 +1,6 @@
-# Scrapes the metrics Service only (service-api-metrics.yaml, port 9090), never the public app's port.
-# `jobLabel` keeps the Prometheus job name the alerts select on (family-history-api).
+# Scrapes the metrics Services only (service-api-metrics.yaml and service-worker-metrics.yaml, port 9090),
+# never the public app's port. `jobLabel` keeps the Prometheus job names the alerts select on
+# (family-history-api, family-history-worker).
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:

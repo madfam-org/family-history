@@ -155,3 +155,64 @@
     letter-spacing: -0.01em;
   }
 }
+
+/*
+ * Family tree drawing (components/tree/TreeCanvas.tsx). Styled here, never inline, so the strict
+ * CSP (no 'unsafe-inline' styles) holds. Line patterns, not colours, distinguish pedigrees.
+ */
+@layer components {
+  .fh-tree-link,
+  .fh-tree-union {
+    stroke: var(--fh-border-strong);
+    stroke-width: 2;
+  }
+  .fh-tree-union {
+    stroke: var(--fh-accent);
+    stroke-width: 3;
+  }
+  .fh-tree-card rect {
+    fill: var(--fh-surface);
+    stroke: var(--fh-border-strong);
+    stroke-width: 1.5;
+  }
+  .fh-tree-card.fh-tree-focus rect {
+    fill: var(--fh-amate);
+    stroke: var(--fh-accent);
+    stroke-width: 3;
+  }
+  .fh-tree-card.fh-tree-partner rect {
+    stroke-dasharray: 4 3;
+  }
+  .fh-tree-card:focus-visible {
+    outline: none;
+  }
+  .fh-tree-card:focus-visible rect,
+  .fh-tree-card:hover rect {
+    stroke: var(--fh-accent);
+    stroke-width: 4;
+  }
+  .fh-tree-name {
+    fill: var(--fh-fg);
+    font-family: var(--font-serif);
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .fh-tree-meta {
+    fill: var(--fh-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+  .fh-tree-note {
+    fill: var(--fh-bark);
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .fh-tree-legend line {
+    stroke: var(--fh-border-strong);
+    stroke-width: 2;
+  }
+  .fh-tree-legend line.fh-tree-legend-union {
+    stroke: var(--fh-accent);
+    stroke-width: 3;
+  }
+}

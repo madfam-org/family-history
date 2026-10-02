@@ -192,6 +192,125 @@
         "title": "AssertionStatusChange",
         "type": "object"
       },
+      "Association": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "event_id": {
+            "format": "uuid",
+            "title": "Event Id",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "person_id": {
+            "format": "uuid",
+            "title": "Person Id",
+            "type": "string"
+          },
+          "phrase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phrase"
+          },
+          "role": {
+            "$ref": "#/components/schemas/AssociationRole"
+          },
+          "space_id": {
+            "format": "uuid",
+            "title": "Space Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "space_id",
+          "event_id",
+          "person_id",
+          "role",
+          "phrase",
+          "created_at"
+        ],
+        "title": "Association",
+        "type": "object"
+      },
+      "AssociationCreate": {
+        "additionalProperties": false,
+        "description": "`person_id` took part in someone else's event: the padrino at a baptism, a witness at a\ncivil marriage. The godchild is the event's principal. `other` needs a `phrase`.",
+        "properties": {
+          "event_id": {
+            "format": "uuid",
+            "title": "Event Id",
+            "type": "string"
+          },
+          "person_id": {
+            "format": "uuid",
+            "title": "Person Id",
+            "type": "string"
+          },
+          "phrase": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phrase"
+          },
+          "role": {
+            "$ref": "#/components/schemas/AssociationRole"
+          }
+        },
+        "required": [
+          "event_id",
+          "person_id",
+          "role"
+        ],
+        "title": "AssociationCreate",
+        "type": "object"
+      },
+      "AssociationRole": {
+        "description": "A person's role at someone else's event. Maps to `domain.events.AssociationRole`\n(GEDCOM `ROLE`: GODP, WITN, OFFICIATOR, OTHER with a phrase).",
+        "enum": [
+          "godparent",
+          "witness",
+          "officiant",
+          "other"
+        ],
+        "title": "AssociationRole",
+        "type": "string"
+      },
+      "Body_create_import_v1_spaces__space_id__imports_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "description": ".ged, .gdz or .json",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_create_import_v1_spaces__space_id__imports_post",
+        "type": "object"
+      },
       "Citation": {
         "properties": {
           "created_at": {
@@ -349,6 +468,90 @@
         "title": "CitationCreate",
         "type": "object"
       },
+      "CompadrazgoItem": {
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "label_en": {
+            "title": "Label En",
+            "type": "string"
+          },
+          "label_es": {
+            "description": "«madrina de bautizo», «compadre de boda».",
+            "title": "Label Es",
+            "type": "string"
+          },
+          "person_id": {
+            "format": "uuid",
+            "title": "Person Id",
+            "type": "string"
+          },
+          "relation": {
+            "$ref": "#/components/schemas/CompadrazgoRole",
+            "description": "What that person is to this one."
+          },
+          "sacrament": {
+            "$ref": "#/components/schemas/Occasion"
+          }
+        },
+        "required": [
+          "person_id",
+          "display_name",
+          "relation",
+          "sacrament",
+          "label_es",
+          "label_en"
+        ],
+        "title": "CompadrazgoItem",
+        "type": "object"
+      },
+      "CompadrazgoList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CompadrazgoItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "CompadrazgoList",
+        "type": "object"
+      },
+      "CompadrazgoRole": {
+        "description": "What the other person is to ego.",
+        "enum": [
+          "godparent",
+          "godchild",
+          "compadre"
+        ],
+        "title": "CompadrazgoRole",
+        "type": "string"
+      },
+      "DateDisplay": {
+        "description": "A date in words: «hacia 1891» / \"about 1891\" (`domain.dates.humanize_es`/`_en`).",
+        "properties": {
+          "en": {
+            "title": "En",
+            "type": "string"
+          },
+          "es": {
+            "title": "Es",
+            "type": "string"
+          }
+        },
+        "required": [
+          "es",
+          "en"
+        ],
+        "title": "DateDisplay",
+        "type": "object"
+      },
       "ErrorBody": {
         "properties": {
           "code": {
@@ -381,6 +584,13 @@
       },
       "Event": {
         "properties": {
+          "associations": {
+            "items": {
+              "$ref": "#/components/schemas/EventAssociation"
+            },
+            "title": "Associations",
+            "type": "array"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -389,6 +599,16 @@
           "created_by": {
             "title": "Created By",
             "type": "string"
+          },
+          "date_display": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DateDisplay"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "date_earliest": {
             "anyOf": [
@@ -400,6 +620,7 @@
                 "type": "null"
               }
             ],
+            "description": "Inclusive lower bound (ISO date).",
             "title": "Date Earliest"
           },
           "date_latest": {
@@ -412,7 +633,20 @@
                 "type": "null"
               }
             ],
+            "description": "Inclusive upper bound (ISO date).",
             "title": "Date Latest"
+          },
+          "date_original": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The date as typed, when it was typed.",
+            "title": "Date Original"
           },
           "date_value": {
             "anyOf": [
@@ -423,6 +657,7 @@
                 "type": "null"
               }
             ],
+            "description": "Canonical GEDCOM 7 DateValue.",
             "title": "Date Value"
           },
           "description": {
@@ -500,6 +735,8 @@
           "space_id",
           "type",
           "date_value",
+          "date_original",
+          "date_display",
           "date_earliest",
           "date_latest",
           "place_id",
@@ -507,6 +744,7 @@
           "description",
           "sensitivity",
           "participants",
+          "associations",
           "created_by",
           "created_at",
           "updated_at"
@@ -514,8 +752,64 @@
         "title": "Event",
         "type": "object"
       },
+      "EventAssociation": {
+        "description": "Someone else's part in the event (padrino, witness, officiant). `display_name` and `sex`\nlet the UI say «padrino» or «madrina» without fetching the person.",
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "person_id": {
+            "format": "uuid",
+            "title": "Person Id",
+            "type": "string"
+          },
+          "phrase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phrase"
+          },
+          "role": {
+            "$ref": "#/components/schemas/AssociationRole"
+          },
+          "sex": {
+            "$ref": "#/components/schemas/Sex"
+          }
+        },
+        "required": [
+          "id",
+          "person_id",
+          "display_name",
+          "sex",
+          "role",
+          "phrase"
+        ],
+        "title": "EventAssociation",
+        "type": "object"
+      },
       "EventBrief": {
         "properties": {
+          "date_display": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DateDisplay"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "date_value": {
             "anyOf": [
               {
@@ -541,6 +835,7 @@
         },
         "required": [
           "date_value",
+          "date_display",
           "place"
         ],
         "title": "EventBrief",
@@ -549,17 +844,32 @@
       "EventCreate": {
         "additionalProperties": false,
         "properties": {
-          "date_value": {
+          "date_original": {
             "anyOf": [
               {
-                "maxLength": 100,
-                "pattern": "^[A-Z0-9_]+( [A-Z0-9_]+)*$",
+                "maxLength": 200,
+                "minLength": 1,
                 "type": "string"
               },
               {
                 "type": "null"
               }
             ],
+            "description": "Send `date_value` (GEDCOM 7 DateValue) or `date_original` (free text, read as es-MX), never both. Errors: `422 invalid_date`, `422 ambiguous_date`.",
+            "title": "Date Original"
+          },
+          "date_value": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Send `date_value` (GEDCOM 7 DateValue) or `date_original` (free text, read as es-MX), never both. Errors: `422 invalid_date`, `422 ambiguous_date`.",
             "title": "Date Value"
           },
           "description": {
@@ -620,17 +930,32 @@
       "EventPatch": {
         "additionalProperties": false,
         "properties": {
-          "date_value": {
+          "date_original": {
             "anyOf": [
               {
-                "maxLength": 100,
-                "pattern": "^[A-Z0-9_]+( [A-Z0-9_]+)*$",
+                "maxLength": 200,
+                "minLength": 1,
                 "type": "string"
               },
               {
                 "type": "null"
               }
             ],
+            "description": "Send `date_value` (GEDCOM 7 DateValue) or `date_original` (free text, read as es-MX), never both. Errors: `422 invalid_date`, `422 ambiguous_date`.",
+            "title": "Date Original"
+          },
+          "date_value": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Send `date_value` (GEDCOM 7 DateValue) or `date_original` (free text, read as es-MX), never both. Errors: `422 invalid_date`, `422 ambiguous_date`.",
             "title": "Date Value"
           },
           "description": {
@@ -698,7 +1023,7 @@
         "type": "object"
       },
       "EventType": {
-        "description": "Event type codes. Mirrors `family_history.domain.events.EventType`.",
+        "description": "Events a person or a couple can have.",
         "enum": [
           "birth",
           "baptism",
@@ -726,6 +1051,30 @@
         "title": "EventType",
         "type": "string"
       },
+      "ExportFormat": {
+        "enum": [
+          "gedcom7",
+          "gedzip",
+          "gedcom551",
+          "native_json"
+        ],
+        "title": "ExportFormat",
+        "type": "string"
+      },
+      "ExportRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "format": {
+            "$ref": "#/components/schemas/ExportFormat",
+            "description": "`gedcom7` (.ged), `gedzip` (.gdz, GEDCOM 7 in a zip), `gedcom551` (.ged, legacy) or `native_json` (lossless `family-history-tree/v1`)."
+          }
+        },
+        "required": [
+          "format"
+        ],
+        "title": "ExportRequest",
+        "type": "object"
+      },
       "Health": {
         "properties": {
           "status": {
@@ -738,9 +1087,200 @@
         "title": "Health",
         "type": "object"
       },
+      "Job": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/JobKind"
+          },
+          "report": {
+            "additionalProperties": true,
+            "description": "Imports (the GEDCOM engine's ImportReport): `source_version`, `source_product`, `record_counts` (records in the file), `created_records` (rows created), `diagnostics` [{severity, code, message, line}], `extension_tags`. Exports: `format`, `record_counts`, `diagnostics`. Failed jobs: `diagnostics` with one error whose code equals `error_code`.",
+            "title": "Report",
+            "type": "object"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobStatus"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "report",
+          "error_code",
+          "created_at",
+          "finished_at"
+        ],
+        "title": "Job",
+        "type": "object"
+      },
+      "JobAccepted": {
+        "properties": {
+          "job_id": {
+            "format": "uuid",
+            "title": "Job Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id"
+        ],
+        "title": "JobAccepted",
+        "type": "object"
+      },
+      "JobKind": {
+        "enum": [
+          "gedcom_import",
+          "export"
+        ],
+        "title": "JobKind",
+        "type": "string"
+      },
+      "JobStatus": {
+        "enum": [
+          "queued",
+          "running",
+          "succeeded",
+          "failed"
+        ],
+        "title": "JobStatus",
+        "type": "string"
+      },
       "JsonValue": {},
+      "KinshipKind": {
+        "enum": [
+          "self",
+          "partner",
+          "blood",
+          "foster",
+          "step",
+          "in_law"
+        ],
+        "title": "KinshipKind",
+        "type": "string"
+      },
+      "KinshipOut": {
+        "properties": {
+          "kinship": {
+            "$ref": "#/components/schemas/KinshipStructure"
+          },
+          "label_en": {
+            "title": "Label En",
+            "type": "string"
+          },
+          "label_es": {
+            "description": "«tía abuela», «primo segundo», «cuñada».",
+            "title": "Label Es",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kinship",
+          "label_es",
+          "label_en"
+        ],
+        "title": "KinshipOut",
+        "type": "object"
+      },
+      "KinshipStructure": {
+        "description": "What `to` is to the person (`domain.kinship.Kinship`). `up`/`down` are generations to the\ncommon ancestor; `half` is null when unknown; `via` is the partner or parent an in-law or\nstep relation goes through.",
+        "properties": {
+          "adoptive": {
+            "title": "Adoptive",
+            "type": "boolean"
+          },
+          "down": {
+            "title": "Down",
+            "type": "integer"
+          },
+          "half": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Half"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/KinshipKind"
+          },
+          "partner_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartnerStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "up": {
+            "title": "Up",
+            "type": "integer"
+          },
+          "via": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Via"
+          }
+        },
+        "required": [
+          "kind",
+          "up",
+          "down",
+          "half",
+          "adoptive",
+          "partner_status",
+          "via"
+        ],
+        "title": "KinshipStructure",
+        "type": "object"
+      },
       "LivingStatus": {
-        "description": "Mirrors `family_history.domain.living.LivingStatus`.",
+        "description": "Whether a person is treated as living.",
         "enum": [
           "living",
           "deceased",
@@ -1105,6 +1645,19 @@
         "title": "NameType",
         "type": "string"
       },
+      "Occasion": {
+        "description": "The sacrament or celebration a godparent sponsored.",
+        "enum": [
+          "bautizo",
+          "confirmacion",
+          "primera_comunion",
+          "boda",
+          "xv_anos",
+          "presentacion"
+        ],
+        "title": "Occasion",
+        "type": "string"
+      },
       "Participant": {
         "properties": {
           "person_id": {
@@ -1156,6 +1709,18 @@
         "title": "ParticipantRole",
         "type": "string"
       },
+      "PartnerStatus": {
+        "description": "The state of a couple's union.",
+        "enum": [
+          "married",
+          "union_libre",
+          "partner",
+          "separated",
+          "divorced"
+        ],
+        "title": "PartnerStatus",
+        "type": "string"
+      },
       "Person": {
         "properties": {
           "citations": {
@@ -1175,6 +1740,7 @@
             "type": "string"
           },
           "display_name": {
+            "description": "The primary name in the FORMAL style of `domain.names.display_name`.",
             "title": "Display Name",
             "type": "string"
           },
@@ -1189,6 +1755,11 @@
             "format": "uuid",
             "title": "Id",
             "type": "string"
+          },
+          "is_private": {
+            "description": "True when the person is private by default (living or unknown) or marked `private`.",
+            "title": "Is Private",
+            "type": "boolean"
           },
           "living_status": {
             "$ref": "#/components/schemas/LivingStatus"
@@ -1210,6 +1781,11 @@
           "sex": {
             "$ref": "#/components/schemas/Sex"
           },
+          "sort_name": {
+            "description": "The primary name in the SORTING style («Garza Treviño, María Guadalupe de la»).",
+            "title": "Sort Name",
+            "type": "string"
+          },
           "space_id": {
             "format": "uuid",
             "title": "Space Id",
@@ -1228,8 +1804,10 @@
           "id",
           "space_id",
           "display_name",
+          "sort_name",
           "sex",
           "living_status",
+          "is_private",
           "visibility",
           "names",
           "events",
@@ -1363,6 +1941,7 @@
             ]
           },
           "display_name": {
+            "description": "The primary name in the FORMAL style of `domain.names.display_name`.",
             "title": "Display Name",
             "type": "string"
           },
@@ -1371,11 +1950,21 @@
             "title": "Id",
             "type": "string"
           },
+          "is_private": {
+            "description": "True when the person is private by default (living or unknown) or marked `private`.",
+            "title": "Is Private",
+            "type": "boolean"
+          },
           "living_status": {
             "$ref": "#/components/schemas/LivingStatus"
           },
           "sex": {
             "$ref": "#/components/schemas/Sex"
+          },
+          "sort_name": {
+            "description": "The primary name in the SORTING style («Garza Treviño, María Guadalupe de la»).",
+            "title": "Sort Name",
+            "type": "string"
           },
           "visibility": {
             "$ref": "#/components/schemas/Visibility"
@@ -1384,8 +1973,10 @@
         "required": [
           "id",
           "display_name",
+          "sort_name",
           "sex",
           "living_status",
+          "is_private",
           "birth",
           "death",
           "visibility"
@@ -2307,6 +2898,102 @@
         ]
       }
     },
+    "/v1/associations/{association_id}": {
+      "delete": {
+        "operationId": "delete_association_v1_associations__association_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "association_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Association Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Delete Association",
+        "tags": [
+          "associations"
+        ]
+      }
+    },
     "/v1/events/{event_id}": {
       "delete": {
         "operationId": "delete_event_v1_events__event_id__delete",
@@ -2511,6 +3198,213 @@
         "summary": "Update Event",
         "tags": [
           "events"
+        ]
+      }
+    },
+    "/v1/jobs/{job_id}": {
+      "get": {
+        "description": "The caller's own job. Jobs are private to whoever submitted them.",
+        "operationId": "get_job_v1_jobs__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Get Job",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/v1/jobs/{job_id}/download": {
+      "get": {
+        "description": "The export file. `409 job_not_ready` until it succeeds, `410 download_expired` 24 hours\nafter it finished.",
+        "operationId": "download_v1_jobs__job_id__download_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/octet-stream": {}
+            },
+            "description": "The export file."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "410": {
+            "description": "The result expired (24 hours after the job finished)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Download",
+        "tags": [
+          "jobs"
         ]
       }
     },
@@ -2913,6 +3807,226 @@
         "summary": "Patch Person",
         "tags": [
           "people"
+        ]
+      }
+    },
+    "/v1/people/{person_id}/compadrazgo": {
+      "get": {
+        "description": "Padrinos, ahijados and compadres of this person, derived from godparent associations\n(never stored).",
+        "operationId": "get_compadrazgo_v1_people__person_id__compadrazgo_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompadrazgoList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Get Compadrazgo",
+        "tags": [
+          "kinship"
+        ]
+      }
+    },
+    "/v1/people/{person_id}/kinship": {
+      "get": {
+        "description": "What `to` is to this person, with Spanish and English labels. `404 person_not_found`\nwhen `to` is not a person the caller can see in the same space; `404 no_relation` when the\ntwo are not related within eight generations.",
+        "operationId": "get_kinship_v1_people__person_id__kinship_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The other person, in the same family space.",
+            "in": "query",
+            "name": "to",
+            "required": true,
+            "schema": {
+              "description": "The other person, in the same family space.",
+              "format": "uuid",
+              "title": "To",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KinshipOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Get Kinship",
+        "tags": [
+          "kinship"
         ]
       }
     },
@@ -3887,9 +5001,123 @@
         ]
       }
     },
+    "/v1/spaces/{space_id}/associations": {
+      "post": {
+        "description": "`422 unknown_event` / `unknown_person` for anything the caller cannot see in the space;\n`422 association_is_principal` when the person is the event's principal (nobody is their own\npadrino); `409 association_exists` for a repeat.",
+        "operationId": "create_association_v1_spaces__space_id__associations_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Space Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssociationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Association"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Create Association",
+        "tags": [
+          "associations"
+        ]
+      }
+    },
     "/v1/spaces/{space_id}/events": {
       "post": {
-        "description": "Sacraments default to the `religion` sensitivity and medical events to `health`.",
+        "description": "Sacraments default to the `religion` sensitivity. The date is `date_value` (GEDCOM 7) or\n`date_original` (free text, es-MX); the response carries both, the bounds and the date in\nwords.",
         "operationId": "create_event_v1_spaces__space_id__events_post",
         "parameters": [
           {
@@ -3998,6 +5226,234 @@
         "summary": "Create Event",
         "tags": [
           "events"
+        ]
+      }
+    },
+    "/v1/spaces/{space_id}/exports": {
+      "post": {
+        "description": "Export what the caller can see. Any member may export: the exit is free at every tier.",
+        "operationId": "create_export_v1_spaces__space_id__exports_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Space Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobAccepted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Create Export",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/v1/spaces/{space_id}/imports": {
+      "post": {
+        "description": "Import a GEDCOM 7 or 5.5.1 file (`.ged`, version auto-detected), a GEDZIP (`.gdz`; media\nentries are skipped with a warning) or a native `family-history-tree/v1` export (`.json`),\nup to 25 MiB (`413 file_too_large`; other files `415 unsupported_file`). Stewards and\neditors only. Poll `GET /v1/jobs/{job_id}`: an unreadable file fails the job with\n`gedcom_invalid` or `native_export_invalid`.",
+        "operationId": "create_import_v1_spaces__space_id__imports_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Space Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_import_v1_spaces__space_id__imports_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobAccepted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        },
+        "summary": "Create Import",
+        "tags": [
+          "jobs"
         ]
       }
     },
@@ -5014,7 +6470,7 @@
     },
     "/v1/waitlist": {
       "post": {
-        "description": "Join the waitlist. Always `202` for a valid request, whether or not the email was\nalready on the list. Consent to the privacy notice (`aviso_version`) is required.",
+        "description": "Join the waitlist. `404 waitlist_closed` until the waitlist is opened with a reviewed\nprivacy notice. Once open, always `202` for a valid request, whether or not the email was\nalready on the list. Consent to the current privacy notice (`aviso_version`) is required.",
         "operationId": "join_waitlist_v1_waitlist_post",
         "requestBody": {
           "content": {

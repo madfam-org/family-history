@@ -58,7 +58,6 @@ class Settings(BaseSettings):
 
     database_url: SecretStr | None = Field(default=None, alias="DATABASE_URL")
     direct_database_url: SecretStr | None = Field(default=None, alias="DIRECT_DATABASE_URL")
-    redis_url: SecretStr | None = Field(default=None, alias="REDIS_URL")
 
     janua_issuer: str = Field(default=DEFAULT_JANUA_ISSUER, alias="FH_JANUA_ISSUER")
     janua_audience: str = Field(default=DEFAULT_JANUA_AUDIENCE, alias="FH_JANUA_AUDIENCE")
@@ -88,6 +87,11 @@ class Settings(BaseSettings):
 
     waitlist_rate_limit: int = 5
     waitlist_rate_window_seconds: int = 600
+    # The waitlist stores personal data, so it stays closed (`404 waitlist_closed`) until a
+    # counsel-reviewed privacy notice ships. Opening it needs that notice's version too, and every
+    # request must consent to exactly that version.
+    waitlist_enabled: bool = Field(default=False, alias="FH_WAITLIST_ENABLED")
+    aviso_version: str | None = Field(default=None, alias="FH_AVISO_VERSION")
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -106,6 +110,17 @@ class Settings(BaseSettings):
         if not value:
             raise SettingsError("FH_JANUA_ISSUER must not be empty")
         return value
+
+    @field_validator("aviso_version")
+    @classmethod
+    def _strip_aviso_version(cls, value: str | None) -> str | None:
+        return (value or "").strip() or None
+
+    @model_validator(mode="after")
+    def _guard_waitlist(self) -> Settings:
+        if self.waitlist_enabled and self.aviso_version is None:
+            raise SettingsError("FH_WAITLIST_ENABLED=true requires FH_AVISO_VERSION")
+        return self
 
     @model_validator(mode="after")
     def _guard_auth_disabled(self) -> Settings:

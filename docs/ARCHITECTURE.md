@@ -1,6 +1,6 @@
 # Architecture and contracts
 
-> Last Updated: 2026-10-01
+> Last Updated: 2026-10-02
 >
 > Boundary checkpoint (2026-10-01): public document. It names public hosts and ecosystem roles
 > only. Topology, secret paths and runbooks live in the private internal-devops repository, per
@@ -13,10 +13,11 @@ families ──▶ web (Next.js, one pod)          fh.madfam.io      public land
                  │                            fh-app.madfam.io  signed-in app
                  │ server-side REST
                  ▼
-             api (FastAPI) ──▶ Postgres (row-level security per family space)
-                 │       └──▶ object storage (private bucket, presigned URLs)
-                 ▼
-             worker (Celery) ──▶ imports, exports, media derivatives, ecosystem calls
+             api (FastAPI) ──▶ Postgres (row-level security per family space; the job queue)
+                 │                    ▲
+                 │                    │ claims jobs (FOR UPDATE SKIP LOCKED)
+                 │                worker ──▶ imports and exports (media derivatives and ecosystem calls later)
+                 └──▶ object storage (private bucket, presigned URLs)
              mcp (generated from the API's OpenAPI; read-only tools first)
 ```
 
@@ -46,13 +47,14 @@ These values are fixed. Changing any of them needs an ADR in [`docs/adr/`](./adr
 | Readiness | `GET /ready` → `200 {"status": "ready", "db": "ok", "migrations": "head"}`; otherwise `503` with the failing part named |
 | Migrations | `python -m family_history.cli migrate`: Alembic upgrade head, using `DIRECT_DATABASE_URL` |
 | OpenAPI | `python -m family_history.cli openapi` writes `packages/contracts/openapi.json`. CI fails on drift |
-| Worker | `celery -A family_history.worker:celery_app worker` |
+| Worker | `python -m family_history.worker`: claims jobs from a Postgres queue ([ADR 0002](./adr/0002-postgres-job-queue.md)). Exec probe `python -m family_history.worker healthcheck` (heartbeat within 120 s); metrics on `:9090` |
 | MCP | `python -m family_history.mcp` (stdio) |
 | Web | `apps/web`, package `@family-history/web`, Next.js **16.3.8** standalone on port `3000`. `GET /api/health` → `200` |
 | Images | `ghcr.io/madfam-org/family-history-api` (api, worker, migrate, mcp) and `ghcr.io/madfam-org/family-history-web` |
 | Dockerfiles | `api/Dockerfile` (context `api/`) and `apps/web/Dockerfile` (context: repo root, for the pnpm workspace) |
-| Kubernetes | Namespace `family-history`.<br>Services: `family-history-web` (80 → 3000), `family-history-api` (80 → 8000), `family-history-api-metrics` (9090) |
+| Kubernetes | Namespace `family-history`.<br>Services: `family-history-web` (80 → 3000), `family-history-api` (80 → 8000), `family-history-api-metrics` (9090), `family-history-worker-metrics` (9090) |
 | Hosts | `fh.madfam.io` (landing) and `fh-app.madfam.io` (app), both served by web; `fh-api.madfam.io` serves the API. Flat labels only, never `api.fh.madfam.io` |
+| Web route handlers | `/api/app/*`, on the app host only: the web's own server routes for uploads, job status and downloads, with the same session refresh as pages. `proxyClientMaxBodySize` is 26 MB, so 25 MiB imports pass |
 | Containers | uid 1001, read-only root filesystem, every capability dropped |
 
 ### Environment
@@ -63,7 +65,6 @@ Variable names only; values never live in this repository.
 |---|---|---|
 | api | `FH_ENV` | `local`, `test`, `staging` or `production` |
 | api | `DATABASE_URL`, `DIRECT_DATABASE_URL` | Pooled URL, plus the direct URL used for migrations |
-| api | `REDIS_URL` | Queue for the worker |
 | api | `FH_JANUA_ISSUER` | Default `https://auth.madfam.io` |
 | api | `FH_JANUA_AUDIENCE` | `family-history-api` |
 | api | `FH_JANUA_JWKS_URL` | Default `<issuer>/.well-known/jwks.json` |
@@ -73,6 +74,9 @@ Variable names only; values never live in this repository.
 | api | `FH_S3_ENDPOINT`, `FH_S3_BUCKET`, `FH_S3_ACCESS_KEY_ID`, `FH_S3_SECRET_ACCESS_KEY`, `FH_S3_REGION` | Private media bucket (S3-compatible) |
 | api | `FH_METRICS_PORT` | Metrics listener port: `9090` in staging and production; unset (off) in local and test |
 | api | `FH_SENTRY_DSN` | Optional; inert until the Sentry SDK is added |
+| api | `FH_WAITLIST_ENABLED` | Default `false`: `POST /v1/waitlist` answers `404 waitlist_closed` and stores nothing. Turn it on together with the web's flag, and only once a counsel-reviewed privacy notice ships |
+| api | `FH_AVISO_VERSION` | Required when the waitlist is open (boot fails otherwise). Each request's `aviso_version` must equal it (`422 aviso_version_mismatch`) |
+| worker | `FH_ENV`, `DATABASE_URL` | As for the API: the same role and pooled URL. The queue lives in Postgres; there is no Redis |
 | web | `FH_ENV` | As above |
 | web | `AUTH_JANUA_ISSUER`, `AUTH_JANUA_CLIENT_ID`, `AUTH_JANUA_CLIENT_SECRET` | Ecosystem env contract for Next.js apps (ruling R45) |
 | web | `FH_SESSION_SECRET` | 32 bytes or more. Signs and encrypts the app's own session cookie, never with the Janua secret (R42) |
@@ -85,8 +89,8 @@ Variable names only; values never live in this repository.
 
 ### v1 API used by the web app
 
-The generated OpenAPI is the source of truth once the API ships. This table is the starting
-contract both sides build against.
+The generated OpenAPI (`packages/contracts/openapi.json`) is the source of truth; this section
+summarizes it.
 
 - **Auth.** Every `/v1/*` route except `POST /v1/waitlist` needs a Janua RS256 Bearer token with
   audience `family-history-api`.
@@ -105,14 +109,20 @@ contract both sides build against.
 | `GET /v1/me` | `{sub, email, name, early_access: bool, spaces: [SpaceSummary]}` |
 | `GET /v1/spaces` | `[SpaceSummary]` |
 | `POST /v1/spaces {name}` | `Space`. The creator becomes `steward` |
-| `GET /v1/spaces/{space_id}/people?q=&limit=&cursor=` | `{items: [PersonSummary], next_cursor}` |
+| `GET /v1/spaces/{space_id}/people?q=&limit=&cursor=` | `{items: [PersonSummary], next_cursor}`. `q` is ranked: exact, then nickname variants («Chucho» finds Jesús), then prefix, with spelling folded |
 | `POST /v1/spaces/{space_id}/people` | `Person` |
 | `GET /v1/people/{person_id}` | `Person`: names, events, relationships, citations |
 | `PATCH /v1/people/{person_id}` | `Person` |
 | `POST /v1/spaces/{space_id}/relationships {type, from_person_id, to_person_id, qualifier}` | `Relationship` |
-| `POST /v1/spaces/{space_id}/events`; `PATCH`, `DELETE /v1/events/{event_id}` | `Event` with participants |
+| `POST /v1/spaces/{space_id}/events`; `PATCH`, `DELETE /v1/events/{event_id}` | `Event` with participants and associations. Send `date_value` (GEDCOM 7) or `date_original` (Spanish text, up to 200 characters), never both |
+| `GET /v1/people/{person_id}/kinship?to={other_id}` | `Kinship`; `404 no_relation`, or `404 person_not_found` when `to` is not visible in the same space |
+| `GET /v1/people/{person_id}/compadrazgo` | `{items: [CompadrazgoItem]}`, derived from godparent associations |
+| `POST /v1/spaces/{space_id}/associations {event_id, person_id, role, phrase?}`; `DELETE /v1/associations/{association_id}` | `201 Association` / `204`. The associated person is `person_id`; the godchild is the event's principal |
+| `POST /v1/spaces/{space_id}/imports` (multipart `file`) | `202 {job_id}`. Editor or steward. `.ged` (GEDCOM 7 or 5.5.1), `.gdz` or `.json` (a native export); 25 MiB |
+| `POST /v1/spaces/{space_id}/exports {format}` | `202 {job_id}`. Any member, at every tier. `format`: `gedcom7`, `gedzip`, `gedcom551`, `native_json` |
+| `GET /v1/jobs/{job_id}`; `GET /v1/jobs/{job_id}/download` | `Job`; the file, with a `Content-Disposition` filename (`.ged`, `.gdz`, `-gedcom551.ged`, `.json`). Jobs are private to their creator; downloads expire after 24 hours |
 | Places, sources, citations, assertions | See the generated OpenAPI below |
-| `POST /v1/waitlist {email, locale, consent: true, aviso_version}` | `202`. Public and rate-limited |
+| `POST /v1/waitlist {email, locale, consent: true, aviso_version}` | `202`. Public and rate-limited. `404 waitlist_closed` unless `FH_WAITLIST_ENABLED` |
 
 The complete v1 surface and every shape live in `packages/contracts/openapi.json`, generated by
 the API and drift-checked in CI. Membership management waits for the Janua organization binding.
@@ -122,12 +132,33 @@ the API and drift-checked in CI. Membership management waits for the Janua organ
 | Shape | Fields |
 |---|---|
 | `SpaceSummary` | `{id: uuid, name, role: steward\|editor\|contributor\|viewer, people_count}` |
-| `PersonSummary` | `{id, display_name, sex: M\|F\|X\|U, living_status: living\|deceased\|presumed_deceased\|unknown, birth: EventBrief\|null, death: EventBrief\|null, visibility: space\|private\|public_memorial}` |
-| `EventBrief` | `{date_value: <canonical GEDCOM 7 DateValue>\|null, place: str\|null}` |
+| `PersonSummary` | `{id, display_name, sort_name, sex: M\|F\|X\|U, living_status: living\|deceased\|presumed_deceased\|unknown, is_private, birth: EventBrief\|null, death: EventBrief\|null, visibility: space\|private\|public_memorial}`. `display_name` is the formal name (nombre de pila and surnames), not the nombre usado |
+| `EventBrief` | `{date_value: <canonical GEDCOM 7 DateValue>\|null, date_display: {es, en}\|null, place: str\|null}` |
+| `Event` dates | `date_value`, `date_original` (the text as typed), `date_display {es, en}`, and `date_earliest`/`date_latest` (ISO dates, inclusive) |
+| `Event.associations` | `[{id, person_id, display_name, sex, role: godparent\|witness\|officiant\|other, phrase}]` |
+| `Kinship` | `{kinship: {kind: self\|partner\|blood\|foster\|step\|in_law, up, down, half, adoptive, partner_status, via}, label_es, label_en}` |
+| `CompadrazgoItem` | `{person_id, display_name, relation: godparent\|godchild\|compadre, sacrament, label_es, label_en}` |
+| `Job` | `{id, kind: gedcom_import\|export, status: queued\|running\|succeeded\|failed, report, error_code, created_at, finished_at}` |
+| Import `report` | The GEDCOM engine's `ImportReport`: `{source_version, source_product, record_counts, created_records, diagnostics: [{severity, code, message, line}], extension_tags}`, at most 500 diagnostics. Codes are stable; [the API lane notes](./lanes/integration-api.md#error-codes-added) list them |
 | `Relationship.qualifier` | `parent_child`: pedigree `birth\|adopted\|foster\|step`. `union`: partner status `married\|union_libre\|partner\|separated\|divorced`. Civil and religious marriages are events, not qualifiers |
 
 `presumed_deceased` means born more than 110 years ago with no death evidence; such a person is
-not private by default. `living` and `unknown` are treated as living.
+not private by default. `living` and `unknown` are treated as living. Death evidence is a current
+assertion about a death, burial or cremation with at least one citation that is neither retracted
+nor disputed.
+
+**Error codes added with import, export and kinship.** `invalid_date` and `ambiguous_date` (422),
+`no_relation` (404), `unknown_event` and `association_is_principal` (422), `association_exists`
+(409), `association_not_found` and `job_not_found` (404), `unsupported_file` (415),
+`file_too_large` (413), `empty_file` (422), `job_not_ready` and `no_download` (409),
+`download_expired` (410), `waitlist_closed` (404), `aviso_version_mismatch` (422). A failed job
+carries an `error_code`: `gedcom_invalid`, `native_export_invalid`, `insufficient_role`,
+`not_a_member`, `invalid_format`, `worker_timeout` or `internal_error`.
+
+**Native format.** `family-history-tree/v1` is the lossless export. Its JSON Schema,
+`packages/contracts/family-history-tree.v1.schema.json`, is generated and drift-checked like the
+OpenAPI. Export, import into an empty space, then export again gives a byte-identical file; CI
+proves it for the native format and for GEDCOM 7.
 
 ## Data model
 
@@ -140,7 +171,7 @@ The model is a superset of GEDCOM 7.0.18.
 | `Person` | Living status, evidence of death, visibility |
 | `NameForm` | Ordered parts (given, apellido paterno, apellido materno, particles); nombre de pila vs nombre usado; apodos; per-language forms. No forced married name |
 | `Relationship` | Parent–child with pedigree (birth, adopted, foster, step); unions with partner status (married, unión libre, partner, separated, divorced). Civil and religious marriages are events. Treated as a graph, not a tree |
-| `Association` | Padrinos per sacrament, witnesses. Compadres are derived, never stored |
+| `Association` | Padrinos per sacrament, witnesses, officiants (GEDCOM 7 `ASSO`): the associated person on the principal's event. Compadres are derived, never stored |
 | `Event` and `Participant` | GEDCOM 7 date grammar; the original text is kept |
 | `Place` | Time-aware hierarchy, keyed to INEGI where possible; parish and hacienda layers |
 | `Source`, `Repository`, `Citation` | Typed: libro parroquial (libro, foja, partida), acta del Registro Civil, oral interview |
@@ -149,5 +180,6 @@ The model is a superset of GEDCOM 7.0.18.
 | `Story`, `OralHistory` | Narrative and recorded memory |
 | `Consent` | Per purpose, revocable |
 | `Revision` | Every write |
+| `Job` | Imports and exports. Forced row-level security: only the creator sees a job, only the worker updates it; inputs and results are purged after they expire |
 
 See [PRIVACY.md](./PRIVACY.md) for the rules the model enforces.

@@ -80,9 +80,11 @@ There are two sources of secrets.
   - both keys mapped in lowercase. Nauta's entry maps `client_id` the same way, and the client id stays
     out of this public repository;
   - `client_key: family-history-web`, `audience: family-history-api`, `is_confidential: true`;
-  - redirect `https://fh-app.madfam.io/auth/callback`, with `http://localhost:3000/auth/callback` as the
-    precedent's local twin;
-  - sign-in scopes `openid email profile offline_access`, and grants `authorization_code`, `refresh_token`;
+  - one redirect, exactly `https://fh-app.madfam.io/auth/callback`. As registered there is no localhost
+    callback, unlike the precedent: local development registers its own client;
+  - allowed scopes exactly `openid profile email fh:read fh:write`, and grants `authorization_code`,
+    `refresh_token`. `fh:export` and `fh:admin` are not granted to this client. The web also requests
+    `offline_access`, an identity scope Janua grants on every sign-in;
   - no `session_intake_target`: re-minting the session secret on every provision run would sign everyone
     out.
 
@@ -100,12 +102,12 @@ There are two sources of secrets.
   secrets file. family-history mirrors this exactly: same key names, pooled key on the API and direct key
   on the migrate Job only.
 - **Not in the first deploy:** `FH_S3_*` (media is in the next wave; the API treats it as optional),
-  `REDIS_URL` (no worker yet) and `FH_SENTRY_DSN`.
+  `REDIS_URL` (no longer used: the worker's queue is in Postgres, ADR 0002) and `FH_SENTRY_DSN`.
 
 ## Operator steps (first deploy)
 
-1. Land the Enclii PR that pins `build-publish.yml`'s actions by SHA, then bump the pin in
-   `build-deploy.yml`. Without it, GitHub refuses the run before any job starts.
+1. Done. Enclii main pins `build-publish.yml`'s actions by SHA, and `build-deploy.yml` pins that commit.
+   Without it, GitHub refuses the run before any job starts.
 2. `enclii onboard --repo madfam-org/family-history` with `--secret-name family-history-secrets --secrets-file
    <env>`. The env file carries `DATABASE_URL` (pooled through PgBouncer) and `DIRECT_DATABASE_URL`
    (direct), built from the generated `--db-password`, which is never printed. Then reconcile drift:
@@ -113,8 +115,8 @@ There are two sources of secrets.
 3. Add the PgBouncer userlist line for the new role, following the platform procedure. Without it the
    pooled URL fails with "no such user" and `/ready` stays 503, while the migrate hook still succeeds.
 4. Vault-writer policy for `secret/family-history`, and intake registry entries for
-   `family-history/api-access`, `family-history/web-oidc` and `family-history/web-session` (enclii lane
-   PRs).
+   `family-history/api-access`, `family-history/web-oidc` and `family-history/web-session`. The registry
+   entries and the OIDC registration are merged in Enclii; the operator applies the writer policy.
 5. Intake:
    - `enclii secrets intake submit family-history/api-access --reason "<ticket>"` (`fh_early_access_allowlist`);
    - `enclii secrets intake submit family-history/web-session --generate fh_session_secret --reason "<ticket>"`;
@@ -142,9 +144,9 @@ called reusable workflows. This has two consequences:
   does not call it. Instead it runs the same gate scripts, from the same pinned commit of
   `madfam-org/.github`, through SHA-pinned actions. Switch back to `uses:` once the org workflow pins its
   actions.
-- **Build & Deploy.** Enclii's `build-publish.yml`, both at `v1.0.0-alpha.14` and on enclii main, uses
-  tag-pinned actions. The first dispatch will be refused until Enclii pins them, and the caller then bumps
-  its SHA.
+- **Build & Deploy.** Enclii's `build-publish.yml` at `v1.0.0-alpha.14` used tag-pinned actions, which
+  would have refused the first dispatch. Enclii main now pins them by SHA, and `build-deploy.yml` pins
+  that main commit. Any later bump must keep every `uses:` in the called workflow SHA-pinned.
 
 ## How it was verified
 
