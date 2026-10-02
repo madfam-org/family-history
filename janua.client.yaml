@@ -37,22 +37,27 @@ clients:
       - refresh_token
     pkce: S256
     # Janua matches redirect URIs exactly: no wildcards, no trailing-slash variants.
+    # One redirect URI and no localhost callback: local development registers its own client.
     redirect_uris:
       - https://fh-app.madfam.io/auth/callback
+    # Janua keeps no separate post-logout list: RP-initiated logout accepts a registered redirect URI or its
+    # origin root, so the callback above admits this and nothing else.
     post_logout_redirect_uris:
       - https://fh-app.madfam.io/
+    # offline_access is requested by the web and granted to every sign-in as an identity scope; it is not part
+    # of the client's allowed scopes.
     sign_in_scopes:
       - openid
       - email
       - profile
       - offline_access
-    # Access tokens are minted for the API's audience with these scopes.
+    # Access tokens are minted for the API's audience with these scopes. The client is allowed exactly
+    # `openid profile email fh:read fh:write`. fh:export and fh:admin are defined above but not granted to this
+    # client; granting one is a registration change, made when a feature needs it.
     audience: family-history-api
     api_scopes:
       - fh:read
       - fh:write
-      - fh:export
-      - fh:admin
     secrets_delivered_to:
       target: family-history/web-oidc
       properties:
