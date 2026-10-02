@@ -1,0 +1,57 @@
+# Dependency updates: weekly, grouped, Monday morning in Mexico City.
+# Security updates are not grouped away: GitHub opens them as soon as an advisory lands.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /api
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: America/Mexico_City
+    open-pull-requests-limit: 5
+    groups:
+      python-runtime:
+        dependency-type: production
+        update-types: [minor, patch]
+      python-dev:
+        dependency-type: development
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: America/Mexico_City
+    open-pull-requests-limit: 5
+    # Next.js and React move together and carry security fixes; never let a grouped bump hide one.
+    groups:
+      next-react:
+        patterns: [next, react, react-dom, "@types/react", "@types/react-dom", eslint-config-next]
+      npm-minor-patch:
+        update-types: [minor, patch]
+        exclude-patterns: [next, react, react-dom]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: America/Mexico_City
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: docker
+    directories: [/api, /apps/web]
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: America/Mexico_City
+    groups:
+      base-images:
+        patterns: ["*"]

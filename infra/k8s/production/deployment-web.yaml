@@ -1,0 +1,127 @@
+# The web app (`apps/web`, Next.js standalone on 3000): the public landing at fh.madfam.io and the signed-in
+# app at fh-app.madfam.io, from this ONE pod, routed by host (two tunnel hostnames, one Service; enclii.yaml
+# `family-history-web`). It is a backend-for-frontend: the browser talks only to this server, which calls the
+# API in-cluster (FH_API_INTERNAL_URL) with the signed-in user's token (allow-web-to-api-egress).
+#
+# Custody: it mounts only Secret family-history-web (the Janua client and the session secret), every key
+# `optional: true` so the landing serves before the Secret exists; never the database or the bucket. It
+# reaches Janua's token endpoint at its public origin over 443 (allow-https-egress), so the client secret
+# never crosses plain in-cluster HTTP.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: family-history-web
+  labels:
+    app.kubernetes.io/name: family-history-web
+    app.kubernetes.io/component: web
+    app.kubernetes.io/part-of: family-history
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: family-history-web
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: family-history-web
+        app.kubernetes.io/component: web
+        app.kubernetes.io/part-of: family-history
+        app: family-history-web
+        enclii.dev/service: family-history-web
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      imagePullSecrets:
+        - name: ghcr-credentials
+      containers:
+        - name: web
+          # DECOY: the real pin is the images: block in kustomization.yaml.
+          image: ghcr.io/madfam-org/family-history-web:latest
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: FH_ENV
+              value: production
+            - name: NODE_ENV
+              value: production
+            - name: NEXT_TELEMETRY_DISABLED
+              value: "1"
+            # The standalone server binds HOSTNAME; the kubelet sets it to the pod name, so bind every interface.
+            - name: HOSTNAME
+              value: 0.0.0.0
+            - name: PORT
+              value: "3000"
+            - name: AUTH_JANUA_ISSUER
+              value: https://auth.madfam.io
+            - name: FH_PUBLIC_LANDING_HOST
+              value: fh.madfam.io
+            - name: FH_PUBLIC_APP_HOST
+              value: fh-app.madfam.io
+            # The API, in-cluster (Service family-history-api, port 80).
+            - name: FH_API_INTERNAL_URL
+              value: http://family-history-api.family-history.svc.cluster.local
+            # Working hosts are never indexed until the brand launches.
+            - name: FH_INDEXABLE
+              value: "false"
+            - name: AUTH_JANUA_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: family-history-web
+                  key: AUTH_JANUA_CLIENT_ID
+                  optional: true
+            - name: AUTH_JANUA_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: family-history-web
+                  key: AUTH_JANUA_CLIENT_SECRET
+                  optional: true
+            - name: FH_SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: family-history-web
+                  key: FH_SESSION_SECRET
+                  optional: true
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            # The standalone server's only write path (image and fetch cache). Contract: WORKDIR /app.
+            - name: next-cache
+              mountPath: /app/.next/cache
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          livenessProbe:
+            httpGet: { path: /api/health, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet: { path: /api/health, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi
+        - name: next-cache
+          emptyDir:
+            sizeLimit: 256Mi
