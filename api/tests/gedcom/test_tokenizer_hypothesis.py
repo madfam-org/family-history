@@ -39,8 +39,9 @@ def structures(draw: st.DrawFn, depth: int = 0) -> Structure:
 @st.composite
 def records(draw: st.DrawFn) -> list[Structure]:
     roots = []
-    for index, child_list in enumerate(draw(st.lists(st.lists(structures(), max_size=3),
-                                                     min_size=1, max_size=3))):
+    for index, child_list in enumerate(
+        draw(st.lists(st.lists(structures(), max_size=3), min_size=1, max_size=3))
+    ):
         roots.append(Structure(tag="_REC", xref=f"@R{index}@", children=child_list))
     return roots
 
@@ -90,6 +91,5 @@ def test_emit_then_read_is_identity_in_551_with_conc(roots: list[Structure]) -> 
     lines = emit_lines(roots, GEDCOM551_EMIT)
     assert all(len(line) <= 255 for line in lines)
     diagnostics = Diagnostics(strict=False)
-    back = build_structures(tokenize(render(lines), diagnostics, GEDCOM551), diagnostics,
-                            GEDCOM551)
+    back = build_structures(tokenize(render(lines), diagnostics, GEDCOM551), diagnostics, GEDCOM551)
     assert back == [_normalize(r) for r in roots]

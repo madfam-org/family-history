@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from gedcom_helpers import SEVEN_FIXTURE, dataset, fixture_bytes
 
 from family_history.gedcom import (
     GedcomDocument,
@@ -15,7 +16,6 @@ from family_history.gedcom import (
 )
 from family_history.gedcom.extensions import SURNAME_LINE
 from family_history.gedcom.model_parts import Event, NamePiece, PersonalName
-from gedcom_helpers import SEVEN_FIXTURE, dataset, fixture_bytes
 
 VENDOR_FIXTURES = [
     "ancestry-like-551.ged",
@@ -89,13 +89,16 @@ def test_text_field_with_extension_child_degrades_to_other_in_order() -> None:
     source = parse_gedcom7(dataset(body)).document.sources[0]
     assert source.title is None and source.other[0].tag == "TITL"
     assert source.author == "Parroquia"
-    assert parse_gedcom7(write_gedcom7(parse_gedcom7(dataset(body)).document)).document.sources[
-        0
-    ] == source
+    assert (
+        parse_gedcom7(write_gedcom7(parse_gedcom7(dataset(body)).document)).document.sources[0]
+        == source
+    )
 
 
 def test_schema_is_written_for_madfam_tags_used() -> None:
-    piece = NamePiece(value="Hernández", other=[Structure(tag=SURNAME_LINE.tag, payload="PATERNAL")])
+    piece = NamePiece(
+        value="Hernández", other=[Structure(tag=SURNAME_LINE.tag, payload="PATERNAL")]
+    )
     person = Individual(
         xref="@I1@",
         names=[PersonalName(value="Lupe /Hernández/", surnames=[piece])],

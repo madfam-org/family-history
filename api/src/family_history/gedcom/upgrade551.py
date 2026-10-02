@@ -27,7 +27,7 @@ from __future__ import annotations
 import re
 from urllib.parse import quote
 
-from family_history.gedcom.datatypes import AGE_RE, LANGUAGE_RE
+from family_history.gedcom.datatypes import AGE_RE
 from family_history.gedcom.dates551 import upgrade_date
 from family_history.gedcom.diagnostics import Diagnostics
 from family_history.gedcom.spec import ENUM_SETS, FAMILY_EVENTS, INDIVIDUAL_EVENTS
@@ -48,6 +48,9 @@ _SEX_WORDS = {
     "M": "M", "F": "F", "U": "U", "X": "X", "MALE": "M", "FEMALE": "F", "UNKNOWN": "U",
     "H": "M", "HOMBRE": "M", "MUJER": "F", "MASCULINO": "M", "FEMENINO": "F",
 }
+# Keep values that already look like BCP 47 (2-3 letter primary subtag); 5.5.1 language
+# names such as "Klingon" do not, and become "und".
+_BCP47_SHORT_RE = re.compile(r"^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{1,8})*$")
 _COORD_RE = re.compile(r"^([NSEW]?)\s*(-?)(\d+(?:\.\d+)?)$")
 
 
@@ -314,7 +317,7 @@ class Upgrader:
         mapped = LANGUAGES.get(original.upper())
         if mapped is not None:
             node.payload = mapped
-        elif not LANGUAGE_RE.match(original):
+        elif not _BCP47_SHORT_RE.match(original):
             node.payload = "und"
             self.d.warning("language-unknown", f"language {original!r} written as und", node.line)
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from gedcom_helpers import dataset
 
 from family_history.gedcom.charsets import decode_gedcom7
 from family_history.gedcom.diagnostics import Diagnostics, GedcomStrictError, Severity
@@ -14,7 +15,6 @@ from family_history.gedcom.lines import (
     tokenize,
 )
 from family_history.gedcom.parse7 import parse_gedcom7, read_structures
-from gedcom_helpers import dataset
 
 
 def _roots(text: str, *, strict: bool = False, dialect=GEDCOM7):  # type: ignore[no-untyped-def]

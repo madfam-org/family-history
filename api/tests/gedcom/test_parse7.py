@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import pytest
+from gedcom_helpers import SEVEN_FIXTURE, dataset, fixture_bytes
 
 from family_history.gedcom import GedcomStrictError, parse_gedcom7
 from family_history.gedcom.diagnostics import Severity
 from family_history.gedcom.spec import RECORD_TYPES, STRUCTURE_TYPES
-from gedcom_helpers import SEVEN_FIXTURE, dataset, fixture_bytes
 
 
 def _violations(text: str) -> list[str]:
@@ -28,7 +28,9 @@ def test_fixture_parses_strictly_into_the_typed_model() -> None:
     result = parse_gedcom7(fixture_bytes(SEVEN_FIXTURE), strict=True)
     doc = result.document
     assert doc.header.version == "7.0"
-    assert doc.header.extension_definitions()["_LOC"] == "https://example.org/synthetic/LocationRecord"
+    assert (
+        doc.header.extension_definitions()["_LOC"] == "https://example.org/synthetic/LocationRecord"
+    )
     assert [i.xref for i in doc.individuals] == ["@I1@", "@I2@", "@I3@", "@I4@"]
     aurelio = doc.individuals[0]
     name = aurelio.names[0]
@@ -46,8 +48,10 @@ def test_fixture_parses_strictly_into_the_typed_model() -> None:
     role = baptism.associations[0].role
     assert role is not None and (role.value, role.phrase) == ("GODP", "Padrino de bautismo")
     assert baptism.other[0].tag == "_FH_SENSITIVITY"
-    assert aurelio.notes[0].value == "@aurelio decía que el río crecía en julio.\n\n  Segunda " \
+    assert (
+        aurelio.notes[0].value == "@aurelio decía que el río crecía en julio.\n\n  Segunda "
         "línea con espacios iniciales."
+    )
     remedios = doc.individuals[2]
     assert remedios.sex == "X"
     assert remedios.child_of[0].pedigree is not None
@@ -71,7 +75,10 @@ def test_fixture_parses_strictly_into_the_typed_model() -> None:
     [
         ("0 @I1@ INDI\n1 SEX Z", "payload-syntax"),
         ("0 @I1@ INDI\n1 RESN SECRET", "payload-syntax"),
-        ("0 @I1@ INDI\n1 RESN CONFIDENTIAL, LOCKED, PRIVACY\n1 NAME A /B/\n2 TYPE NICK", "payload-syntax"),
+        (
+            "0 @I1@ INDI\n1 RESN CONFIDENTIAL, LOCKED, PRIVACY\n1 NAME A /B/\n2 TYPE NICK",
+            "payload-syntax",
+        ),
         ("0 @I1@ INDI\n1 FAMC @F1@\n2 PEDI NATURAL\n0 @F1@ FAM", "payload-syntax"),
         ("0 @I1@ INDI\n1 SOUR @S1@\n2 QUAY 5\n0 @S1@ SOUR", "payload-syntax"),
         ("0 @I1@ INDI\n1 ASSO @I1@\n2 ROLE PADRINO", "payload-syntax"),
@@ -101,8 +108,10 @@ def test_shape_violations() -> None:
     assert "missing-head" in _violations("0 @I1@ INDI\n0 TRLR\n")
     assert "gedc-version" in _violations("0 HEAD\n1 GEDC\n2 VERS 5.5.1\n0 TRLR\n")
     assert "after-trlr" in _violations(dataset("") + "0 @I1@ INDI\n")
-    schema = "0 HEAD\n1 GEDC\n2 VERS 7.0\n1 SCHMA\n2 TAG _A https://a.example\n" \
+    schema = (
+        "0 HEAD\n1 GEDC\n2 VERS 7.0\n1 SCHMA\n2 TAG _A https://a.example\n"
         "2 TAG _A https://b.example\n0 TRLR\n"
+    )
     assert "schema-duplicate" in _violations(schema)
 
 
@@ -116,7 +125,8 @@ def test_strict_error_lists_every_violation_with_lines() -> None:
 
 def test_valid_7_0_constructs_pass_strict() -> None:
     body = (
-        "0 @I1@ INDI\n1 RESN CONFIDENTIAL, LOCKED\n1 NAME Ana /Ruiz/\n2 TYPE OTHER\n3 PHRASE Apodo\n"
+        "0 @I1@ INDI\n1 RESN CONFIDENTIAL, LOCKED\n"
+        "1 NAME Ana /Ruiz/\n2 TYPE OTHER\n3 PHRASE Apodo\n"
         "1 BIRT\n2 DATE FROM JULIAN 1700 TO GREGORIAN 1701\n2 AGE > 1y 2m\n3 PHRASE poco más\n"
         "1 DEAT\n2 DATE\n3 PHRASE 5 de enero, año desconocido\n"
         "1 EVEN Algo\n2 TYPE Cruce fronterizo\n2 SDATE 1950\n"
@@ -133,7 +143,11 @@ def test_tolerant_mode_keeps_everything_and_reports_warnings() -> None:
     assert indi.sex == "Z"
     assert [o.tag for o in indi.other] == ["WEIRD"]
     assert indi.child_of[0].pointer == "@F9@"
-    assert {d.code for d in result.warnings} == {"payload-syntax", "not-allowed", "dangling-pointer"}
+    assert {d.code for d in result.warnings} == {
+        "payload-syntax",
+        "not-allowed",
+        "dangling-pointer",
+    }
     assert all(d.severity is Severity.WARNING for d in result.warnings)
 
 
