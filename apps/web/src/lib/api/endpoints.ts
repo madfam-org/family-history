@@ -8,6 +8,7 @@ import {
   personSchema,
   spaceSchema,
   spaceSummarySchema,
+  type EventCreateBody,
   type Me,
   type PeoplePage,
   type Person,
@@ -45,6 +46,11 @@ export function listPeople(
 
 export function createPerson(api: ApiClient, spaceId: string, body: PersonCreateBody): Promise<Person> {
   return api.json(`/v1/spaces/${segment(spaceId)}/people`, personSchema, { method: "POST", body });
+}
+
+/** Creates an event; the response is not needed by the web app, only its success. */
+export function createEvent(api: ApiClient, spaceId: string, body: EventCreateBody): Promise<number> {
+  return api.empty(`/v1/spaces/${segment(spaceId)}/events`, { method: "POST", body });
 }
 
 export function getPerson(api: ApiClient, personId: string): Promise<Person> {

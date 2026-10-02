@@ -27,6 +27,7 @@ const SHARED_EXACT = new Set([
   "/og.png",
   "/favicon.ico",
   "/icon.svg",
+  "/.well-known/security.txt",
 ]);
 
 const AUTH_PATHS = new Set(["/auth/start", "/auth/callback", "/auth/signout"]);

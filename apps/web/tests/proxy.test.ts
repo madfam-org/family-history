@@ -28,7 +28,7 @@ describe("proxy", () => {
     expect(asset.headers.get("X-Robots-Tag")).toBe("noindex, nofollow");
     const redirect = await proxy(request("https://fh.madfam.io/", "fh.madfam.io"));
     expect(redirect.status).toBe(307);
-    expect(redirect.headers.get("Location")).toBe("/es");
+    expect(redirect.headers.get("Location")).toBe("https://fh.madfam.io/es");
     expect(redirect.headers.get("X-Robots-Tag")).toBe("noindex, nofollow");
   });
 
@@ -45,5 +45,28 @@ describe("proxy", () => {
     expect(app.headers.get("x-middleware-rewrite")).toContain("/es/workspace/ajustes");
     const internal = await proxy(request("https://fh-app.madfam.io/es/site", "fh-app.madfam.io"));
     expect(internal.status).toBe(404);
+  });
+});
+
+describe("proxy second pass", () => {
+  beforeEach(() => {
+    vi.stubEnv("FH_ENV", "production");
+    vi.stubEnv("FH_PUBLIC_LANDING_HOST", "fh.madfam.io");
+    vi.stubEnv("FH_PUBLIC_APP_HOST", "fh-app.madfam.io");
+  });
+
+  it("lets its own rewrite through and refuses a forged marker", async () => {
+    const first = await proxy(request("https://fh.madfam.io/es", "fh.madfam.io"));
+    const marker = first.headers.get("x-middleware-request-x-fh-internal");
+    expect(marker).toBeTruthy();
+    const second = await proxy(
+      new NextRequest("https://fh.madfam.io/es/site", { headers: { host: "fh.madfam.io", "x-fh-internal": marker ?? "" } }),
+    );
+    expect(second.status).toBe(200);
+    expect(second.headers.get("x-middleware-next")).toBe("1");
+    const forged = await proxy(
+      new NextRequest("https://fh.madfam.io/es/site", { headers: { host: "fh.madfam.io", "x-fh-internal": "guess" } }),
+    );
+    expect(forged.status).toBe(404);
   });
 });

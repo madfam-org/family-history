@@ -8,15 +8,16 @@ import { isLocale } from "@/i18n/locales";
 import { getPerson } from "@/lib/api/endpoints";
 import { load } from "@/lib/api/load";
 import { requireApi } from "@/lib/auth/server";
-import { eventTypeKey, formatName, relationshipTypeKey } from "@/lib/people/labels";
+import { eventTypeKey, formatName, relationshipLabelKey } from "@/lib/people/labels";
 
 type Params = Promise<{ locale: string; personId: string }>;
+type Search = Promise<Record<string, string | string[] | undefined>>;
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) return {};
   const t = await getTranslations({ locale, namespace: "app.person" });
-  return { title: t("namesTitle") };
+  return { title: t("pageTitle") };
 }
 
 function Section({ id, title, empty, children }: { id: string; title: string; empty: string; children: ReactNode[] }) {
@@ -35,8 +36,9 @@ function Section({ id, title, empty, children }: { id: string; title: string; em
 }
 
 /** A person: names, events, relationships and cited sources, with honest empty states. */
-export default async function PersonPage({ params }: { params: Params }) {
+export default async function PersonPage({ params, searchParams }: { params: Params; searchParams: Search }) {
   const { locale, personId } = await params;
+  const birthNotSaved = (await searchParams).aviso === "fecha-no-guardada";
   if (!isLocale(locale)) notFound();
   setRequestLocale(locale);
   const { api } = await requireApi();
@@ -71,10 +73,16 @@ export default async function PersonPage({ params }: { params: Params }) {
         </p>
       </div>
 
+      {birthNotSaved ? (
+        <p role="status" className="rounded-xl border-2 border-line-strong p-4">
+          {t("birthNotSaved")}
+        </p>
+      ) : null}
+
       <div className="grid gap-4 lg:grid-cols-2">
         <Section id="nombres" title={t("namesTitle")} empty={t("noNames")}>
           {person.names.map((name, index) => {
-            const nicknames = [name.nickname, ...(name.nicknames ?? [])].filter(Boolean);
+            const nicknames = name.nicknames.filter(Boolean);
             return (
               <li key={name.id ?? index}>
                 <p className="font-serif text-lg font-bold">{formatName(name) || person.display_name}</p>
@@ -89,7 +97,7 @@ export default async function PersonPage({ params }: { params: Params }) {
         <Section id="eventos" title={t("eventsTitle")} empty={t("noEvents")}>
           {person.events.map((event, index) => {
             const key = eventTypeKey(event.type);
-            const date = event.date_value ?? event.date_original;
+            const date = event.date_value;
             return (
               <li key={event.id ?? index}>
                 <p className="font-semibold">{key === "other" ? event.type : t(`eventTypes.${key}`)}</p>
@@ -104,13 +112,13 @@ export default async function PersonPage({ params }: { params: Params }) {
 
         <Section id="relaciones" title={t("relationshipsTitle")} empty={t("noRelationships")}>
           {person.relationships.map((relationship) => {
-            const key = relationshipTypeKey(relationship.type);
+            const key = relationshipLabelKey(relationship, person.id);
             const otherId =
               relationship.from_person_id === person.id ? relationship.to_person_id : relationship.from_person_id;
             return (
               <li key={relationship.id}>
                 <p className="font-semibold">
-                  {key === "other" ? relationship.type : t(`relationshipTypes.${key}`)}
+                  {t(`relationshipTypes.${key}`)}
                   {relationship.qualifier ? <span className="font-normal text-muted"> · {relationship.qualifier}</span> : null}
                 </p>
                 <a href={`/${locale}/personas/${encodeURIComponent(otherId)}`} className="text-sm">
@@ -124,8 +132,15 @@ export default async function PersonPage({ params }: { params: Params }) {
         <Section id="fuentes" title={t("citationsTitle")} empty={t("noCitations")}>
           {person.citations.map((citation) => (
             <li key={citation.id}>
-              <p className="font-semibold">{citation.title ?? citation.id}</p>
-              {citation.detail ? <p className="fh-date text-sm text-muted">{citation.detail}</p> : null}
+              <p className="fh-date text-sm">
+                {[
+                  citation.page,
+                  citation.foja ? t("citationFoja", { value: citation.foja }) : null,
+                  citation.partida ? t("citationPartida", { value: citation.partida }) : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ") || citation.id}
+              </p>
             </li>
           ))}
         </Section>

@@ -31,6 +31,8 @@ describe("error-code mapping", () => {
     for (const code of KNOWN_ERROR_CODES) expect(errorMessageKey(code)).toBe(code);
     expect(errorMessageKey("invalid_token")).toBe("unauthorized");
     expect(errorMessageKey("space_not_found")).toBe("not_found");
+    expect(errorMessageKey("event_not_found")).toBe("not_found");
+    expect(errorMessageKey("insufficient_scope")).toBe("forbidden");
     expect(errorMessageKey("something_new")).toBe("unknown");
   });
 
@@ -107,12 +109,14 @@ describe("API client", () => {
     expect(calls[0]?.url.searchParams.get("q")).toBe("Ana");
     expect(calls[0]?.url.searchParams.has("cursor")).toBe(false);
     const person = await createPerson(api, SPACE_ID, {
-      names: [{ given: "Ana", surname_paternal: "Prueba", surname_maternal: null, nicknames: [] }],
       sex: "F",
-      birth: { date_original: "hacia 1931" },
+      names: [{ given: "Ana", apellido_paterno: "Prueba", nicknames: [] }],
     });
     expect(person.names).toEqual([]);
-    expect(JSON.parse(String(calls[1]?.init.body))).toMatchObject({ birth: { date_original: "hacia 1931" } });
+    expect(JSON.parse(String(calls[1]?.init.body))).toEqual({
+      sex: "F",
+      names: [{ given: "Ana", apellido_paterno: "Prueba", nicknames: [] }],
+    });
   });
 
   it("is an Error subclass", () => {

@@ -1,7 +1,10 @@
 /**
  * Validation for «Agregar persona» with the Mexican name model: nombre(s), apellido paterno,
- * apellido materno, apodo, sexo (M/F/X/U) and the birth date as free text. The API stores the
- * date string as written; parsing to a GEDCOM 7 DateValue happens server-side later.
+ * apellido materno, apodo, sexo (M/F/X/U) and the birth date as free text.
+ *
+ * The person is created first; the birth date travels as a separate birth event with the text
+ * exactly as written. Parsing free text into a GEDCOM 7 DateValue is wired server-side later
+ * (docs/lanes/web.md, contract requests).
  */
 import type { PersonCreateBody, Sex } from "@/lib/api/schemas";
 
@@ -37,9 +40,11 @@ export function readPersonForm(form: FormData): PersonFormValues {
   };
 }
 
-export function toPersonCreateBody(
-  values: PersonFormValues,
-): { ok: true; body: PersonCreateBody } | { ok: false; error: PersonFormError } {
+export type PersonSubmission =
+  | { ok: true; body: PersonCreateBody; birthDate: string | null }
+  | { ok: false; error: PersonFormError };
+
+export function toPersonCreateBody(values: PersonFormValues): PersonSubmission {
   if (!values.given && !values.paternal && !values.maternal) return { ok: false, error: "nameRequired" };
   const names = [values.given, values.paternal, values.maternal, values.nickname];
   if (names.some((value) => value.length > PERSON_FIELD_MAX) || values.birthDate.length > BIRTH_DATE_MAX) {
@@ -48,16 +53,16 @@ export function toPersonCreateBody(
   return {
     ok: true,
     body: {
+      sex: values.sex,
       names: [
         {
-          given: values.given || null,
-          surname_paternal: values.paternal || null,
-          surname_maternal: values.maternal || null,
+          ...(values.given ? { given: values.given } : {}),
+          ...(values.paternal ? { apellido_paterno: values.paternal } : {}),
+          ...(values.maternal ? { apellido_materno: values.maternal } : {}),
           nicknames: values.nickname ? [values.nickname] : [],
         },
       ],
-      sex: values.sex,
-      birth: values.birthDate ? { date_original: values.birthDate } : null,
     },
+    birthDate: values.birthDate || null,
   };
 }

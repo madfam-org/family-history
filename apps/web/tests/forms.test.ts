@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { readPersonForm, toPersonCreateBody } from "@/lib/forms/person";
 import { parseSpaceForm } from "@/lib/forms/space";
-import { eventTypeKey, formatName, relationshipTypeKey } from "@/lib/people/labels";
+import { eventTypeKey, formatName, relationshipLabelKey } from "@/lib/people/labels";
 
 function form(fields: Record<string, string>): FormData {
   const data = new FormData();
@@ -11,7 +11,7 @@ function form(fields: Record<string, string>): FormData {
 }
 
 describe("Agregar persona", () => {
-  it("maps the Mexican name model and keeps the birth date as written", () => {
+  it("maps the Mexican name model to the API body and keeps the birth date as written", () => {
     const values = readPersonForm(
       form({
         given: " María  Guadalupe ",
@@ -25,10 +25,10 @@ describe("Agregar persona", () => {
     expect(toPersonCreateBody(values)).toEqual({
       ok: true,
       body: {
-        names: [{ given: "María Guadalupe", surname_paternal: "Prueba", surname_maternal: "Ejemplo", nicknames: ["Lupita"] }],
         sex: "F",
-        birth: { date_original: "hacia 1931" },
+        names: [{ given: "María Guadalupe", apellido_paterno: "Prueba", apellido_materno: "Ejemplo", nicknames: ["Lupita"] }],
       },
+      birthDate: "hacia 1931",
     });
   });
 
@@ -36,9 +36,10 @@ describe("Agregar persona", () => {
     const values = readPersonForm(form({ nickname: "Lupita", sex: "Z" }));
     expect(values.sex).toBe("U");
     expect(toPersonCreateBody(values)).toEqual({ ok: false, error: "nameRequired" });
-    expect(toPersonCreateBody(readPersonForm(form({ maternal: "Ejemplo" })))).toMatchObject({
+    expect(toPersonCreateBody(readPersonForm(form({ maternal: "Ejemplo" })))).toEqual({
       ok: true,
-      body: { birth: null, names: [{ given: null, surname_paternal: null }] },
+      body: { sex: "U", names: [{ apellido_materno: "Ejemplo", nicknames: [] }] },
+      birthDate: null,
     });
   });
 
@@ -65,8 +66,15 @@ describe("person labels", () => {
     expect(eventTypeKey("baptism")).toBe("baptism");
     expect(eventTypeKey("CHR")).toBe("baptism");
     expect(eventTypeKey("_CUSTOM")).toBe("other");
-    expect(relationshipTypeKey("Parent")).toBe("parent");
-    expect(relationshipTypeKey("godparent")).toBe("other");
-    expect(formatName({ given: "Ana", surname_paternal: null, surname_maternal: "Ejemplo" })).toBe("Ana Ejemplo");
+    expect(formatName({ given: "Ana", apellido_paterno: null, apellido_materno: "Ejemplo" })).toBe("Ana Ejemplo");
+    expect(formatName({ nombre_usado: "Chela" })).toBe("Chela");
+  });
+
+  it("reads parent-child relationships from the person's side", () => {
+    const rel = { type: "parent_child", from_person_id: "parent", to_person_id: "child" };
+    expect(relationshipLabelKey(rel, "child")).toBe("parentOf");
+    expect(relationshipLabelKey(rel, "parent")).toBe("childOf");
+    expect(relationshipLabelKey({ ...rel, type: "union" }, "parent")).toBe("union");
+    expect(relationshipLabelKey({ ...rel, type: "godparent" }, "parent")).toBe("other");
   });
 });

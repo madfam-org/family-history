@@ -189,7 +189,8 @@
         "expired": "The sign-in attempt expired. Please try again.",
         "invalid": "We could not verify your sign-in. Please try again.",
         "unavailable": "The account service is not responding. Try again in a few minutes."
-      }
+      },
+      "signedOut": "You signed out on this device."
     },
     "earlyAccess": {
       "title": "Your account does not have early access yet",
@@ -295,13 +296,15 @@
         "other": "Other event"
       },
       "relationshipTypes": {
-        "parent": "Parent",
-        "child": "Child",
+        "parentOf": "Parent of this person",
+        "childOf": "Child of this person",
         "union": "Union",
-        "spouse": "Partner",
-        "sibling": "Sibling",
         "other": "Other relationship"
-      }
+      },
+      "pageTitle": "Person",
+      "birthNotSaved": "The person was saved, but the birth date was not: the server does not accept free-text dates yet. You can add it once that is available.",
+      "citationFoja": "folio {value}",
+      "citationPartida": "entry {value}"
     },
     "settings": {
       "title": "Settings",

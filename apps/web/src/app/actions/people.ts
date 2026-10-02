@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { isLocale } from "@/i18n/locales";
-import { createPerson } from "@/lib/api/endpoints";
+import { createEvent, createPerson } from "@/lib/api/endpoints";
 import { errorMessageKey, isApiError } from "@/lib/api/errors";
 import { requireApi } from "@/lib/auth/server";
 import { readPersonForm, toPersonCreateBody } from "@/lib/forms/person";
@@ -27,5 +27,22 @@ export async function createPersonAction(_previous: PersonFormState, form: FormD
     if (isApiError(error)) return { status: "failed", code: errorMessageKey(error.code), values: echo };
     throw error;
   }
-  redirect(`/${locale}/personas/${encodeURIComponent(personId)}`);
+
+  // The person exists from here on. A birth date the API does not accept yet is reported on the
+  // person's page instead of being dropped silently (the text itself never goes into the URL).
+  let birthSaved = true;
+  if (parsed.birthDate) {
+    try {
+      await createEvent(api, spaceId, {
+        type: "birth",
+        date_value: parsed.birthDate,
+        participants: [{ person_id: personId, role: "principal" }],
+      });
+    } catch (error) {
+      if (!isApiError(error)) throw error;
+      birthSaved = false;
+    }
+  }
+  const notice = birthSaved ? "" : "?aviso=fecha-no-guardada";
+  redirect(`/${locale}/personas/${encodeURIComponent(personId)}${notice}`);
 }

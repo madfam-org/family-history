@@ -2,7 +2,7 @@
  * Route-handler logic for /auth/start, /auth/callback and /auth/signout. Framework-free (plain
  * Request in, plain Response out) so the whole flow is unit-testable.
  */
-import { appOrigin, landingOrigin, oidcClientConfig, oidcRedirectUri, sessionSecret, type Env } from "@/lib/env";
+import { appOrigin, oidcClientConfig, oidcRedirectUri, sessionSecret, type Env } from "@/lib/env";
 
 import {
   clearChunked,
@@ -181,7 +181,9 @@ export async function handleSignOut(request: Request, deps: HandlerDeps = {}): P
   const writes = clearChunked(sessionName, cookies);
   const form = await request.formData().catch(() => null);
   const locale = form?.get("locale") === "en" ? "en" : "es";
-  const signedOutUrl = `${landingOrigin(env)}/${locale}`;
+  // A signed-out person lands on the sign-in page, never straight back at the issuer, so an
+  // issuer-side session cannot silently sign them in again.
+  const signedOutUrl = `${appOrigin(env)}/${locale}/entrar?signed_out=1`;
 
   const client = oidcClientConfig(env);
   const secret = sessionSecret(env);
@@ -191,7 +193,8 @@ export async function handleSignOut(request: Request, deps: HandlerDeps = {}): P
     const metadata = await discover(client.issuer, deps.fetchImpl);
     const endSession = buildEndSessionUrl(metadata, {
       clientId: client.clientId,
-      postLogoutRedirectUri: `${landingOrigin(env)}/`,
+      // Registered exactly in janua.client.yaml (post_logout_redirect_uris).
+      postLogoutRedirectUri: `${appOrigin(env)}/`,
       idTokenHint: session?.idToken,
       uiLocales: locale === "es" ? "es-MX es en" : "en es",
     });

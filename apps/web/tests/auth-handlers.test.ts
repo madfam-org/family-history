@@ -98,6 +98,9 @@ describe("sign-in flow", () => {
     expect(location.searchParams.get("code_challenge")).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect(location.searchParams.get("state")).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect(location.searchParams.get("prompt")).toBe("login");
+    expect(location.searchParams.get("scope")?.split(" ")).toEqual(
+      expect.arrayContaining(["openid", "offline_access", "fh:read", "fh:write"]),
+    );
     expect(tx?.raw).toContain("HttpOnly");
     expect(tx?.raw).toContain("Secure");
     expect(tx?.raw).toContain("SameSite=Lax");
@@ -188,7 +191,7 @@ describe("sign-out", () => {
     );
     const location = new URL(response.headers.get("location") ?? "");
     expect(location.origin + location.pathname).toBe(`${ISSUER}/logout`);
-    expect(location.searchParams.get("post_logout_redirect_uri")).toBe("https://fh.example.test/");
+    expect(location.searchParams.get("post_logout_redirect_uri")).toBe("https://fh-app.example.test/");
     expect(setCookies(response)[0]?.raw).toContain("Max-Age=0");
   });
 
@@ -201,5 +204,32 @@ describe("sign-out", () => {
       { env, fetchImpl },
     );
     expect(response.status).toBe(403);
+  });
+});
+
+describe("sign-out without an end-session endpoint", () => {
+  it("clears locally and lands on the sign-in page, not at the issuer", async () => {
+    const noLogout = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input).endsWith("/.well-known/openid-configuration")) {
+        return Response.json({
+          issuer: ISSUER,
+          authorization_endpoint: `${ISSUER}/authorize`,
+          token_endpoint: `${ISSUER}/token`,
+          jwks_uri: `${ISSUER}/jwks`,
+        });
+      }
+      return fetchImpl(input, init);
+    }) as typeof fetch;
+    clearDiscoveryCache();
+    const response = await handleSignOut(
+      new Request("https://fh-app.example.test/auth/signout", {
+        method: "POST",
+        headers: { origin: "https://fh-app.example.test", cookie: "__Host-fh_session.0=abc; __Host-fh_session.1=def" },
+        body: new URLSearchParams({ locale: "es" }),
+      }),
+      { env, fetchImpl: noLogout },
+    );
+    expect(response.headers.get("location")).toBe("https://fh-app.example.test/es/entrar?signed_out=1");
+    expect(setCookies(response).map((cookie) => cookie.name)).toEqual(["__Host-fh_session.0", "__Host-fh_session.1"]);
   });
 });

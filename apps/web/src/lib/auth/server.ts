@@ -13,7 +13,7 @@ import { PATHNAME_HEADER } from "@/lib/routing/request-headers";
 
 import { cookieName, readChunked, SESSION_COOKIE_BASE } from "./cookies";
 import { accessTokenIsUsable, decryptSession, type SessionData } from "./session";
-import { safeReturnTo } from "./transaction";
+import { localeOfPath, safeReturnTo } from "./transaction";
 
 export async function getSession(): Promise<SessionData | null> {
   const secret = sessionSecret();
@@ -39,10 +39,19 @@ export function signInHref(returnTo: string, prompt?: "select_account" | "login"
   return `/auth/start?${params.toString()}`;
 }
 
-/** Redirects to sign-in when there is no usable session. */
+/** The app's sign-in page for a locale, remembering where to return. */
+export function signInPageHref(returnTo: string): string {
+  const target = safeReturnTo(returnTo);
+  return `/${localeOfPath(target)}/entrar?${new URLSearchParams({ return_to: target }).toString()}`;
+}
+
+/**
+ * Sends a visitor without a usable session to the sign-in page (not straight to the issuer, so
+ * signing out is never undone by an issuer-side session).
+ */
 export async function requireSession(): Promise<SessionData> {
   const session = await getSession();
-  if (!session) redirect(signInHref(await currentPublicPath()));
+  if (!session) redirect(signInPageHref(await currentPublicPath()));
   return session;
 }
 

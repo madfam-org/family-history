@@ -5,7 +5,8 @@
  * Next.js runtime and, when configured, the Plausible loader) run. JSON-LD blocks are data, not
  * scripts, and are not executed. Fonts are self-hosted by next/font,
  * so no Google Fonts origin is needed. The self-hosted Plausible origin is added only when
- * analytics is configured; the Janua issuer is a form-action target only, for sign-out.
+ * analytics is configured; the Janua issuer is a form-action target only, for the sign-out
+ * redirect chain.
  */
 import { randomBytes } from "node:crypto";
 
@@ -34,6 +35,8 @@ export function buildCsp(nonce: string, env: Env = process.env, isDev = process.
   const connectSrc = ["'self'"];
   if (plausible) connectSrc.push(plausible.origin);
 
+  // Sign-out is a form POST that redirects to the issuer's end-session endpoint and back to
+  // the app; browsers apply form-action to every hop of that chain.
   const formAction = ["'self'"];
   if (issuerOrigin) formAction.push(issuerOrigin);
 

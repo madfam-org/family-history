@@ -61,12 +61,13 @@ export const nameFormSchema = z
   .object({
     id: z.string().optional(),
     given: optionalText,
-    surname_paternal: optionalText,
-    surname_maternal: optionalText,
-    nickname: optionalText,
-    nicknames: z.array(z.string()).optional(),
-    display: optionalText,
-    type: optionalText,
+    apellido_paterno: optionalText,
+    apellido_materno: optionalText,
+    nombre_de_pila: optionalText,
+    nombre_usado: optionalText,
+    nicknames: z.array(z.string()).default([]),
+    name_type: optionalText,
+    is_primary: z.boolean().optional(),
   })
   .loose();
 
@@ -75,8 +76,8 @@ export const personEventSchema = z
     id: z.string().optional(),
     type: z.string(),
     date_value: optionalText,
-    date_original: optionalText,
     place: optionalText,
+    description: optionalText,
   })
   .loose();
 
@@ -87,14 +88,16 @@ export const relationshipSchema = z
     from_person_id: z.string(),
     to_person_id: z.string(),
     qualifier: optionalText,
+    status: optionalText,
   })
   .loose();
 
 export const citationSchema = z
   .object({
     id: z.string(),
-    title: optionalText,
-    detail: optionalText,
+    page: optionalText,
+    foja: optionalText,
+    partida: optionalText,
   })
   .loose();
 
@@ -129,16 +132,22 @@ export type Relationship = z.infer<typeof relationshipSchema>;
 export type Citation = z.infer<typeof citationSchema>;
 export type Person = z.infer<typeof personSchema>;
 
-/** Request body for POST /v1/spaces/{space_id}/people. See docs/lanes/web.md, contract requests. */
+/** Request body for POST /v1/spaces/{space_id}/people (unknown fields are rejected by the API). */
 export interface PersonCreateBody {
+  sex: Sex;
   names: Array<{
-    given: string | null;
-    surname_paternal: string | null;
-    surname_maternal: string | null;
+    given?: string;
+    apellido_paterno?: string;
+    apellido_materno?: string;
     nicknames: string[];
   }>;
-  sex: Sex;
-  birth: { date_original: string } | null;
+}
+
+/** Request body for POST /v1/spaces/{space_id}/events. */
+export interface EventCreateBody {
+  type: string;
+  date_value: string;
+  participants: Array<{ person_id: string; role: "principal" }>;
 }
 
 export interface WaitlistBody {

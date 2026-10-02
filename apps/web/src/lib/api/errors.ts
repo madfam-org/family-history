@@ -50,6 +50,7 @@ const ALIASES: Readonly<Record<string, ErrorCode>> = {
   space_not_found: "not_found",
   person_not_found: "not_found",
   invalid_request: "validation_error",
+  insufficient_scope: "forbidden",
   too_many_requests: "rate_limited",
   internal_error: "server_error",
 };
@@ -57,6 +58,7 @@ const ALIASES: Readonly<Record<string, ErrorCode>> = {
 /** Maps any API error code to a message key under `errors.*`. Unknown codes never leak through. */
 export function errorMessageKey(code: string): ErrorCode {
   if ((KNOWN_ERROR_CODES as readonly string[]).includes(code)) return code as ErrorCode;
+  if (code.endsWith("_not_found")) return "not_found";
   return ALIASES[code] ?? "unknown";
 }
 

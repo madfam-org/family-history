@@ -6,6 +6,7 @@ import { ApiErrorNotice } from "@/components/app/ApiErrorNotice";
 import { CreateSpaceForm } from "@/components/app/CreateSpaceForm";
 import { isLocale } from "@/i18n/locales";
 import { getMe } from "@/lib/api/endpoints";
+import { brandName } from "@/lib/brand";
 import { load } from "@/lib/api/load";
 import { requireApi } from "@/lib/auth/server";
 import { errorCopy } from "@/lib/i18n/error-copy";
@@ -16,7 +17,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { locale } = await params;
   if (!isLocale(locale)) return {};
   const t = await getTranslations({ locale, namespace: "app.spaces" });
-  return { title: t("title") };
+  // The layout's title template applies to child segments only, so this page sets its own.
+  return { title: { absolute: `${t("title")} · ${brandName(locale)}` } };
 }
 
 /** «Mis familias»: the signed-in user's family spaces, and a form to create one. */

@@ -149,7 +149,8 @@ export interface AuthorizationRequest {
   uiLocales?: string | undefined;
 }
 
-export const OIDC_SCOPES = "openid profile email offline_access";
+/** Sign-in scopes plus the API scopes the app uses (janua.client.yaml: fh:read, fh:write). */
+export const OIDC_SCOPES = "openid profile email offline_access fh:read fh:write";
 
 export function buildAuthorizationUrl(metadata: OidcMetadata, request: AuthorizationRequest): string {
   const url = new URL(metadata.authorizationEndpoint);

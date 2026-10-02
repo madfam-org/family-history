@@ -32,23 +32,33 @@ export function eventTypeKey(type: string): EventTypeKey {
   return (EVENT_TYPE_KEYS as readonly string[]).includes(normalized) ? (normalized as EventTypeKey) : "other";
 }
 
-export const RELATIONSHIP_TYPE_KEYS = ["parent", "child", "union", "spouse", "sibling"] as const;
-export type RelationshipTypeKey = (typeof RELATIONSHIP_TYPE_KEYS)[number] | "other";
+export type RelationshipLabelKey = "parentOf" | "childOf" | "union" | "other";
 
-export function relationshipTypeKey(type: string): RelationshipTypeKey {
-  const normalized = type.toLowerCase();
-  return (RELATIONSHIP_TYPE_KEYS as readonly string[]).includes(normalized)
-    ? (normalized as RelationshipTypeKey)
-    : "other";
+/**
+ * How a relationship reads from the point of view of `personId`. For `parent_child`,
+ * `from_person_id` is the parent (API contract), so the other person is the parent when this
+ * person is the child.
+ */
+export function relationshipLabelKey(
+  relationship: { type: string; from_person_id: string; to_person_id: string },
+  personId: string,
+): RelationshipLabelKey {
+  if (relationship.type === "parent_child") {
+    return relationship.to_person_id === personId ? "parentOf" : "childOf";
+  }
+  if (relationship.type === "union") return "union";
+  return "other";
 }
 
-/** «Nombre(s) Paterno Materno», skipping missing parts. */
+/** «Nombre(s) Paterno Materno», skipping missing parts; falls back to the name in use. */
 export function formatName(parts: {
   given?: string | null | undefined;
-  surname_paternal?: string | null | undefined;
-  surname_maternal?: string | null | undefined;
-  display?: string | null | undefined;
+  apellido_paterno?: string | null | undefined;
+  apellido_materno?: string | null | undefined;
+  nombre_usado?: string | null | undefined;
+  nombre_de_pila?: string | null | undefined;
 }): string {
-  const joined = [parts.given, parts.surname_paternal, parts.surname_maternal].filter(Boolean).join(" ");
-  return joined || parts.display || "";
+  const given = parts.given || parts.nombre_de_pila;
+  const joined = [given, parts.apellido_paterno, parts.apellido_materno].filter(Boolean).join(" ");
+  return joined || parts.nombre_usado || "";
 }
