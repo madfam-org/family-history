@@ -53,7 +53,8 @@ _RECLAIM = text(
     "status = CASE WHEN attempts >= :max_attempts THEN 'failed' ELSE 'queued' END, "
     "error_code = CASE WHEN attempts >= :max_attempts THEN 'worker_timeout' ELSE error_code END, "
     "finished_at = CASE WHEN attempts >= :max_attempts THEN now() ELSE finished_at END, "
-    "expires_at = CASE WHEN attempts >= :max_attempts THEN now() + :ttl ELSE expires_at END "
+    "expires_at = CASE WHEN attempts >= :max_attempts THEN now() + :ttl ELSE expires_at END, "
+    "input = CASE WHEN attempts >= :max_attempts THEN NULL ELSE input END "
     "WHERE status = 'running' AND started_at < now() - :lease RETURNING id"
 )
 _PURGE = text(
