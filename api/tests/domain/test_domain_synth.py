@@ -200,6 +200,14 @@ def test_godparent_associations_carry_occasions() -> None:
                 assert association.occasion is None
 
 
+def test_person_lookup() -> None:
+    family = generate_family(2, 3)
+    first = family.people[0]
+    assert family.person(first.id) is first
+    with pytest.raises(KeyError):
+        family.person("I9999")
+
+
 def test_lexicon_accessor() -> None:
     lexicon = synthetic_lexicon()
     assert "María de Jesús" in lexicon.given_names and "Jesús" in lexicon.given_names
@@ -208,6 +216,9 @@ def test_lexicon_accessor() -> None:
     assert "Jalisco" in lexicon.place_names and "Villa Imaginaria" in lexicon.place_names
     assert not lexicon.covers_place("Guadalajara")
     assert DEFAULT_TODAY == dt.date(2026, 10, 1)
+    form = synthetic_lexicon().covers
+    family = generate_family(0, 3)
+    assert form(family.people[0].names[0])
 
 
 @settings(max_examples=25, deadline=None)

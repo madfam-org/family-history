@@ -291,3 +291,18 @@ def test_collateral_distances_mirror(left: int, right: int) -> None:
     assert (there.up, there.down) == (back.down, back.up) == (left, right)
     if left == right:
         assert there.label_es == back.label_es
+
+
+def test_partner_status_and_distant_removals() -> None:
+    assert PartnerStatus.MARRIED.is_current and PartnerStatus.UNION_LIBRE.is_current
+    assert not PartnerStatus.DIVORCED.is_current and not PartnerStatus.SEPARATED.is_current
+    # g's first cousin j has a great-grandchild three generations below g's level.
+    graph = FamilyGraph(
+        dict(SEXES, j4=Sex.MALE, j5=Sex.FEMALE),
+        [*PARENTS, ParentLink("j3", "j4"), ParentLink("j4", "j5")],
+        PARTNERS,
+    )
+    result = kinship(graph, "g", "j5")
+    assert result is not None
+    assert result.label_en == "first cousin 4 times removed"
+    assert result.label_es == "sobrina tataranieta segunda"

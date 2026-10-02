@@ -23,10 +23,10 @@ def _union_kind(state: State, year: int) -> tuple[bool, bool]:
                  (1.0, (False, False)))  # fmt: skip
     else:
         table = ((0.50, (True, True)), (0.70, (True, False)), (1.0, (False, False)))
-    for threshold, kind in table:
+    for threshold, kind in table[:-1]:
         if roll < threshold:
             return kind
-    return False, False
+    return table[-1][1]
 
 
 def _unite(state: State, a: Draft, b: Draft, year: int) -> Union:
