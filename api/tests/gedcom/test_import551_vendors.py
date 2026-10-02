@@ -37,19 +37,19 @@ def test_ancestry_like() -> None:
     assert codes["date-normalized"] == 3  # mixed-case months and "abt"
     assert [d.code for d in report.warnings] == ["date-upgraded"]
     doc = result.document
-    aurelio = doc.individuals[0]
-    assert aurelio.sex == "M"
-    assert aurelio.notes[0].value == (
+    silverio = doc.individuals[0]
+    assert silverio.sex == "M"
+    assert silverio.notes[0].value == (
         "Contaba que el río crecía cada julio y que la familia cruzaba por el vado viejo; "
-        "su correo era aurelio@ejemplo.invalid"
+        "su correo era silverio@ejemplo.invalid"
     )
-    citation = aurelio.events[0].citations[0]
+    citation = silverio.events[0].citations[0]
     assert citation.other[0].tag == "_APID"
     teodora = doc.individuals[1]
     birth_date = teodora.events[0].date
     assert birth_date is not None and (birth_date.value, birth_date.phrase) == ("1751", "1750/51")
     media = doc.media[0].files[0]
-    assert media.value == "https://example.invalid/synthetic/aurelio.jpg"
+    assert media.value == "https://example.invalid/synthetic/silverio.jpg"
     assert media.form is not None and media.form.value == "image/jpeg"
     assert media.form.medium is not None and media.form.medium.value == "PHOTO"
     assert doc.extension_records[0].tag == "_MTTAG"
@@ -92,8 +92,8 @@ def test_gramps_like_ansel() -> None:
     assert ansel and "0xFC x1" in ansel[0].message and ansel[0].severity is Severity.WARNING
     doc = result.document
     jose = doc.individuals[0]
-    assert jose.names[0].value == "José María /Peña Ibáñez/"
-    assert doc.individuals[1].names[0].value == "Ramón /Núñez/"
+    assert jose.names[0].value == "José Luis /Peña Ávila/"
+    assert doc.individuals[1].names[0].value == "Ramón /Navarro/"
     dates = [e.date.value for e in jose.events if e.date is not None]
     assert dates == ["JULIAN 3 MAR 1712", "FRENCH_R 1 VEND 3"]
     assert jose.associations[0].role is not None
@@ -120,24 +120,24 @@ def test_rootsmagic_like_bom_crlf_and_quirks() -> None:
         assert codes[code] == 1, code
     assert codes["date-upgraded"] == 3
     doc = result.document
-    aurelio = doc.individuals[0]
-    birth = aurelio.events[0]
+    silverio = doc.individuals[0]
+    birth = silverio.events[0]
     assert birth.date is not None and birth.date.value == "BET 1930 AND 1931"
     assert birth.citations[0].pointer == "@S_1@"
-    baptism = aurelio.events[1]
+    baptism = silverio.events[1]
     assert baptism.date is not None
     assert (baptism.date.value, baptism.date.phrase) == ("1931", "poco después de la Semana Santa")
-    work = aurelio.events[2]
+    work = silverio.events[2]
     assert (work.value, work.type) == ("Trabajó en los campos de California", work.value)
     assert work.date is not None and (work.date.value, work.date.phrase) == (
         None,
         "temporada de 1955",
     )
-    link = aurelio.media[0]
-    assert link.pointer == "@FHO1@" and link.title == "Boda de Aurelio"
+    link = silverio.media[0]
+    assert link.pointer == "@FHO1@" and link.title == "Boda de Silverio"
     obje = next(m for m in doc.media if m.xref == "@FHO1@")
     assert obje.files[0].value == "fotos/boda%201958.jpg"
-    assert obje.files[0].title == "Boda de Aurelio"
+    assert obje.files[0].title == "Boda de Silverio"
     marriage = doc.families[0].events[0]
     created = next(s for s in doc.sources if s.xref == marriage.citations[0].pointer)
     assert created.title == "Acta de matrimonio vista por la familia, sin registro de fuente"

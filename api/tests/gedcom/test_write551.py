@@ -45,9 +45,9 @@ def test_fixture_downgrade_shape_and_report() -> None:
         assert marked in lines, marked
     assert "2 DATE INT @#DJULIAN@ 1750 (1750/51 en el libro original)" in lines
     assert "3 _PHRASE entre 1954 y 1956, según la tarjeta de identificación" in lines
-    assert "0 @N1@ NOTE Cipriano fue padrino en varias familias del pueblo." in lines
+    assert "0 @N1@ NOTE Cirilo fue padrino en varias familias del pueblo." in lines
     assert "1 NOTE @N1@" in lines
-    assert "1 NOTE @@aurelio decía que el río crecía en julio." in lines
+    assert "1 NOTE @@silverio decía que el río crecía en julio." in lines
     assert "2 FORM jpg" in lines and "3 TYPE photo" in lines
     assert "2 PEDI birth" in lines and "1 RESN confidential" in lines
     assert {d.code for d in export.report} >= {"schema", "marked", "asso-lifted", "sex-x"}

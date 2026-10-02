@@ -58,7 +58,7 @@ def test_two_surnames_round_trip_with_extensions() -> None:
 def test_maternal_first_order_and_prefix_suffix_type() -> None:
     name = MexicanName(
         given="Ana",
-        paternal_surname="Smith",
+        paternal_surname="Wong",
         maternal_surname="García",
         order=SurnameOrder.MATERNAL_FIRST,
         prefix="Dra.",
@@ -66,26 +66,26 @@ def test_maternal_first_order_and_prefix_suffix_type() -> None:
         name_type="BIRTH",
     )
     node = name_to_structure(name)
-    assert node.payload == "Dra. Ana /García Smith/ Jr."
+    assert node.payload == "Dra. Ana /García Wong/ Jr."
     assert name_from_structure(node) == name
 
 
 def test_reading_names_without_extensions() -> None:
-    pieces = Structure(tag="NAME", payload="José /Peña Ibáñez/")
+    pieces = Structure(tag="NAME", payload="José /Peña Ávila/")
     pieces.add("SURN", "Peña")
-    pieces.add("SURN", "Ibáñez")
+    pieces.add("SURN", "Ávila")
     read = name_from_structure(pieces)
     assert (read.given, read.paternal_surname, read.maternal_surname) == (
         "José",
         "Peña",
-        "Ibáñez",
+        "Ávila",
     )
     bare = name_from_structure(Structure(tag="NAME", payload="Ramón /Núñez Ortiz/"))
     assert (bare.paternal_surname, bare.maternal_surname) == ("Núñez", "Ortiz")
     compound = name_from_structure(Structure(tag="NAME", payload="Juan /de la Garza/"))
     assert (compound.paternal_surname, compound.maternal_surname) == ("de la Garza", None)
-    single = name_from_structure(Structure(tag="NAME", payload="Cipriano"))
-    assert (single.given, single.paternal_surname) == ("Cipriano", None)
+    single = name_from_structure(Structure(tag="NAME", payload="Cirilo"))
+    assert (single.given, single.paternal_surname) == ("Cirilo", None)
 
 
 def test_slash_in_name_parts_is_rejected() -> None:
@@ -97,7 +97,7 @@ def test_baptism_with_padrinos_and_religion_class() -> None:
     node = sacrament_event(
         Sacrament.BAPTISM,
         date="2 APR 1931",
-        place="Parroquia de San Isidro, Tlacotepec, Puebla, México",
+        place="Parroquia de San Hipotético, Tlacotepec, Puebla, México",
         godparents=[Godparent("@I2@", "Padrino de bautismo"), Godparent(phrase="Madrina")],
     )
     assert node.tag == "BAPM"

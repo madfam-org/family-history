@@ -1,8 +1,8 @@
 0 HEAD
 1 SOUR Ancestry.com Family Trees
-2 NAME Ancestry.com Member Trees
+2 NAME ancestry.com member trees
 2 VERS 2025.08
-2 _TREE Familia Quintanar (sintética)
+2 _TREE Familia Cortés (sintética)
 3 RIN 123456789
 3 _ENV prd
 2 CORP Ancestry.com
@@ -13,9 +13,9 @@
 2 FORM LINEAGE-LINKED
 1 CHAR UTF-8
 0 @I1@ INDI
-1 NAME Aurelio /Quintanar Belmonte/
-2 GIVN Aurelio
-2 SURN Quintanar Belmonte
+1 NAME Silverio /Cortés Moreno/
+2 GIVN Silverio
+2 SURN Cortés Moreno
 1 SEX m
 1 BIRT
 2 DATE 12 Mar 1931
@@ -30,17 +30,17 @@
 1 DEAT Y
 2 DATE 1999
 1 NOTE Contaba que el río crecía cada julio y que la familia cruzaba por el vad
-2 CONC o viejo; su correo era aurelio@@ejemplo.invalid
+2 CONC o viejo; su correo era silverio@@ejemplo.invalid
 1 FAMS @F1@
 1 OBJE @M1@
 0 @I2@ INDI
-1 NAME Teodora /Belmonte/
+1 NAME Tomasa /Moreno/
 1 SEX F
 1 BIRT
 2 DATE 1750/51
 1 FAMS @F1@
 0 @I3@ INDI
-1 NAME Remedios /Quintanar/
+1 NAME Consuelo /Cortés/
 1 SEX F
 1 BIRT
 2 DATE BET 1960 AND 1961
@@ -59,12 +59,12 @@
 1 _APID 1,60111::0
 1 REPO @R1@
 0 @R1@ REPO
-1 NAME Ancestry.com
+1 NAME ancestry.com
 0 @M1@ OBJE
-1 FILE https://example.invalid/synthetic/aurelio.jpg
+1 FILE https://example.invalid/synthetic/silverio.jpg
 2 FORM jpg
 3 TYPE photo
-2 TITL Aurelio en 1958
+2 TITL Silverio en 1958
 0 @T1@ _MTTAG
-1 NAME Revisado
+1 NAME revisado
 0 TRLR

@@ -1,6 +1,6 @@
 0 HEAD
 1 SOUR MYHERITAGE
-2 NAME MyHeritage Family Tree Builder
+2 NAME myheritage family tree builder
 2 VERS 5.5.1
 2 _RTLSAVE RTL
 2 CORP MyHeritage.com
@@ -16,10 +16,10 @@
 1 LANG Spanish
 0 @I500001@ INDI
 1 _UPD 30 SEP 2026 12:00:00 GMT -0500
-1 NAME Remedios /Quintanar Belmonte/
-2 GIVN Remedios
-2 SURN Quintanar Belmonte
-2 _MARNM Arriaga
+1 NAME Consuelo /Cortés Moreno/
+2 GIVN Consuelo
+2 SURN Cortés Moreno
+2 _MARNM Reyes
 1 SEX F
 1 BIRT
 2 DATE 4 JUN 1960
@@ -36,7 +36,7 @@
 1 _UID 5F3C2B1A9E8D4C7BA6F5E4D3C2B1A0F9
 0 @I500002@ INDI
 1 _UPD 30 SEP 2026 12:00:00 GMT -0500
-1 NAME Cipriana /Arriaga/
+1 NAME Jovita /Reyes/
 1 SEX F
 1 BIRT
 2 DATE ABT 1935
@@ -45,7 +45,7 @@
 2 CAUS Neumonía
 1 RIN MH:I500002
 0 @I500003@ INDI
-1 NAME Aurelio /Quintanar Belmonte/
+1 NAME Silverio /Cortés Moreno/
 1 SEX M
 1 FAMS @F500001@
 1 RIN MH:I500003

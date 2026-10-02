@@ -1,7 +1,7 @@
 0 HEAD
 1 SOUR Gramps
 2 VERS 5.2.3
-2 NAME Gramps
+2 NAME gramps
 1 DATE 1 OCT 2026
 2 TIME 12:00:00
 1 SUBM @SUBM@
@@ -12,11 +12,11 @@
 2 FORM LINEAGE-LINKED
 1 CHAR ANSEL
 0 @SUBM@ SUBM
-1 NAME Usuario sint‚etico
+1 NAME usuario sint‚etico
 0 @I0000@ INDI
-1 NAME Jos‚e Mar‚ia /Pe‰na Ib‚a‰nez/
-2 GIVN Jos‚e Mar‚ia
-2 SURN Pe‰na Ib‚a‰nez
+1 NAME Jos‚e Luis /Pe‰na ‚Avila/
+2 GIVN Jos‚e Luis
+2 SURN Pe‰na ‚Avila
 1 SEX M
 1 BIRT
 2 TYPE Nacimiento
@@ -30,7 +30,7 @@
 1 FAMC @F0000@
 2 PEDI foster
 0 @I0001@ INDI
-1 NAME Ram‚on /N‚u‰nez/
+1 NAME Ram‚on /Navarro/
 1 SEX M
 1 BIRT
 2 DATE 1690

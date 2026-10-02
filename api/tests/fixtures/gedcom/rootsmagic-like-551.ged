@@ -1,7 +1,7 @@
 ﻿0 HEAD
 1 SOUR RootsMagic
-2 NAME RootsMagic
-2 VERS 10.0.3.0
+2 NAME rootsmagic
+2 VERS 10.0.3
 2 CORP RootsMagic, Inc.
 1 DEST RootsMagic
 1 DATE 1 OCT 2026
@@ -12,12 +12,12 @@
 1 CHAR UTF-8
 1 SUBM @SUBM1@
 0 @SUBM1@ SUBM
-1 NAME Equipo sintético
+1 NAME equipo sintético
 0 @I1@ INDI
-1 NAME Aurelio /Quintanar Belmonte/
-2 GIVN Aurelio
-2 NICK Lelo
-2 SURN Quintanar
+1 NAME Silverio /Cortés Moreno/
+2 GIVN Silverio
+2 NICK Chava
+2 SURN Cortés
 1 SEX M
 1 _UID 9B5F8C2E00004000800000000000000196A3
 1 BIRT
@@ -28,11 +28,11 @@
 3 QUAY 3
 3 _TMPLT
 4 FIELD
-5 NAME Page
+5 NAME page
 5 VALUE Libro 4, foja 12, partida 33
 1 BAPM
 2 DATE INT 1931 (poco después de la Semana Santa)
-2 PLAC Parroquia de San Isidro, Tlacotepec, Puebla, México
+2 PLAC Parroquia de San Hipotético, Tlacotepec, Puebla, México
 1 EVEN Trabajó en los campos de California
 2 DATE (temporada de 1955)
 1 BURI
@@ -41,11 +41,11 @@
 1 OBJE
 2 FILE fotos\boda 1958.jpg
 2 FORM jpg
-2 TITL Boda de Aurelio
+2 TITL Boda de Silverio
 2 _PRIM Y
 1 FAMS @F1@
 0 @I2@ INDI
-1 NAME Teodora /Belmonte/
+1 NAME Tomasa /Moreno/
 1 SEX F
 1 FAMS @F1@
 0 @F1@ FAM
@@ -56,7 +56,7 @@
 2 SOUR Acta de matrimonio vista por la familia, sin registro de fuente
 3 TEXT Se casaron en la parroquia.
 0 @s-1@ SOUR
-1 TITL Libro de bautismos de San Isidro (sintético)
+1 TITL Libro de bautismos de San Hipotético (sintético)
 1 _TMPLT
 2 TID 0
 0 TRLR

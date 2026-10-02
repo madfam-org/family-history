@@ -32,24 +32,24 @@ def test_fixture_parses_strictly_into_the_typed_model() -> None:
         doc.header.extension_definitions()["_LOC"] == "https://example.org/synthetic/LocationRecord"
     )
     assert [i.xref for i in doc.individuals] == ["@I1@", "@I2@", "@I3@", "@I4@"]
-    aurelio = doc.individuals[0]
-    name = aurelio.names[0]
-    assert name.value == "Aurelio /Quintanar Belmonte/"
-    assert [p.value for p in name.surnames] == ["Quintanar", "Belmonte"]
-    assert [p.value for p in name.nicknames] == ["Lelo"]
+    silverio = doc.individuals[0]
+    name = silverio.names[0]
+    assert name.value == "Silverio /Cortés Moreno/"
+    assert [p.value for p in name.surnames] == ["Cortés", "Moreno"]
+    assert [p.value for p in name.nicknames] == ["Chava"]
     assert name.type is not None and name.type.value == "BIRTH"
-    birth = aurelio.events[0]
+    birth = silverio.events[0]
     assert birth.tag == "BIRT" and birth.date is not None
     assert (birth.date.value, birth.date.time) == ("12 MAR 1931", "06:30")
     assert birth.place is not None and birth.place.map is not None
     assert birth.place.map.latitude == "N18.6812"
     assert birth.citations[0].page == "Libro 4, foja 12, partida 33"
-    baptism = aurelio.events[1]
+    baptism = silverio.events[1]
     role = baptism.associations[0].role
     assert role is not None and (role.value, role.phrase) == ("GODP", "Padrino de bautismo")
     assert baptism.other[0].tag == "_FH_SENSITIVITY"
     assert (
-        aurelio.notes[0].value == "@aurelio decía que el río crecía en julio.\n\n  Segunda "
+        silverio.notes[0].value == "@silverio decía que el río crecía en julio.\n\n  Segunda "
         "línea con espacios iniciales."
     )
     remedios = doc.individuals[2]
@@ -63,7 +63,7 @@ def test_fixture_parses_strictly_into_the_typed_model() -> None:
     assert [e.type for e in family.events] == ["Matrimonio religioso", "Matrimonio civil"]
     assert doc.media[0].files[0].form is not None
     assert doc.media[0].files[0].form.value == "image/jpeg"
-    assert doc.shared_notes[0].value.startswith("Cipriano")
+    assert doc.shared_notes[0].value.startswith("Cirilo")
     assert doc.extension_records[0].tag == "_LOC"
     assert result.extension_tags["_FH_SENSITIVITY"] == 3
     assert any(d.code == "undocumented-extensions" for d in result.diagnostics)

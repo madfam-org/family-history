@@ -61,7 +61,7 @@ def test_bom_utf8_and_utf16_are_decoded() -> None:
 
 
 def test_invalid_utf8_reports_line_number() -> None:
-    data = dataset("0 @I1@ INDI\n1 NAME Bad /\xff/").encode("latin-1")
+    data = dataset("0 @I1@ INDI\n1 NAME Ana /\xff/").encode("latin-1")
     result = parse_gedcom7(data)
     bad = [d for d in result.diagnostics if d.code == "invalid-encoding"]
     assert bad and bad[0].line == 5
