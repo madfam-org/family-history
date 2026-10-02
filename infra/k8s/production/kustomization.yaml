@@ -16,6 +16,8 @@ resources:
 - service-api-metrics.yaml
 - deployment-web.yaml
 - service-web.yaml
+- deployment-worker.yaml
+- service-worker-metrics.yaml
 - network-policies.yaml
 - servicemonitor.yaml
 - prometheusrule.yaml
@@ -25,7 +27,8 @@ resources:
 # it). The all-zero digests are placeholders the FIRST successful build overwrites; they never resolve, so
 # nothing can run unpinned before a real pin lands. Workloads name each image with a `:latest` decoy that
 # this block rewrites to the digest (the rendered manifests carry no tag at all, which Kyverno's
-# disallow-latest policy accepts). Image names are the contract in docs/ARCHITECTURE.md.
+# disallow-latest policy accepts). Image names are the contract in docs/ARCHITECTURE.md. The worker
+# (deployment-worker.yaml) and the migrate Job run the API image, so its one entry pins all three.
 images:
 - digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
   name: ghcr.io/madfam-org/family-history-api

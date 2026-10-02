@@ -14,7 +14,7 @@ from family_history.models.base import utcnow
 from family_history.models.enums import RevisionAction, Role
 from family_history.routers.schemas.events import Event as EventOut
 from family_history.routers.schemas.events import EventCreate, EventPatch
-from family_history.services import audit
+from family_history.services import audit, dates
 from family_history.services.access import (
     DbSession,
     SpaceContext,
@@ -23,12 +23,13 @@ from family_history.services.access import (
     user_scoped,
 )
 from family_history.services.events import (
+    apply_date,
     event_snapshot,
     events_out,
-    recompute_living,
     replace_participants,
     require_place,
 )
+from family_history.services.living import recompute_living
 from family_history.services.privacy import default_sensitivity
 
 router = APIRouter(prefix="/v1", tags=["events"], responses=ERROR_RESPONSES)
@@ -68,20 +69,23 @@ def _single(ctx: SpaceContext, event: Event) -> EventOut:
     "/spaces/{space_id}/events", response_model=EventOut, status_code=status.HTTP_201_CREATED
 )
 def create_event(body: EventCreate, ctx: SpaceCtx) -> EventOut:
-    """Sacraments default to the `religion` sensitivity and medical events to `health`."""
+    """Sacraments default to the `religion` sensitivity. The date is `date_value` (GEDCOM 7) or
+    `date_original` (free text, es-MX); the response carries both, the bounds and the date in
+    words."""
     ctx.require(Role.CONTRIBUTOR)
     require_place(ctx, body.place_id)
+    parsed = dates.event_date(body.date_value, body.date_original)
     sensitivity = body.sensitivity or default_sensitivity(body.type)
     event = Event(
         id=uuid.uuid4(),
         family_space_id=ctx.space_id,
         type=body.type.value,
-        date_value=body.date_value,
         place_id=body.place_id,
         description=body.description,
         sensitivity=sensitivity.value if sensitivity else None,
         created_by=ctx.sub,
     )
+    apply_date(event, parsed)
     ctx.db.add(event)
     ctx.db.flush()
     touched = replace_participants(ctx, event, body.participants)
@@ -108,11 +112,8 @@ def update_event(
     fields = body.model_fields_set
     if "type" in fields and body.type is not None:
         event.type = body.type.value
-    if "date_value" in fields:
-        event.date_value = body.date_value
-        # The bounds belong to the old value; the domain library recomputes them.
-        event.date_earliest = None
-        event.date_latest = None
+    if "date_value" in fields or "date_original" in fields:
+        apply_date(event, dates.event_date(body.date_value, body.date_original))
     if "place_id" in fields:
         require_place(ctx, body.place_id)
         event.place_id = body.place_id

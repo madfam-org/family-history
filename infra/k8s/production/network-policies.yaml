@@ -3,13 +3,15 @@
 # Ingress, per workload and per port:
 #   - the web (3000): the Cloudflare tunnel (fh.madfam.io and fh-app.madfam.io) ONLY;
 #   - the API (8000): the Cloudflare tunnel (fh-api.madfam.io) and the web pod;
-#   - the API's metrics port (9090): the scraper's namespace ONLY.
+#   - the API's and the worker's metrics port (9090): the scraper's namespace ONLY (the worker takes no other
+#     traffic).
 # The tunnel reaches the web and the API only, each on its app port, never 9090 and never the migrate Job;
 # there is no Ingress object (scripts/check-manifests.py asserts all of it).
 #
 # Egress:
 #   - every pod: DNS;
 #   - the API and the migrate Job: the data namespace, Postgres (5432) and PgBouncer (6432);
+#   - the worker: PgBouncer (6432) in the data namespace ONLY (its queue and data are Postgres; no 443);
 #   - the web: the API pod on 8000 (backend-for-frontend);
 #   - the API and the web: TCP 443 to public addresses only (Janua's JWKS and token endpoint at their public
 #     origin; the S3-compatible media bucket once media lands). A NetworkPolicy cannot name hosts, so 443 is
@@ -129,6 +131,26 @@ spec:
         - protocol: TCP
           port: 9090
 ---
+# The scraper, to the worker's metrics port ONLY.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-monitoring-ingress-worker
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: family-history-worker
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 9090
+---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -203,3 +225,23 @@ spec:
       ports:
         - protocol: TCP
           port: 443
+---
+# The worker: the pooled database URL only (PgBouncer, 6432). DNS comes from allow-dns-egress.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-worker-pgbouncer-egress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: family-history-worker
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: data
+      ports:
+        - protocol: TCP
+          port: 6432

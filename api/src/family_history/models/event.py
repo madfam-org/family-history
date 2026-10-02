@@ -56,8 +56,10 @@ class Event(IdMixin, TimestampMixin, TenantMixin, AuthoredMixin, Base):
     )
 
     type: Mapped[str] = mapped_column(String(50))
-    # GEDCOM 7 DateValue text as entered; the domain library computes the bounds.
+    # Canonical GEDCOM 7 DateValue (`domain.dates.format_date_value`); `date_original` is the text
+    # as the family typed it, and the bounds come from the domain library (services/dates.py).
     date_value: Mapped[str | None] = mapped_column(String(100))
+    date_original: Mapped[str | None] = mapped_column(String(200))
     date_earliest: Mapped[date | None] = mapped_column()
     date_latest: Mapped[date | None] = mapped_column()
     place_id: Mapped[uuid.UUID | None] = mapped_column()
@@ -89,7 +91,9 @@ class EventParticipant(IdMixin, TimestampMixin, TenantMixin, Base):
 
 
 class Association(IdMixin, TimestampMixin, TenantMixin, AuthoredMixin, Base):
-    """A godparent (or witness) tie made at a sacrament. Compadrazgo is derived, never stored."""
+    """`person_id` took part in someone else's event as `role` (a padrino at a baptism, a witness
+    at a civil marriage). The godchild is the event's principal, so compadrazgo is derived from
+    these rows and the participants, never stored (GEDCOM 7: `ASSO` + `ROLE` under the event)."""
 
     __tablename__ = "association"
     __table_args__ = (
@@ -103,17 +107,13 @@ class Association(IdMixin, TimestampMixin, TenantMixin, AuthoredMixin, Base):
             ["person.family_space_id", "person.id"],
             ondelete="CASCADE",
         ),
-        ForeignKeyConstraint(
-            ["family_space_id", "associate_id"],
-            ["person.family_space_id", "person.id"],
-            ondelete="CASCADE",
-        ),
-        UniqueConstraint("event_id", "person_id", "associate_id", "role"),
+        UniqueConstraint("event_id", "person_id", "role"),
         CheckConstraint(sql_in("role", AssociationRole), name="role"),
-        CheckConstraint("person_id <> associate_id", name="not_self"),
+        CheckConstraint("role <> 'other' OR phrase IS NOT NULL", name="other_phrase"),
+        Index("ix_association_person", "family_space_id", "person_id"),
     )
 
     event_id: Mapped[uuid.UUID] = mapped_column()
     person_id: Mapped[uuid.UUID] = mapped_column()
-    associate_id: Mapped[uuid.UUID] = mapped_column()
     role: Mapped[str] = mapped_column(String(20), default=AssociationRole.GODPARENT.value)
+    phrase: Mapped[str | None] = mapped_column(String(200))

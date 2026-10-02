@@ -4,7 +4,10 @@ Row-level security policies (see the initial migration) read two transaction-loc
 
 - `app.user_sub`: the Janua subject of the caller;
 - `app.family_space_id`: the family space the request works in, set only after the application
-  has checked the caller's membership.
+  has checked the caller's membership;
+- `app.job_runner`: `on` only in the worker's sessions, which lets the `job` policies show every
+  queued job and accept status updates (docs/adr/0002-postgres-job-queue.md). Request sessions
+  never set it.
 
 `set_config(..., is_local => true)` scopes them to the current transaction, so they never leak
 across pooled connections. The values live in `Session.info` and an `after_begin` hook re-applies
@@ -22,10 +25,12 @@ from sqlalchemy.orm import Session, SessionTransaction, sessionmaker
 
 SCOPE_USER_KEY = "fh_user_sub"
 SCOPE_SPACE_KEY = "fh_family_space_id"
+SCOPE_JOB_RUNNER_KEY = "fh_job_runner"
 
 _SET_SCOPE_SQL = text(
     "SELECT set_config('app.user_sub', :user_sub, true), "
-    "set_config('app.family_space_id', :space_id, true)"
+    "set_config('app.family_space_id', :space_id, true), "
+    "set_config('app.job_runner', :job_runner, true)"
 )
 
 
@@ -48,6 +53,7 @@ def _scope_params(session: Session) -> dict[str, str]:
     return {
         "user_sub": user_sub if isinstance(user_sub, str) else "",
         "space_id": str(space_id) if isinstance(space_id, uuid.UUID) else "",
+        "job_runner": "on" if session.info.get(SCOPE_JOB_RUNNER_KEY) is True else "",
     }
 
 
@@ -57,10 +63,17 @@ def _apply_scope_on_begin(
     connection.execute(_SET_SCOPE_SQL, _scope_params(session))
 
 
-def set_scope(session: Session, *, user_sub: str | None, space_id: uuid.UUID | None = None) -> None:
+def set_scope(
+    session: Session,
+    *,
+    user_sub: str | None,
+    space_id: uuid.UUID | None = None,
+    job_runner: bool = False,
+) -> None:
     """Record the RLS scope on the session and apply it to the open transaction, if any."""
     session.info[SCOPE_USER_KEY] = user_sub
     session.info[SCOPE_SPACE_KEY] = space_id
+    session.info[SCOPE_JOB_RUNNER_KEY] = job_runner
     if session.in_transaction():
         session.execute(_SET_SCOPE_SQL, _scope_params(session))
 

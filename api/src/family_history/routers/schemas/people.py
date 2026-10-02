@@ -87,11 +87,20 @@ class PersonPatch(InputModel):
     names: list[NameFormIn] | None = Field(default=None, min_length=1, max_length=20)
 
 
+_DISPLAY_HELP = "The primary name in the FORMAL style of `domain.names.display_name`."
+_SORT_HELP = "The primary name in the SORTING style («Garza Treviño, María Guadalupe de la»)."
+_PRIVATE_HELP = (
+    "True when the person is private by default (living or unknown) or marked `private`."
+)
+
+
 class PersonSummary(ApiModel):
     id: uuid.UUID
-    display_name: str
+    display_name: str = Field(description=_DISPLAY_HELP)
+    sort_name: str = Field(description=_SORT_HELP)
     sex: Sex
     living_status: LivingStatus
+    is_private: bool = Field(description=_PRIVATE_HELP)
     birth: EventBrief | None
     death: EventBrief | None
     visibility: Visibility
@@ -105,9 +114,11 @@ class PersonPage(ApiModel):
 class Person(ApiModel):
     id: uuid.UUID
     space_id: uuid.UUID
-    display_name: str
+    display_name: str = Field(description=_DISPLAY_HELP)
+    sort_name: str = Field(description=_SORT_HELP)
     sex: Sex
     living_status: LivingStatus
+    is_private: bool = Field(description=_PRIVATE_HELP)
     visibility: Visibility
     names: list[NameFormOut]
     events: list[Event]

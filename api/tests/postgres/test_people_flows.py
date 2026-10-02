@@ -84,8 +84,10 @@ def test_person_create_get_patch_and_soft_delete(
             {"given": "Guadalupe", "apellido_paterno": "Garza", "name_type": "religious"},
         ],
     )
-    assert person["display_name"] == "Lupita de la Garza Treviño"
+    assert person["display_name"] == "María Guadalupe de la Garza Treviño"
+    assert person["sort_name"] == "Garza Treviño, María Guadalupe de la"
     assert person["living_status"] == "unknown"
+    assert person["is_private"] is True
     assert [n["is_primary"] for n in person["names"]] == [True, False]
     fetched = client.get(f"/v1/people/{person['id']}", headers=auth(ANA)).json()
     assert fetched == person
@@ -240,25 +242,66 @@ def test_events_update_living_status(client: TestClient, auth: AuthHeaders) -> N
         json={"type": "death", "participants": [{"person_id": person["id"], "role": "principal"}]},
         headers=auth(ANA),
     ).json()
+    # A death nobody has cited is not evidence: born about 1920, the person may be living.
+    detail = client.get(f"/v1/people/{person['id']}", headers=auth(ANA)).json()
+    assert detail["living_status"] == "living"
+    assert detail["is_private"] is True
+    assert len(detail["events"]) == 2
+
+    source = client.post(
+        f"/v1/spaces/{space}/sources",
+        json={"type": "civil_registry_act", "title": "Registro Civil (sintético)"},
+        headers=auth(ANA),
+    ).json()
+    citation = client.post(
+        f"/v1/sources/{source['id']}/citations", json={"page": "Acta 12"}, headers=auth(ANA)
+    ).json()
+    cited = client.post(
+        f"/v1/spaces/{space}/assertions",
+        json={
+            "subject_type": "event",
+            "subject_id": death["id"],
+            "field": "occurred",
+            "value": True,
+            "status": "accepted",
+            "citation_ids": [citation["id"]],
+        },
+        headers=auth(ANA),
+    )
+    assert cited.status_code == 201, cited.text
     detail = client.get(f"/v1/people/{person['id']}", headers=auth(ANA)).json()
     assert detail["living_status"] == "deceased"
-    assert len(detail["events"]) == 2
+    assert detail["is_private"] is False
     listed = client.get(f"/v1/spaces/{space}/people", headers=auth(ANA)).json()["items"][0]
-    assert listed["birth"] == {"date_value": "ABT 1920", "place": "San Miguel Sintético"}
-    assert listed["death"] == {"date_value": None, "place": None}
+    assert listed["birth"] == {
+        "date_value": "ABT 1920",
+        "date_display": {"es": "hacia 1920", "en": "about 1920"},
+        "place": "San Miguel Sintético",
+    }
+    assert listed["death"] == {"date_value": None, "date_display": None, "place": None}
 
     public = client.patch(
         f"/v1/people/{person['id']}", json={"visibility": "public_memorial"}, headers=auth(ANA)
     )
     assert public.json()["visibility"] == "public_memorial"
     updated = client.patch(
-        f"/v1/events/{death['id']}", json={"date_value": "1990"}, headers=auth(ANA)
+        f"/v1/events/{death['id']}", json={"date_original": "hacia 1990"}, headers=auth(ANA)
+    ).json()
+    assert updated["date_value"] == "ABT 1990"
+    assert updated["date_original"] == "hacia 1990"
+    assert updated["date_display"] == {"es": "hacia 1990", "en": "about 1990"}
+    assert (updated["date_earliest"], updated["date_latest"]) == ("1985-01-01", "1995-12-31")
+    # Retracting the only citation-bearing assertion takes the evidence away again.
+    retracted = client.post(
+        f"/v1/assertions/{cited.json()['id']}/status",
+        json={"status": "retracted"},
+        headers=auth(ANA),
     )
-    assert updated.json()["date_value"] == "1990"
-    assert client.delete(f"/v1/events/{death['id']}", headers=auth(ANA)).status_code == 204
+    assert retracted.status_code == 201, retracted.text
     detail = client.get(f"/v1/people/{person['id']}", headers=auth(ANA)).json()
-    assert detail["living_status"] == "unknown"
+    assert detail["living_status"] == "living"
     assert detail["visibility"] == "space"
+    assert client.delete(f"/v1/events/{death['id']}", headers=auth(ANA)).status_code == 204
 
 
 def test_sacraments_default_to_religion_and_stay_with_their_author(
