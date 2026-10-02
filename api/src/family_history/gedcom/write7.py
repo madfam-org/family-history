@@ -66,4 +66,4 @@ def write_gedcom7_text(document: GedcomDocument, *, line_ending: str = "\n") -> 
 def write_gedcom7(document: GedcomDocument, *, line_ending: str = "\n", bom: bool = True) -> bytes:
     """The dataset as UTF-8 bytes, with the byte-order mark the specification recommends."""
     text = write_gedcom7_text(document, line_ending=line_ending)
-    return ("﻿" + text if bom else text).encode("utf-8")
+    return ("\ufeff" + text if bom else text).encode("utf-8")

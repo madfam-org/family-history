@@ -1,0 +1,14 @@
+# Exceptions for scripts/public-hygiene-check.sh. One per line:
+#   <rule> <path-glob> <match-ERE>  # why this is public-safe
+# The ERE is tested against the matched text only. Every entry needs a reason after '#'.
+
+# The public-egress NetworkPolicy excludes the private, carrier-grade NAT and link-local blocks from 0.0.0.0/0.
+# These are the generic RFC 1918 / RFC 6598 network constants, not addresses of anything.
+private-ipv4 infra/k8s/production/network-policies.yaml ^10\.0\.0\.0/8$  # RFC 1918 block constant in an ipBlock except list
+private-ipv4 infra/k8s/production/network-policies.yaml ^172\.16\.0\.0/12$  # RFC 1918 block constant in an ipBlock except list
+private-ipv4 infra/k8s/production/network-policies.yaml ^192\.168\.0\.0/16$  # RFC 1918 block constant in an ipBlock except list
+private-ipv4 infra/k8s/production/network-policies.yaml ^100\.64\.0\.0/10$  # RFC 6598 block constant in an ipBlock except list
+
+# The env contract documents FH_API_INTERNAL_URL with the in-cluster Service name of this project's own API
+# (namespace and Service names are public contract values, docs/ARCHITECTURE.md, Contracts).
+cluster-dns docs/ARCHITECTURE.md ^family-history-api\.family-history\.svc\.cluster\.local$  # contract example of FH_API_INTERNAL_URL

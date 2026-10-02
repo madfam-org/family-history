@@ -7,10 +7,16 @@ from pathlib import Path
 FIXTURES = Path(__file__).resolve().parent.parent / "fixtures" / "gedcom"
 SEVEN_FIXTURE = "familia-sintetica-7.ged"
 MINIMAL_HEAD = "0 HEAD\n1 GEDC\n2 VERS 7.0\n"
+UTF8_BOM = b"\xef\xbb\xbf"
+# Fixtures that stand for files exported WITH a UTF-8 byte-order mark. The mark is added at run
+# time, not stored on disk, so the repository's byte gate (no BOM in tracked text) holds while the
+# importer's BOM handling is still exercised with exactly the bytes a vendor writes.
+BOM_FIXTURES = frozenset({"rootsmagic-like-551.ged"})
 
 
 def fixture_bytes(name: str) -> bytes:
-    return (FIXTURES / name).read_bytes()
+    data = (FIXTURES / name).read_bytes()
+    return UTF8_BOM + data if name in BOM_FIXTURES else data
 
 
 def dataset(body: str) -> str:
