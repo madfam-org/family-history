@@ -1,0 +1,197 @@
+# Enclii manifest: family-history.
+#
+# One project, two services, two images (docs/ARCHITECTURE.md, Contracts):
+#   family-history-web  the web (apps/web, Next.js): the public landing at fh.madfam.io and the signed-in app at
+#                       fh-app.madfam.io, from the SAME pod (two tunnel hostnames, one Service);
+#   family-history-api  the API (api/, FastAPI), public at fh-api.madfam.io (every /v1 route but the waitlist
+#                       needs a Janua token).
+# The worker (Celery) is not deployed yet; it joins in a later wave with its own document here.
+# Hostnames are flat labels only (fh-api.madfam.io, never api.fh.madfam.io). "fh" is the working hostname while
+# the brand is pending.
+#
+# Tunnel routes. Enclii derives each declared domain's route from the Service DOCUMENT that declares it:
+# <metadata.name> in the project namespace, on the domain's own `port:` or, when absent, `runtime.port`.
+# runtime.port is the CONTAINER port (3000, 8000), but the Kubernetes Services publish 80, so every domain pins
+# `port: 80`; without it the tunnel would dial a port no Service exposes. So each document's metadata.name IS
+# the Kubernetes Service name (infra/k8s/production; scripts/check-manifests.py checks both agree).
+#
+# Secrets are referenced by NAME only, wired per workload in the kustomize base (infra/k8s/production), and
+# reach the store only through `enclii secrets intake`. Never `enclii secrets set`: it injects into every
+# container of a service.
+#
+# Network blocks: `label: app.kubernetes.io/name` makes Enclii's generated policies select exactly one
+# workload. The repository's own policies are the full picture (infra/k8s/production/network-policies.yaml).
+#
+# Builds: .github/workflows/build-deploy.yml (Enclii's reusable build-publish, pinned by full SHA) builds both
+# images and commits their digest pins. It is dispatch-only until the project is onboarded (docs/DEPLOYMENT.md).
+apiVersion: enclii.dev/v1
+kind: Project
+metadata:
+  name: family-history
+spec:
+  promotion:
+    pattern: manual
+    min_soak_minutes: 15
+    require_smoke_pass: true
+---
+apiVersion: enclii.dev/v1
+kind: Service
+metadata:
+  name: family-history-web
+  project: family-history
+  description: family-history web, the public landing (fh.madfam.io) and the signed-in app (fh-app.madfam.io) from one Next.js server
+spec:
+  # Two hostnames, ONE pod: both routes go to Service family-history-web on port 80 (runtime.port is the
+  # container's 3000). The app tells the two apart by host.
+  domains:
+    - name: fh.madfam.io
+      environment: production
+      port: 80
+    - name: fh-app.madfam.io
+      environment: production
+      port: 80
+
+  status:
+    enabled: true
+    entries:
+      - name: family-history
+        # The web's own health endpoint: `/` may redirect by language, so it is not a status probe.
+        url: https://fh.madfam.io/api/health
+        href: https://fh.madfam.io
+        group: family-history
+        family: MADFAM Platform
+        description: Public landing (no sign-in)
+      - name: family-history app
+        url: https://fh-app.madfam.io/api/health
+        href: https://fh-app.madfam.io
+        group: family-history
+        family: MADFAM Platform
+        description: Signed-in family app (Janua sign-in; the server calls the API in-cluster)
+
+  # The Dockerfile lives in apps/web, but the build context is the repository root (the pnpm workspace).
+  build:
+    type: dockerfile
+    dockerfile: apps/web/Dockerfile
+    context: .
+    source:
+      git:
+        repository: https://github.com/madfam-org/family-history
+        branch: main
+        autoDeploy: false
+
+  runtime:
+    port: 3000
+    replicas: 1
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "128Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    healthCheck: /api/health
+    healthCheckTimeoutSeconds: 3
+
+  # Runtime configuration lives in the kustomize base (infra/k8s/production/deployment-web.yaml):
+  #   env:     FH_ENV, AUTH_JANUA_ISSUER, FH_PUBLIC_LANDING_HOST, FH_PUBLIC_APP_HOST, FH_API_INTERNAL_URL,
+  #            FH_INDEXABLE=false
+  #   secrets: Secret family-history-web (AUTH_JANUA_CLIENT_ID, AUTH_JANUA_CLIENT_SECRET, FH_SESSION_SECRET),
+  #            from the intake. No database, no bucket.
+  slo:
+    availability: 99.5
+    latencyP99Ms: 2000
+
+  # Tunnel ingress on 3000. Egress: DNS and 443 (Janua's token endpoint at its public origin). Its call to the
+  # API pod (8000) is the repository's own policy pair allow-web-to-api-egress / allow-web-to-api-ingress.
+  network:
+    services:
+      - name: family-history-web
+        label: app.kubernetes.io/name
+        port: 3000
+        ingress: [cloudflare-tunnel]
+        egress: [dns, https]
+
+  dependencies:
+    - platform: janua
+      reason: identity; the web signs people in with its own confidential Janua client (authorization code with PKCE) and forwards their tokens to the API
+    - platform: enclii
+      reason: deploy, domains (fh.madfam.io, fh-app.madfam.io), secrets intake
+---
+apiVersion: enclii.dev/v1
+kind: Service
+metadata:
+  name: family-history-api
+  project: family-history
+  description: family-history API, evidence-based family trees and family memory (Janua-gated, row-level security per family space)
+spec:
+  # The route is Service family-history-api on port 80 (runtime.port is the container's 8000).
+  domains:
+    - name: fh-api.madfam.io
+      environment: production
+      port: 80
+
+  status:
+    enabled: true
+    entries:
+      - name: family-history API
+        # Readiness, not liveness: it proves the database and the migration head.
+        url: https://fh-api.madfam.io/ready
+        href: https://fh-api.madfam.io
+        group: family-history
+        family: MADFAM Platform
+        description: API (Janua-gated; the waitlist is the only public route)
+
+  # Build context is api/ (docs/ARCHITECTURE.md, Contracts).
+  build:
+    type: dockerfile
+    dockerfile: api/Dockerfile
+    context: api
+    source:
+      git:
+        repository: https://github.com/madfam-org/family-history
+        branch: main
+        autoDeploy: false
+
+  runtime:
+    port: 8000
+    replicas: 1
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "160Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    healthCheck: /health
+    healthCheckTimeoutSeconds: 3
+
+  # Runtime configuration lives in the kustomize base (infra/k8s/production/deployment-api.yaml):
+  #   env:     FH_ENV=production, FH_JANUA_ISSUER, FH_JANUA_AUDIENCE=family-history-api, FH_JANUA_JWKS_URL,
+  #            FH_CORS_ORIGINS
+  #   secrets: Secret family-history-api (DATABASE_URL, DIRECT_DATABASE_URL for the migrate hook only,
+  #            FH_S3_*, FH_EARLY_ACCESS_ALLOWLIST), from the intake.
+  # The managed Postgres addon creates the database and its role at onboarding; the pooled and direct URLs
+  # built from them are taken in through the intake.
+  addons:
+    - type: postgres
+      name: family-history-db
+
+  slo:
+    availability: 99.5
+    latencyP99Ms: 2000
+
+  # Tunnel ingress on the app port (8000) ONLY; /metrics is on 9090, for the scraper only. Egress: DNS, the
+  # pooler and Postgres, and 443 (Janua's JWKS and the media bucket).
+  network:
+    services:
+      - name: family-history-api
+        label: app.kubernetes.io/name
+        port: 8000
+        ingress: [cloudflare-tunnel]
+        egress: [dns, pgbouncer, postgres, https]
+
+  dependencies:
+    - platform: janua
+      reason: identity; RS256 JWTs with audience family-history-api, organizations bound 1:1 to family spaces
+    - platform: enclii
+      reason: deploy, managed Postgres addon, secrets intake
