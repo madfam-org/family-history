@@ -6,7 +6,7 @@ import uuid
 from collections.abc import Sequence
 from typing import Any
 
-from sqlalchemy import literal, or_, select, tuple_
+from sqlalchemy import ColumnElement, literal, or_, select, tuple_
 from sqlalchemy.orm import Session
 
 from family_history.auth import Principal
@@ -27,10 +27,17 @@ from family_history.routers.schemas.events import Relationship as RelationshipOu
 from family_history.routers.schemas.people import NameFormIn, NameFormOut, PersonPage, PersonSummary
 from family_history.routers.schemas.people import Person as PersonOut
 from family_history.services import names as name_rules
+from family_history.services import search
 from family_history.services.access import SpaceContext, enter_space, user_scoped
-from family_history.services.events import events_out, visible_person_ids
+from family_history.services.events import date_display, events_out, visible_person_ids
 from family_history.services.evidence import citations_for_subjects
-from family_history.services.pagination import decode_cursor, encode_cursor
+from family_history.services.living import is_private
+from family_history.services.pagination import (
+    decode_cursor,
+    decode_ranked_cursor,
+    encode_cursor,
+    encode_ranked_cursor,
+)
 from family_history.services.privacy import (
     sensitive_visible,
     treated_as_living,
@@ -56,8 +63,8 @@ def set_names(person: Person, names_in: Sequence[NameFormIn]) -> None:
             NameForm(family_space_id=person.family_space_id, position=index, **data)
         )
     primary = name_rules.primary_name(person.names)
-    person.search_text = name_rules.search_text(person.names)
-    person.sort_name = name_rules.sort_name(primary)
+    person.search_tokens = name_rules.search_tokens(person.names)
+    person.sort_name = name_rules.sort_key(primary)
 
 
 def names_snapshot(person: Person) -> list[dict[str, Any]]:
@@ -128,7 +135,8 @@ def _briefs(ctx: SpaceContext, people: Sequence[Person]) -> dict[uuid.UUID, dict
         if not sensitive_visible(sensitivity, created_by, ctx.sub, living[person_id]):
             continue
         briefs.setdefault(person_id, {}).setdefault(
-            event_type, EventBrief(date_value=date_value, place=place)
+            event_type,
+            EventBrief(date_value=date_value, date_display=date_display(date_value), place=place),
         )
     return briefs
 
@@ -139,8 +147,10 @@ def summaries(ctx: SpaceContext, people: Sequence[Person]) -> list[PersonSummary
         PersonSummary(
             id=p.id,
             display_name=name_rules.display_name(name_rules.primary_name(p.names)),
+            sort_name=name_rules.sorting_display(name_rules.primary_name(p.names)),
             sex=Sex(p.sex),
             living_status=LivingStatus(p.living_status),
+            is_private=is_private(p.living_status, p.visibility),
             birth=briefs.get(p.id, {}).get("birth"),
             death=briefs.get(p.id, {}).get("death"),
             visibility=Visibility(p.visibility),
@@ -150,20 +160,43 @@ def summaries(ctx: SpaceContext, people: Sequence[Person]) -> list[PersonSummary
 
 
 def list_people(ctx: SpaceContext, q: str | None, limit: int, cursor: str | None) -> PersonPage:
+    """Without `q`: surname order. With `q`: exact, then variant, then prefix matches
+    (services/search.py), each group in surname order."""
     query = select(Person).where(Person.family_space_id == ctx.space_id, visible_people(ctx.sub))
-    for token in name_rules.search_tokens(q or ""):
-        query = query.where(Person.search_text.like(name_rules.like_pattern(token), escape="\\"))
+    compiled = search.compile_search(search.plan(q))
+    if compiled is None:
+        if cursor:
+            sort_key, last_id = decode_cursor(cursor)
+            query = query.where(
+                tuple_(Person.sort_name, Person.id) > tuple_(literal(sort_key), literal(last_id))
+            )
+        rows = ctx.db.scalars(query.order_by(Person.sort_name, Person.id).limit(limit + 1)).all()
+        page = list(rows[:limit])
+        has_more = len(rows) > limit and bool(page)
+        next_cursor = encode_cursor(page[-1].sort_name, page[-1].id) if has_more else None
+        return PersonPage(items=summaries(ctx, page), next_cursor=next_cursor)
+
+    rank: ColumnElement[int] = compiled.rank
+    query = query.where(compiled.where)
     if cursor:
-        sort_key, last_id = decode_cursor(cursor)
+        last_rank, sort_key, last_id = decode_ranked_cursor(cursor)
         query = query.where(
-            tuple_(Person.sort_name, Person.id) > tuple_(literal(sort_key), literal(last_id))
+            tuple_(rank, Person.sort_name, Person.id)
+            > tuple_(literal(last_rank), literal(sort_key), literal(last_id))
         )
-    rows = ctx.db.scalars(query.order_by(Person.sort_name, Person.id).limit(limit + 1)).all()
-    page = list(rows[:limit])
-    next_cursor = (
-        encode_cursor(page[-1].sort_name, page[-1].id) if len(rows) > limit and page else None
-    )
-    return PersonPage(items=summaries(ctx, page), next_cursor=next_cursor)
+    ranked = ctx.db.execute(
+        query.add_columns(rank.label("rank"))
+        .order_by(rank, Person.sort_name, Person.id)
+        .limit(limit + 1)
+    ).all()
+    page_rows = list(ranked[:limit])
+    next_cursor = None
+    if len(ranked) > limit and page_rows:
+        last_person, last_rank_value = page_rows[-1]
+        next_cursor = encode_ranked_cursor(
+            int(last_rank_value), last_person.sort_name, last_person.id
+        )
+    return PersonPage(items=summaries(ctx, [row[0] for row in page_rows]), next_cursor=next_cursor)
 
 
 def relationships_out(ctx: SpaceContext, rows: Sequence[Relationship]) -> list[RelationshipOut]:
@@ -207,8 +240,10 @@ def detail(ctx: SpaceContext, person: Person) -> PersonOut:
         id=person.id,
         space_id=person.family_space_id,
         display_name=name_rules.display_name(name_rules.primary_name(person.names)),
+        sort_name=name_rules.sorting_display(name_rules.primary_name(person.names)),
         sex=Sex(person.sex),
         living_status=LivingStatus(person.living_status),
+        is_private=is_private(person.living_status, person.visibility),
         visibility=Visibility(person.visibility),
         names=[
             NameFormOut(

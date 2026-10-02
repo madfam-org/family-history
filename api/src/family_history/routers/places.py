@@ -70,7 +70,7 @@ def search_places(
 ) -> list[PlaceOut]:
     """Places in the space; `q` matches the name ignoring case and accents."""
     query = select(Place).where(Place.family_space_id == ctx.space_id)
-    for token in name_rules.search_tokens(q or ""):
+    for token in name_rules.query_tokens(q or ""):
         query = query.where(Place.search_text.like(name_rules.like_pattern(token), escape="\\"))
     if kind is not None:
         query = query.where(Place.kind == kind.value)

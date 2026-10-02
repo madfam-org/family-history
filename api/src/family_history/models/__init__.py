@@ -4,6 +4,7 @@ from family_history.models.audit import Revision, WaitlistEntry
 from family_history.models.base import Base
 from family_history.models.event import Association, Event, EventParticipant, Place
 from family_history.models.evidence import Assertion, Citation, Source
+from family_history.models.job import Job
 from family_history.models.person import NameForm, Person, Relationship
 from family_history.models.space import FamilySpace, SpaceMember
 
@@ -19,6 +20,7 @@ TENANT_TABLES: tuple[str, ...] = (
     "citation",
     "assertion",
     "revision",
+    "job",
 )
 
 __all__ = [
@@ -30,6 +32,7 @@ __all__ = [
     "Event",
     "EventParticipant",
     "FamilySpace",
+    "Job",
     "NameForm",
     "Person",
     "Place",

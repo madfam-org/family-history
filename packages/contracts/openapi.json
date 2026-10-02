@@ -349,6 +349,25 @@
         "title": "CitationCreate",
         "type": "object"
       },
+      "DateDisplay": {
+        "description": "A date in words: «hacia 1891» / \"about 1891\" (`domain.dates.humanize_es`/`_en`).",
+        "properties": {
+          "en": {
+            "title": "En",
+            "type": "string"
+          },
+          "es": {
+            "title": "Es",
+            "type": "string"
+          }
+        },
+        "required": [
+          "es",
+          "en"
+        ],
+        "title": "DateDisplay",
+        "type": "object"
+      },
       "ErrorBody": {
         "properties": {
           "code": {
@@ -390,6 +409,16 @@
             "title": "Created By",
             "type": "string"
           },
+          "date_display": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DateDisplay"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "date_earliest": {
             "anyOf": [
               {
@@ -400,6 +429,7 @@
                 "type": "null"
               }
             ],
+            "description": "Inclusive lower bound (ISO date).",
             "title": "Date Earliest"
           },
           "date_latest": {
@@ -412,7 +442,20 @@
                 "type": "null"
               }
             ],
+            "description": "Inclusive upper bound (ISO date).",
             "title": "Date Latest"
+          },
+          "date_original": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The date as typed, when it was typed.",
+            "title": "Date Original"
           },
           "date_value": {
             "anyOf": [
@@ -423,6 +466,7 @@
                 "type": "null"
               }
             ],
+            "description": "Canonical GEDCOM 7 DateValue.",
             "title": "Date Value"
           },
           "description": {
@@ -500,6 +544,8 @@
           "space_id",
           "type",
           "date_value",
+          "date_original",
+          "date_display",
           "date_earliest",
           "date_latest",
           "place_id",
@@ -516,6 +562,16 @@
       },
       "EventBrief": {
         "properties": {
+          "date_display": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DateDisplay"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "date_value": {
             "anyOf": [
               {
@@ -541,6 +597,7 @@
         },
         "required": [
           "date_value",
+          "date_display",
           "place"
         ],
         "title": "EventBrief",
@@ -549,17 +606,32 @@
       "EventCreate": {
         "additionalProperties": false,
         "properties": {
-          "date_value": {
+          "date_original": {
             "anyOf": [
               {
-                "maxLength": 100,
-                "pattern": "^[A-Z0-9_]+( [A-Z0-9_]+)*$",
+                "maxLength": 200,
+                "minLength": 1,
                 "type": "string"
               },
               {
                 "type": "null"
               }
             ],
+            "description": "Send `date_value` (GEDCOM 7 DateValue) or `date_original` (free text, read as es-MX), never both. Errors: `422 invalid_date`, `422 ambiguous_date`.",
+            "title": "Date Original"
+          },
+          "date_value": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Send `date_value` (GEDCOM 7 DateValue) or `date_original` (free text, read as es-MX), never both. Errors: `422 invalid_date`, `422 ambiguous_date`.",
             "title": "Date Value"
           },
           "description": {
@@ -620,17 +692,32 @@
       "EventPatch": {
         "additionalProperties": false,
         "properties": {
-          "date_value": {
+          "date_original": {
             "anyOf": [
               {
-                "maxLength": 100,
-                "pattern": "^[A-Z0-9_]+( [A-Z0-9_]+)*$",
+                "maxLength": 200,
+                "minLength": 1,
                 "type": "string"
               },
               {
                 "type": "null"
               }
             ],
+            "description": "Send `date_value` (GEDCOM 7 DateValue) or `date_original` (free text, read as es-MX), never both. Errors: `422 invalid_date`, `422 ambiguous_date`.",
+            "title": "Date Original"
+          },
+          "date_value": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Send `date_value` (GEDCOM 7 DateValue) or `date_original` (free text, read as es-MX), never both. Errors: `422 invalid_date`, `422 ambiguous_date`.",
             "title": "Date Value"
           },
           "description": {
@@ -698,7 +785,7 @@
         "type": "object"
       },
       "EventType": {
-        "description": "Event type codes. Mirrors `family_history.domain.events.EventType`.",
+        "description": "Events a person or a couple can have.",
         "enum": [
           "birth",
           "baptism",
@@ -740,7 +827,7 @@
       },
       "JsonValue": {},
       "LivingStatus": {
-        "description": "Mirrors `family_history.domain.living.LivingStatus`.",
+        "description": "Whether a person is treated as living.",
         "enum": [
           "living",
           "deceased",
@@ -1175,6 +1262,7 @@
             "type": "string"
           },
           "display_name": {
+            "description": "The primary name in the FORMAL style of `domain.names.display_name`.",
             "title": "Display Name",
             "type": "string"
           },
@@ -1189,6 +1277,11 @@
             "format": "uuid",
             "title": "Id",
             "type": "string"
+          },
+          "is_private": {
+            "description": "True when the person is private by default (living or unknown) or marked `private`.",
+            "title": "Is Private",
+            "type": "boolean"
           },
           "living_status": {
             "$ref": "#/components/schemas/LivingStatus"
@@ -1210,6 +1303,11 @@
           "sex": {
             "$ref": "#/components/schemas/Sex"
           },
+          "sort_name": {
+            "description": "The primary name in the SORTING style («Garza Treviño, María Guadalupe de la»).",
+            "title": "Sort Name",
+            "type": "string"
+          },
           "space_id": {
             "format": "uuid",
             "title": "Space Id",
@@ -1228,8 +1326,10 @@
           "id",
           "space_id",
           "display_name",
+          "sort_name",
           "sex",
           "living_status",
+          "is_private",
           "visibility",
           "names",
           "events",
@@ -1363,6 +1463,7 @@
             ]
           },
           "display_name": {
+            "description": "The primary name in the FORMAL style of `domain.names.display_name`.",
             "title": "Display Name",
             "type": "string"
           },
@@ -1371,11 +1472,21 @@
             "title": "Id",
             "type": "string"
           },
+          "is_private": {
+            "description": "True when the person is private by default (living or unknown) or marked `private`.",
+            "title": "Is Private",
+            "type": "boolean"
+          },
           "living_status": {
             "$ref": "#/components/schemas/LivingStatus"
           },
           "sex": {
             "$ref": "#/components/schemas/Sex"
+          },
+          "sort_name": {
+            "description": "The primary name in the SORTING style («Garza Treviño, María Guadalupe de la»).",
+            "title": "Sort Name",
+            "type": "string"
           },
           "visibility": {
             "$ref": "#/components/schemas/Visibility"
@@ -1384,8 +1495,10 @@
         "required": [
           "id",
           "display_name",
+          "sort_name",
           "sex",
           "living_status",
+          "is_private",
           "birth",
           "death",
           "visibility"
@@ -3889,7 +4002,7 @@
     },
     "/v1/spaces/{space_id}/events": {
       "post": {
-        "description": "Sacraments default to the `religion` sensitivity and medical events to `health`.",
+        "description": "Sacraments default to the `religion` sensitivity. The date is `date_value` (GEDCOM 7) or\n`date_original` (free text, es-MX); the response carries both, the bounds and the date in\nwords.",
         "operationId": "create_event_v1_spaces__space_id__events_post",
         "parameters": [
           {

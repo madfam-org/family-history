@@ -4,6 +4,37 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+# The genealogy vocabularies come from the domain library; the API stores their values.
+from family_history.domain.events import EventType
+from family_history.domain.kinship import PartnerStatus, Pedigree
+from family_history.domain.living import LivingStatus
+
+__all__ = [
+    "ROLE_RANK",
+    "AssertionStatus",
+    "AssociationRole",
+    "EventType",
+    "ExportFormat",
+    "JobKind",
+    "JobStatus",
+    "LivingStatus",
+    "NameType",
+    "ParticipantRole",
+    "PartnerStatus",
+    "Pedigree",
+    "PlaceKind",
+    "RelationshipType",
+    "RevisionAction",
+    "Role",
+    "Sensitivity",
+    "Sex",
+    "SourceType",
+    "SubjectType",
+    "SurnameOrder",
+    "Visibility",
+    "sql_in",
+]
+
 
 class Role(StrEnum):
     STEWARD = "steward"
@@ -25,15 +56,6 @@ class Sex(StrEnum):
     F = "F"
     X = "X"
     U = "U"
-
-
-class LivingStatus(StrEnum):
-    """Mirrors `family_history.domain.living.LivingStatus`."""
-
-    LIVING = "living"
-    DECEASED = "deceased"
-    PRESUMED_DECEASED = "presumed_deceased"
-    UNKNOWN = "unknown"
 
 
 class Visibility(StrEnum):
@@ -63,56 +85,6 @@ class RelationshipType(StrEnum):
     UNION = "union"
 
 
-class Pedigree(StrEnum):
-    """How a child is linked to a parent. Mirrors `family_history.domain.kinship.Pedigree`."""
-
-    BIRTH = "birth"
-    ADOPTED = "adopted"
-    FOSTER = "foster"
-    STEP = "step"
-
-
-class PartnerStatus(StrEnum):
-    """The state of a couple's union. Mirrors `family_history.domain.kinship.PartnerStatus`.
-
-    Civil and religious marriage are events, not union qualifiers; widowhood is derived from a
-    death.
-    """
-
-    MARRIED = "married"
-    UNION_LIBRE = "union_libre"
-    PARTNER = "partner"
-    SEPARATED = "separated"
-    DIVORCED = "divorced"
-
-
-class EventType(StrEnum):
-    """Event type codes. Mirrors `family_history.domain.events.EventType`."""
-
-    BIRTH = "birth"
-    BAPTISM = "baptism"
-    CHRISTENING = "christening"
-    CONFIRMATION = "confirmation"
-    FIRST_COMMUNION = "first_communion"
-    MARRIAGE = "marriage"
-    CIVIL_MARRIAGE = "civil_marriage"
-    RELIGIOUS_MARRIAGE = "religious_marriage"
-    DIVORCE = "divorce"
-    DEATH = "death"
-    BURIAL = "burial"
-    CREMATION = "cremation"
-    EMIGRATION = "emigration"
-    IMMIGRATION = "immigration"
-    NATURALIZATION = "naturalization"
-    RESIDENCE = "residence"
-    OCCUPATION = "occupation"
-    EDUCATION = "education"
-    QUINCEANERA = "quinceanera"
-    BRACERO_CONTRACT = "bracero_contract"
-    BORDER_CROSSING = "border_crossing"
-    OTHER = "other"
-
-
 class ParticipantRole(StrEnum):
     PRINCIPAL = "principal"
     SPOUSE = "spouse"
@@ -125,8 +97,13 @@ class ParticipantRole(StrEnum):
 
 
 class AssociationRole(StrEnum):
+    """A person's role at someone else's event. Maps to `domain.events.AssociationRole`
+    (GEDCOM `ROLE`: GODP, WITN, OFFICIATOR, OTHER with a phrase)."""
+
     GODPARENT = "godparent"
     WITNESS = "witness"
+    OFFICIANT = "officiant"
+    OTHER = "other"
 
 
 class Sensitivity(StrEnum):
@@ -173,6 +150,25 @@ class SubjectType(StrEnum):
     EVENT = "event"
     RELATIONSHIP = "relationship"
     PLACE = "place"
+
+
+class JobKind(StrEnum):
+    GEDCOM_IMPORT = "gedcom_import"
+    EXPORT = "export"
+
+
+class JobStatus(StrEnum):
+    QUEUED = "queued"
+    RUNNING = "running"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+
+
+class ExportFormat(StrEnum):
+    GEDCOM7 = "gedcom7"
+    GEDZIP = "gedzip"
+    GEDCOM551 = "gedcom551"
+    NATIVE_JSON = "native_json"
 
 
 class RevisionAction(StrEnum):

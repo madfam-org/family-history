@@ -7,7 +7,12 @@ import uuid
 import pytest
 from pydantic import ValidationError
 
-from family_history.routers.schemas.events import EventCreate, PlaceCreate, RelationshipCreate
+from family_history.routers.schemas.events import (
+    EventCreate,
+    EventPatch,
+    PlaceCreate,
+    RelationshipCreate,
+)
 from family_history.routers.schemas.evidence import AssertionCreate, CitationCreate
 from family_history.routers.schemas.people import NameFormIn, PersonCreate
 from family_history.routers.schemas.waitlist import WaitlistRequest
@@ -67,12 +72,15 @@ def test_date_values_accept_gedcom_shapes(value: str) -> None:
     assert event.date_value == value
 
 
-@pytest.mark.parametrize("value", ["hacia 1890", "1890-01-01", "ABT  1890", "<script>"])
-def test_date_values_reject_free_text(value: str) -> None:
-    with pytest.raises(ValidationError):
+def test_date_value_and_date_original_are_exclusive() -> None:
+    participants = [{"person_id": A, "role": "principal"}]
+    with pytest.raises(ValidationError, match="not both"):
         EventCreate(
-            type="birth", date_value=value, participants=[{"person_id": A, "role": "principal"}]
+            type="birth", date_value="1890", date_original="1890", participants=participants
         )
+    with pytest.raises(ValidationError, match="not both"):
+        EventPatch(date_value=None, date_original="hacia 1890")
+    assert EventPatch(date_original="hacia 1890").date_original == "hacia 1890"
 
 
 def test_place_validity_range() -> None:

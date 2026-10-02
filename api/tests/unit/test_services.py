@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date
+from datetime import UTC, datetime
 
 import pytest
 
@@ -11,10 +11,9 @@ from family_history.errors import APIError
 from family_history.models import NameForm
 from family_history.models.enums import LivingStatus, Sensitivity
 from family_history.services import names
+from family_history.services.living import is_private, today_mexico_city
 from family_history.services.pagination import decode_cursor, encode_cursor
 from family_history.services.privacy import (
-    LifeEvent,
-    compute_living_status,
     default_field_sensitivity,
     default_sensitivity,
     sensitive_visible,
@@ -47,38 +46,49 @@ def test_display_name_with_particles_and_order() -> None:
         apellido_materno="Treviño",
         particles={"paterno": "de la"},
     )
-    assert names.display_name(form) == "Lupita de la Garza Treviño"
+    # FORMAL style of domain.names.display_name: the nombre de pila, then the surnames.
+    assert names.display_name(form) == "María Guadalupe de la Garza Treviño"
+    assert names.sorting_display(form) == "Garza Treviño, María Guadalupe de la"
+    assert names.sort_key(form) == "garza trevino maria guadalupe de la"
     form.surname_order = "materno_paterno"
-    assert names.display_name(form) == "Lupita Treviño de la Garza"
+    assert names.display_name(form) == "María Guadalupe Treviño de la Garza"
 
 
-def test_search_text_covers_every_part_once() -> None:
+def test_unknown_particles_stay_in_front_of_the_surname() -> None:
+    form = _name(given="Ana", apellido_paterno="Garza", particles={"paterno": "xx"})
+    assert names.display_name(form) == "Ana xx Garza"
+    only_usado = _name(nombre_usado="Lupita")
+    assert names.display_name(only_usado) == "Lupita"
+
+
+def test_search_tokens_cover_every_part_once() -> None:
     forms = [
         _name(given="Ana", apellido_paterno="Pérez", nicknames=["Anita"]),
         _name(given="Ana", apellido_paterno="Pérez", apellido_materno="Ruiz", is_primary=True),
     ]
-    assert names.search_text(forms) == "ana perez anita ruiz"
+    # normalize_for_search folds spellings that sound alike (z→s): «Pérez» → «peres».
+    assert names.search_tokens(forms) == " ana peres anita ruis "
+    assert names.search_tokens([]) == ""
     assert names.primary_name(forms) is forms[1]
-    assert names.sort_name(forms[1]) == "perez ruiz ana"
+    assert names.sort_key(forms[1]) == "perez ruiz ana"
 
 
 def test_like_pattern_escapes_wildcards() -> None:
     assert names.like_pattern("50%_x") == "%50\\%\\_x%"
-    assert names.search_tokens("  Hernández   de  ") == ["hernandez", "de"]
+    assert names.query_tokens("  Hernández   de  ") == ["hernandez", "de"]
 
 
-def test_living_status_rules() -> None:
-    today = date(2026, 10, 1)
-    assert compute_living_status([], today) is LivingStatus.UNKNOWN
-    assert compute_living_status([LifeEvent("birth", None)], today) is LivingStatus.UNKNOWN
-    for kind in ("death", "burial", "cremation"):
-        assert compute_living_status([LifeEvent(kind, None)], today) is LivingStatus.DECEASED
-    old_birth = LifeEvent("birth", date(1900, 1, 1))
-    assert compute_living_status([old_birth], today) is LivingStatus.PRESUMED_DECEASED
-    old_baptism = LifeEvent("christening", date(1910, 1, 1))
-    assert compute_living_status([old_baptism], today) is LivingStatus.PRESUMED_DECEASED
-    recent_birth = LifeEvent("birth", date(1950, 1, 1))
-    assert compute_living_status([recent_birth, old_birth], today) is LivingStatus.LIVING
+def test_today_is_mexico_city() -> None:
+    # 03:00 UTC on 2 October is still 1 October in Mexico City (UTC−06:00).
+    assert str(today_mexico_city(datetime(2026, 10, 2, 3, 0, tzinfo=UTC))) == "2026-10-01"
+    assert str(today_mexico_city(datetime(2026, 10, 2, 7, 0, tzinfo=UTC))) == "2026-10-02"
+
+
+def test_is_private_follows_living_status_and_visibility() -> None:
+    assert is_private("living", "space") and is_private("unknown", "space")
+    assert not is_private("deceased", "space") and not is_private("presumed_deceased", "space")
+    assert is_private("deceased", "private")
+    assert LivingStatus.PRESUMED_DECEASED.value == "presumed_deceased"
 
 
 def test_living_and_unknown_are_private_by_default() -> None:
