@@ -6,7 +6,7 @@
 # The only writable paths are /tmp and /app/.next/cache (emptyDir volumes in Kubernetes).
 # No secrets and no NEXT_PUBLIC_* values are used at build time; all configuration is runtime env.
 
-FROM node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 AS build
+FROM node:26-alpine@sha256:0b36e8c136b94cd4fcf02188228e76c31ad5872eef3fec8cbd2eee500cfd9e80 AS build
 ENV NEXT_TELEMETRY_DISABLED=1 \
     CI=true
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
@@ -21,7 +21,7 @@ COPY apps/web apps/web
 RUN pnpm --filter @family-history/web run build \
  && test -f apps/web/.next/standalone/apps/web/server.js
 
-FROM node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 AS runtime
+FROM node:26-alpine@sha256:0b36e8c136b94cd4fcf02188228e76c31ad5872eef3fec8cbd2eee500cfd9e80 AS runtime
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     HOSTNAME=0.0.0.0 \
