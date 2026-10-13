@@ -55,7 +55,7 @@ jobs:
         id: detect
         run: |
           if [ -f apps/web/package.json ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; fi
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         if: steps.detect.outputs.present == 'true'
         with:
           node-version: "22"
@@ -176,7 +176,7 @@ jobs:
           ref: ${{ env.GATES_SHA }}
           path: .madfam-gates
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "20"
       - name: Byte gate (control bytes, BOM, U+2028/U+2029)
@@ -273,7 +273,7 @@ jobs:
         id: web
         run: |
           if [ -f apps/web/package.json ] && [ -f pnpm-lock.yaml ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; fi
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         if: steps.web.outputs.present == 'true'
         with:
           node-version: "22"
