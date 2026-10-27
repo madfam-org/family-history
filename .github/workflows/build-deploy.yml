@@ -10,18 +10,16 @@ name: Build & Deploy
 # path segment (family-history-api / family-history-web, the Service documents in enclii.yaml) and accepts it
 # only for this repository.
 #
-# The ref is a full commit SHA, the peeled commit of enclii tag v1.0.0-alpha.14, so what runs cannot change
-# under us; the reusable workflow's pin job accepts a SHA caller's signer identity when the SHA is on enclii
-# main or is a v* tag commit. To bump: take a release tag's peeled commit
-# (`git ls-remote https://github.com/madfam-org/enclii 'refs/tags/vX.Y.Z^{}'`), read the diff of
-# .github/workflows/build-publish.yml from the current SHA to it, re-check the named secrets below against
-# its `on.workflow_call.secrets`, then change the SHA and its comment together.
-#
-# BLOCKER BEFORE THE FIRST DISPATCH: this repository requires every action to be pinned to a full commit SHA,
-# and the policy reaches inside called reusable workflows. build-publish.yml at this SHA (and on enclii main
-# as of 2026-10-01) still uses tag-pinned actions (actions/checkout@v7, docker/*, sigstore/cosign-installer),
-# so GitHub refuses the run before any job starts. Bump this pin to an Enclii commit whose build-publish pins
-# its actions by SHA (docs/DEPLOYMENT.md, "First deploy").
+# The ref is a full commit SHA on enclii main: the first commit whose build-publish.yml pins every action it
+# uses by commit SHA (the tag v1.0.0-alpha.14 still pinned them by tag). This repository requires every action
+# to be pinned to a full commit SHA, and the policy reaches inside called reusable workflows, so GitHub refuses
+# the run before any job starts if one `uses:` in build-publish.yml is tag-pinned. What runs cannot change
+# under us, and the reusable workflow's pin job accepts a SHA caller's signer identity when the SHA is on
+# enclii main or is a v* tag commit. To bump: take a release tag's peeled commit
+# (`git ls-remote https://github.com/madfam-org/enclii 'refs/tags/vX.Y.Z^{}'`) or a later main commit, read
+# the diff of .github/workflows/build-publish.yml from the current SHA to it, confirm every `uses:` in it is
+# still pinned by full SHA, re-check the named secrets below against its `on.workflow_call.secrets`, then
+# change the SHA and its comment together.
 #
 # DISPATCH ONLY for now. Push-on-main (with `paths-ignore: ['**.md', 'docs/**']`) is switched on in its own
 # pull request once the project is onboarded to Enclii (docs/DEPLOYMENT.md). Until then nothing deploys by
@@ -46,7 +44,7 @@ permissions:
 
 jobs:
   build-publish:
-    uses: madfam-org/enclii/.github/workflows/build-publish.yml@c0e44a8c373fdf632a0115b145fdb810313fd387 # v1.0.0-alpha.14
+    uses: madfam-org/enclii/.github/workflows/build-publish.yml@c8b4647e8300733bc0a3d70a067173378aac633a # enclii main after v1.0.0-alpha.14, actions pinned by SHA
     with:
       image_prefix: ghcr.io/madfam-org
       kustomization_path: infra/k8s/production

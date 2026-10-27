@@ -94,12 +94,10 @@ in step with both sources:
 The platform operator runs these steps through Enclii. This repository is ready for them; the order
 matters.
 
-**Deploy blocker.** This repository requires every GitHub Action to be pinned to a full commit SHA, and
-GitHub applies that requirement inside reusable workflows too. Enclii's `build-publish.yml` still uses
-tag-pinned actions (`actions/checkout@v7`, the `docker/*` actions, `sigstore/cosign-installer`). So GitHub
-refuses the Build & Deploy run before any job starts, at the SHA this repository pins and on enclii main
-alike. The fix is a separate Enclii pull request that pins those actions by SHA; this repository then bumps
-its pin in `.github/workflows/build-deploy.yml`. Until that lands, step 6 cannot run.
+This repository requires every GitHub Action to be pinned to a full commit SHA, and GitHub applies that
+requirement inside reusable workflows too. `.github/workflows/build-deploy.yml` therefore pins an Enclii
+commit whose `build-publish.yml` pins every action by SHA. Keep it that way when bumping the pin (the
+workflow's header says how).
 
 1. **Onboard the project** from `enclii.yaml`, with `--secret-name family-history-secrets`. This creates the
    namespace with its platform labels, the managed database and its role, and the project Secret holding
@@ -117,13 +115,12 @@ its pin in `.github/workflows/build-deploy.yml`. Until that lands, step 6 cannot
      `auth_janua_client_secret`.
 4. **Grant the build what it needs:** the repository secret `ENCLII_CALLBACK_TOKEN`, and pull access for the
    cluster to the two GHCR packages.
-5. **Clear the deploy blocker** above.
-6. **Dispatch Build & Deploy** with both services. Both digests are pinned on main, the migrate hook runs,
+5. **Dispatch Build & Deploy** with both services. Both digests are pinned on main, the migrate hook runs,
    and the pods roll.
-7. **Wire the hosts.** Enclii provisions the three domains and their tunnel routes from `enclii.yaml`. Each
+6. **Wire the hosts.** Enclii provisions the three domains and their tunnel routes from `enclii.yaml`. Each
    route targets its Service on port 80; the network policies admit the tunnel to the web on 3000 and the
    API on 8000 only.
-8. **Verify** each host ([RUNBOOK.md, Public hosts](./RUNBOOK.md#public-hosts)), then switch Build &
+7. **Verify** each host ([RUNBOOK.md, Public hosts](./RUNBOOK.md#public-hosts)), then switch Build &
    Deploy to push-on-main in its own pull request.
 
 ## Migrations
