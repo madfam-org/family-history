@@ -40,7 +40,7 @@ shell, platform) is on `main`; nothing is deployed yet.
 | `apps/web/` | Next.js app: the public landing and the signed-in app |
 | `packages/contracts/` | Generated OpenAPI, TypeScript types, export schemas |
 | `infra/`, `enclii.yaml` | Deployment manifests for the MADFAM platform (no secret values) |
-| `docs/` | [Architecture and contracts](./docs/ARCHITECTURE.md), [privacy rules](./docs/PRIVACY.md), [ADRs](./docs/adr/) |
+| `docs/` | [Architecture and contracts](./docs/ARCHITECTURE.md), [privacy rules](./docs/PRIVACY.md), [roadmap](./docs/ROADMAP.md), [ADRs](./docs/adr/) |
 
 Contributors and coding agents start with [AGENTS.md](./AGENTS.md). Ecosystem roles are in
 [ECOSYSTEM.md](./ECOSYSTEM.md).
