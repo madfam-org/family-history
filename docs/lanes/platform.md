@@ -118,10 +118,10 @@ There are two sources of secrets.
    `family-history/api-access`, `family-history/web-oidc` and `family-history/web-session`. The registry
    entries and the OIDC registration are merged in Enclii; the operator applies the writer policy.
 5. Intake:
-   - `enclii secrets intake submit family-history/api-access --reason "<ticket>"` (`fh_early_access_allowlist`);
-   - `enclii secrets intake submit family-history/web-session --generate fh_session_secret --reason "<ticket>"`;
+   - `enclii secrets intake submit family-history/api-access --reason "family-history first deploy: early-access allowlist"` (`fh_early_access_allowlist`);
+   - `enclii secrets intake submit family-history/web-session --generate fh_session_secret --reason "family-history first deploy: web session secret"`;
    - as a Janua admin: `enclii secrets provision oidc --platform family-history-web --registry
-     config/ecosystem-oidc-provision.yaml --reason "<ticket>" --dry-run`, then the same without `--dry-run`.
+     config/ecosystem-oidc-provision.yaml --reason "family-history first deploy: web OIDC client" --dry-run`, then the same without `--dry-run`.
      Pin the printed client id in the registry, never in this repository.
 6. Repository secret `ENCLII_CALLBACK_TOKEN`, and cluster pull access (`ghcr-credentials`) for
    `ghcr.io/madfam-org/family-history-api` and `ghcr.io/madfam-org/family-history-web`.
@@ -130,7 +130,7 @@ There are two sources of secrets.
    - `enclii ops pods diagnose --project family-history`.
 8. Domains:
    - `enclii projects environments family-history`;
-   - `enclii ops domains reconcile family-history-web --apply --reason "<ticket>"`, and the same for
+   - `enclii ops domains reconcile family-history-web --apply --reason "family-history first deploy: public hosts"`, and the same for
      `family-history-api`;
    - tunnel routes per the platform procedure, targets the two Services on port 80 (never 3000 or 8000).
 9. Verify per `docs/RUNBOOK.md#public-hosts`, then open a PR switching Build & Deploy to push-on-main.

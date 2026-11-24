@@ -133,8 +133,9 @@ safe. Until the hook succeeds the API's `/ready` answers 503, and a failed hook 
 
 ## Rollback
 
-Roll back through Enclii: `enclii releases <service>` lists the releases, and `enclii rollback <service>
-<v{n}>` returns to one. A migration is not rolled back by an image rollback; write migrations so the
+Roll back through Enclii: `enclii releases family-history-api` (or `family-history-web`) lists the
+releases, and `enclii rollback family-history-api` returns that service to its previous running
+deployment; with a v-number from the list after the service name, it returns to that release instead. A migration is not rolled back by an image rollback; write migrations so the
 previous image still runs against the new schema (expand first, contract in a later release).
 
 ## Checks that guard the deploy
