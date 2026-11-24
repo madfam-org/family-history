@@ -1,6 +1,6 @@
 # Runbook
 
-> Last Updated: 2026-10-01
+> Last Updated: 2026-11-24
 >
 > Boundary checkpoint (2026-10-01): public document. It covers what anyone operating family-history
 > through Enclii needs: alert → symptom → first actions. Cluster topology, break-glass procedures and
@@ -22,7 +22,7 @@ Commands you will use most:
 | Sync and hook status of the app | `enclii ops apps status family-history --project family-history --json` |
 | Why a pod is not ready | `enclii ops pods diagnose --project family-history` |
 | Recent logs of a service | `enclii logs family-history-api` (or `family-history-web`) |
-| Releases and rollback | `enclii releases family-history-api`, then `enclii rollback family-history-api <v{n}>` |
+| Releases and rollback | `enclii releases family-history-api`, then `enclii rollback family-history-api` (to the previous running deployment; add a v-number from the list to pick an older one) |
 | Restart through a safe rollout | `enclii ops pods restart family-history-api --project family-history` |
 | ExternalSecret readiness | `enclii ops secrets external family-history-api --project family-history` |
 
@@ -42,8 +42,8 @@ too: `https://fh-api.madfam.io/health` fails, and the app shows its error page.
    OOM kills and pending pods.
 2. `enclii logs family-history-api`: a boot failure names the missing or invalid setting. In production
    the API refuses to start with `FH_AUTH_DISABLED` set, and with an empty required setting.
-3. If a new release broke it, roll back: `enclii releases family-history-api`, then
-   `enclii rollback family-history-api <previous v{n}>`.
+3. If a new release broke it, roll back: `enclii releases family-history-api` to confirm the previous
+   release, then `enclii rollback family-history-api`, which returns to the previous running deployment.
 4. If the app answers but the scrape does not, the metrics listener on 9090 died while uvicorn kept
    serving: restart through Enclii and open an issue on the API.
 
@@ -85,7 +85,8 @@ for 10 minutes. The matching host is down.
 **Symptom.** A container restarted more than 3 times in 30 minutes.
 
 **Actions.**
-1. `enclii logs <service>` around the restarts, and `enclii ops pods diagnose --project family-history`
+1. `enclii logs family-history-api` (or `enclii logs family-history-web`, whichever the alert names)
+   around the restarts, and `enclii ops pods diagnose --project family-history`
    for the last termination reason.
 2. `OOMKilled`: see [FamilyHistoryMemoryNearLimit](#familyhistorymemorynearlimit).
 3. Liveness failures: the API's `/health` and the web's `/api/health` must stay dependency-free. A
@@ -117,11 +118,14 @@ of the app is blocked, so new images do not roll; the running pods keep serving.
 their values; new pods of that workload may not start. The migrate hook does not depend on either.
 
 **Actions.**
-1. `enclii ops secrets external <name> --project family-history`: the failing key.
+1. `enclii ops secrets external family-history-api --project family-history` (or
+   `family-history-web`, whichever the alert names): the failing key.
 2. A mapped property is missing from the store: take it in through `enclii secrets intake submit`
    ([DEPLOYMENT.md](./DEPLOYMENT.md#secrets)). Properties are lowercase; an upper-case property never
    syncs.
-3. After the intake reports ready: `enclii ops secrets refresh <name> --project family-history`.
+3. After the intake reports ready: `enclii ops secrets refresh family-history-api --project family-history`
+   (or `family-history-web`) shows the plan; repeat it with
+   `--apply --reason "resync after secret intake"` to run it.
 
 ## Capacity
 
