@@ -127,3 +127,4 @@ before they get there.
 
 [`docs/HONEST_STATUS.md`](./docs/HONEST_STATUS.md) is the only list. Do not describe a planned
 capability as shipped anywhere else: not in README, not in llms files, not in UI copy.
+What comes next, and the dependency holds, are in [`docs/ROADMAP.md`](./docs/ROADMAP.md).
